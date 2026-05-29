@@ -1169,6 +1169,180 @@
             .writing-card { padding: 16px; border-radius: 16px; }
             .voip-call-top { margin-top: 4px; }
         }
+        /* PREMIUM PAYWALL MODAL STYLE */
+        .premium-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 6, 12, 0.9);
+            backdrop-filter: blur(25px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .premium-content {
+            background: linear-gradient(135deg, rgba(20, 16, 36, 0.95) 0%, rgba(10, 8, 18, 0.98) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
+            width: 90%;
+            max-width: 520px;
+            border-radius: 28px;
+            padding: 35px;
+            text-align: center;
+            position: relative;
+            animation: modalScale 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .premium-crown {
+            font-size: 55px;
+            margin-bottom: 15px;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));
+            animation: crownPulse 3s infinite ease-in-out;
+        }
+
+        @keyframes crownPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4)); }
+            50% { transform: scale(1.1) rotate(5deg); filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7)); }
+        }
+
+        .premium-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFF 0%, #D4AF37 50%, #FFDF00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .premium-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .premium-bullets {
+            text-align: left;
+            margin: 0 auto 25px;
+            display: inline-block;
+            max-width: 380px;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .premium-bullets li {
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .premium-bullets li i {
+            color: #D4AF37;
+            font-size: 16px;
+        }
+
+        .premium-key-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 25px;
+        }
+
+        .premium-key-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .premium-input-wrap {
+            display: flex;
+            gap: 10px;
+        }
+
+        .premium-key-input {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #FFF;
+            font-family: 'Outfit', monospace;
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            transition: var(--transition-smooth);
+        }
+
+        .premium-key-input:focus {
+            outline: none;
+            border-color: #D4AF37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+        }
+
+        .premium-unlock-btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-transform: uppercase;
+        }
+
+        .premium-unlock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .premium-action-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #D4AF37 0%, #F3E5AB 50%, #AA7C11 100%);
+            border: none;
+            border-radius: 14px;
+            color: #000;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: var(--shadow-premium);
+        }
+
+        .premium-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .premium-success-msg {
+            color: var(--accent-green);
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            font-weight: 600;
+            animation: fadeIn 0.3s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -1537,6 +1711,35 @@
                     <div class="modal-value" id="modalWritingExample" style="font-style: italic;">"Modern transit networks did much to ameliorate congestion."</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- PREMIUM MONETIZATION PAYWALL OVERLAY -->
+    <div class="premium-modal" id="premiumPaywallModal">
+        <div class="premium-content">
+            <button class="close-modal" id="closePremiumModalBtn" style="color:var(--text-secondary);"><i class="fa-solid fa-xmark"></i></button>
+            <div class="premium-crown">👑</div>
+            <div class="premium-title">Upgrade to Premium</div>
+            <div class="premium-subtitle">Unlock unlimited realistic IELTS speaking call practice sessions.</div>
+            
+            <ul class="premium-bullets">
+                <li><i class="fa-solid fa-circle-check"></i> Unlimited IELTS Speaking Call Duration</li>
+                <li><i class="fa-solid fa-circle-check"></i> Dedicated Band 9.0 Diagnostic Feedback</li>
+                <li><i class="fa-solid fa-circle-check"></i> Advanced Neural British Accent (Dr. Sarah)</li>
+                <li><i class="fa-solid fa-circle-check"></i> Interactive Pronunciation Coach Engine</li>
+            </ul>
+
+            <!-- Settings: license key unlocking -->
+            <div class="premium-key-section">
+                <div class="premium-key-label">Activate Premium Key</div>
+                <div class="premium-input-wrap">
+                    <input type="text" class="premium-key-input" id="premiumLicenseKeyInput" placeholder="Enter license key..." autocomplete="off">
+                    <button class="premium-unlock-btn" id="activatePremiumKeyBtn">Activate</button>
+                </div>
+                <div class="premium-success-msg" id="premiumSuccessMsg">Premium Activated Successfully! 🚀</div>
+            </div>
+
+            <button class="premium-action-btn" onclick="window.open('https://lineazk.github.io/ielts-booster-pack/', '_blank')">Get Unlimited Premium Access</button>
         </div>
     </div>
 
@@ -2610,8 +2813,9 @@
 
             function connectToVoipWebSocket(url) {
                 try {
+                    const savedKey = localStorage.getItem("ielts_premium_key") || "";
                     const wsUrl = url.startsWith("ws://") || url.startsWith("wss://") ? url : `wss://${url.replace(/^https?:\/\//, '')}`;
-                    callWs = new WebSocket(`${wsUrl}/ws/call`);
+                    callWs = new WebSocket(`${wsUrl}/ws/call?key=${encodeURIComponent(savedKey)}`);
 
                     callWs.onopen = () => {
                         callActive = true;
@@ -2645,6 +2849,17 @@
                             // Play dynamic voiced notification when entering queue or when position updates
                             if (window.lastQueuePosition !== data.queue_position) {
                                 window.lastQueuePosition = data.queue_position;
+                                playVocabAudio(data.text);
+                            }
+                        } else if (data.type === "limit_reached") {
+                            endLiveCallSession();
+                            const pModal = document.getElementById("premiumPaywallModal");
+                            if (pModal) pModal.style.display = "flex";
+                            
+                            if (data.audio_url) {
+                                const secureUrl = "https://relying-film-und-arrange.trycloudflare.com" + data.audio_url;
+                                playVoipResponse(secureUrl, data.text, () => {});
+                            } else {
                                 playVocabAudio(data.text);
                             }
                         } else if (data.type === "error") {
@@ -3003,6 +3218,64 @@
                     voipSpeakerBtn.innerHTML = speakerOn
                         ? `<i class="fa-solid fa-volume-xmark"></i>`
                         : `<i class="fa-solid fa-volume-high"></i>`;
+                });
+            }
+
+
+            // -----------------------------------------------------------------
+            // PREMIUM MONETIZATION PAYWALL LOGIC
+            // -----------------------------------------------------------------
+            const premiumPaywallModal = document.getElementById("premiumPaywallModal");
+            const closePremiumModalBtn = document.getElementById("closePremiumModalBtn");
+            const premiumLicenseKeyInput = document.getElementById("premiumLicenseKeyInput");
+            const activatePremiumKeyBtn = document.getElementById("activatePremiumKeyBtn");
+            const premiumSuccessMsg = document.getElementById("premiumSuccessMsg");
+
+            // Auto-fill existing saved key in the input field
+            const savedKey = localStorage.getItem("ielts_premium_key");
+            if (savedKey && premiumLicenseKeyInput) {
+                premiumLicenseKeyInput.value = savedKey;
+            }
+
+            if (closePremiumModalBtn) {
+                closePremiumModalBtn.addEventListener("click", () => {
+                    premiumPaywallModal.style.display = "none";
+                });
+            }
+
+            // Simple validation matching backend preset keys
+            const VALID_PREMIUM_KEYS = ["IELTS_PREMIUM_2026", "DR_SARAH_UNLIMITED", "LINEAZK_MASTER_9"];
+
+            if (activatePremiumKeyBtn) {
+                activatePremiumKeyBtn.addEventListener("click", () => {
+                    const key = premiumLicenseKeyInput.value.trim();
+                    if (VALID_PREMIUM_KEYS.includes(key)) {
+                        localStorage.setItem("ielts_premium_key", key);
+                        premiumSuccessMsg.style.display = "block";
+                        premiumSuccessMsg.textContent = "Premium Activated Successfully! 🚀";
+                        premiumSuccessMsg.style.color = "var(--accent-green)";
+                        
+                        setTimeout(() => {
+                            premiumPaywallModal.style.display = "none";
+                            premiumSuccessMsg.style.display = "none";
+                        }, 1800);
+                    } else if (key === "") {
+                        localStorage.removeItem("ielts_premium_key");
+                        premiumSuccessMsg.style.display = "block";
+                        premiumSuccessMsg.textContent = "Cleared Premium key.";
+                        premiumSuccessMsg.style.color = "var(--text-secondary)";
+                        setTimeout(() => { premiumSuccessMsg.style.display = "none"; }, 1500);
+                    } else {
+                        premiumSuccessMsg.style.display = "block";
+                        premiumSuccessMsg.textContent = "Invalid license key! Please try again.";
+                        premiumSuccessMsg.style.color = "#ff3b30";
+                        
+                        // Shake the input for a feedback effect
+                        premiumLicenseKeyInput.style.borderColor = "#ff3b30";
+                        setTimeout(() => {
+                            premiumLicenseKeyInput.style.borderColor = "rgba(212, 175, 55, 0.2)";
+                        }, 1000);
+                    }
                 });
             }
 
