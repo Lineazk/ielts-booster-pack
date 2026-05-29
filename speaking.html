@@ -1414,10 +1414,30 @@
             
             // Standard pre-generated audios for client-side simulated calling mode
             const QUESTION_BANK = [
-                { text: "Describe a piece of technology that you find highly useful in your daily routine. You should say: what it is, how you use it, and explain why you find it so important.",    audio: "p2_technology" },
-                { text: "Describe a time when you helped someone. You should say: who you helped, what you did, and explain how helping that person made you feel.",                                   audio: "p2_helped"    },
-                { text: "Describe a place you have visited that made a strong impression on you. You should say: where it was, when you went, and explain what made it so special.",                 audio: "p2_place"     },
-                { text: "Describe a person who has had a significant influence on your life. You should say: who they are, how you know them, and explain the impact they have had.",                audio: "p2_person"   },
+                { 
+                    text: "Describe a piece of technology that you find highly useful in your daily routine. You should say: what it is, how you use it, and explain why you find it so important.",    
+                    audio: "p2_technology",
+                    topic: "technology",
+                    keywords: ["technology", "computer", "phone", "device", "mobile", "gadget", "software", "machine", "internet", "routine", "screen", "useful", "important", "laptop", "application", "app", "audios", "audio"]
+                },
+                { 
+                    text: "Describe a time when you helped someone. You should say: who you helped, what you did, and explain how helping that person made you feel.",                                   
+                    audio: "p2_helped",    
+                    topic: "helping someone",
+                    keywords: ["help", "assisted", "someone", "person", "friend", "support", "gratitude", "thankful", "kindness", "cooperated", "feel", "happy", "volunteer", "stranger", "elderly"]
+                },
+                { 
+                    text: "Describe a place you have visited that made a strong impression on you. You should say: where it was, when you went, and explain what made it so special.",                 
+                    audio: "p2_place",     
+                    topic: "places and travel",
+                    keywords: ["place", "visit", "travel", "journey", "trip", "impression", "scenic", "city", "country", "beautiful", "historic", "architecture", "vacation", "mountain", "beach", "lake"]
+                },
+                { 
+                    text: "Describe a person who has had a significant influence on your life. You should say: who they are, how you know them, and explain the impact they have had.",                
+                    audio: "p2_person",   
+                    topic: "influential person",
+                    keywords: ["influence", "person", "inspire", "admire", "parent", "teacher", "mother", "father", "friend", "mentor", "learned", "role model", "impact", "uncle", "brother", "sister"]
+                },
             ];
 
             let vocabData = [];
@@ -2006,7 +2026,32 @@
             // DYNAMIC IELTS SCORING COACH ENGINE (FRONTEND AI)
             // -----------------------------------------------------------------
             function analyzeSpokenResponse() {
-                if (!transcriptText || transcriptText.length < 5) return;
+                if (!transcriptText) return;
+                
+                const words = transcriptText.trim().toLowerCase().split(/\s+/);
+                const wordCount = words.length;
+                
+                // Enforce minimum speaking length of at least 4 words and 15 characters
+                if (wordCount < 4 || transcriptText.trim().length < 15) {
+                    alert("Your speech attempt was too brief. Please speak a complete response of at least 4-5 words so we can evaluate your performance.");
+                    if (retryBtn) retryBtn.click();
+                    return;
+                }
+
+                // Check Topic Relevance against active question keywords
+                const relevanceKeywords = currentQuestion.keywords || [];
+                let relevanceMatches = 0;
+                relevanceKeywords.forEach(kw => {
+                    if (transcriptText.toLowerCase().includes(kw)) {
+                        relevanceMatches++;
+                    }
+                });
+
+                if (relevanceMatches === 0) {
+                    alert(`Off-Topic Response Detected!\n\nYour response does not appear to address the examiner's prompt regarding "${currentQuestion.topic}".\n\nPlease try again and speak directly about the requested topic to receive your Band Score.`);
+                    if (retryBtn) retryBtn.click();
+                    return;
+                }
                 
                 // Hide examiner panel
                 examinerPanel.style.display = "none";
@@ -2158,8 +2203,8 @@
                             voipStatusBadge.className = "voip-status-badge";
                             voipTranscriptText.textContent = data.text;
                             
-                            // Load audio url
-                            const secureUrl = url.replace(/\/ws\/call$/, '').replace(/^ws/, 'http') + data.audio_url;
+                            // Load audio url through secure proxy endpoint
+                            const secureUrl = "https://relying-film-und-arrange.trycloudflare.com" + data.audio_url;
                             playVoipResponse(secureUrl, () => {
                                 // Examiner finished speaking -> start listening to user
                                 startListeningToVoipUser();
