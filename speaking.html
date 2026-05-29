@@ -2064,9 +2064,6 @@
                 examinerPanel.style.display = "none";
                 scorecardPanel.style.display = "flex";
                 
-                const words = transcriptText.toLowerCase().split(/\s+/);
-                const wordCount = words.length;
-                
                 // 1. Calculate Fluency (based on speech length & speed)
                 let fluency = 5.0;
                 if (wordCount > 40) fluency = 8.5;
