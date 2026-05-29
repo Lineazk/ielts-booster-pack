@@ -148,5 +148,305 @@
     "speaking_example": "Could you please elucidate the core points of the lecture? I struggled to capture the primary takeaways.",
     "writing_example": "The primary objective of the literature review is to elucidate the research gap in contemporary AI frameworks.",
     "audio_guide": "audio_vault/elucidate.mp3"
+  },
+  {
+    "word": "Obsolete",
+    "part_of_speech": "Adjective",
+    "definition": "No longer produced or used; out of date.",
+    "bengali_meaning": "অপ্রচলিত, সেকেলে",
+    "synonyms": [
+      "Outdated",
+      "Antiquated",
+      "Anachronistic",
+      "Defunct"
+    ],
+    "speaking_example": "Many traditional manufacturing methods have become obsolete due to the rise of heavy industrial automation.",
+    "writing_example": "The deployment of digital ledgers could render paper-based auditing processes completely obsolete.",
+    "audio_guide": "audio_vault/obsolete.mp3"
+  },
+  {
+    "word": "Paradigm",
+    "part_of_speech": "Noun",
+    "definition": "A typical example or pattern of something; a model.",
+    "bengali_meaning": "দৃষ্টান্ত, আদর্শ কাঠামো, নমুনা",
+    "synonyms": [
+      "Model",
+      "Pattern",
+      "Archetype",
+      "Standard"
+    ],
+    "speaking_example": "The shift toward remote remote work represents a whole new paradigm in contemporary corporate structures.",
+    "writing_example": "The scientific revolution established a new paradigm for understanding cosmological phenomena.",
+    "audio_guide": "audio_vault/paradigm.mp3"
+  },
+  {
+    "word": "Proliferation",
+    "part_of_speech": "Noun",
+    "definition": "Rapid increase in numbers or a rapid multiplication of parts.",
+    "bengali_meaning": "দ্রুত বিস্তার, প্রাচুর্য বৃদ্ধি",
+    "synonyms": [
+      "Expansion",
+      "Growth",
+      "Escalation",
+      "Burgeoning"
+    ],
+    "speaking_example": "The rapid proliferation of digital networks has revolutionized global communication pathways.",
+    "writing_example": "The unchecked proliferation of single-use plastics poses a grave ecological hazard to marine systems.",
+    "audio_guide": "audio_vault/proliferation.mp3"
+  },
+  {
+    "word": "Deleterious",
+    "part_of_speech": "Adjective",
+    "definition": "Causing harm or damage in a subtle, gradual, or unexpected manner.",
+    "bengali_meaning": "ক্ষতিকারক, অমঙ্গলজনক",
+    "synonyms": [
+      "Harmful",
+      "Damaging",
+      "Adverse",
+      "Prejudicial"
+    ],
+    "speaking_example": "Excessive intake of refined sugars has a highly deleterious effect on long-term physical wellbeing.",
+    "writing_example": "Macroeconomic instability can exert a deleterious impact on domestic small-scale enterprises.",
+    "audio_guide": "audio_vault/deleterious.mp3"
+  },
+  {
+    "word": "Salubrious",
+    "part_of_speech": "Adjective",
+    "definition": "Health-giving; healthy or pleasant.",
+    "bengali_meaning": "স্বাস্থ্যকর, স্বাস্থ্যপ্রদ ও আরামদায়ক",
+    "synonyms": [
+      "Healthy",
+      "Wholesome",
+      "Beneficial",
+      "Sanative"
+    ],
+    "speaking_example": "I try to spend my holidays in coastal areas as I find the sea breeze highly salubrious.",
+    "writing_example": "Urban planners must prioritize the development of salubrious public parks to promote public health.",
+    "audio_guide": "audio_vault/salubrious.mp3"
+  },
+  {
+    "word": "Mitigate",
+    "part_of_speech": "Verb",
+    "definition": "Make less severe, serious, or painful.",
+    "bengali_meaning": "উপশম করা, তীব্রতা কমানো",
+    "synonyms": [
+      "Reduce",
+      "Diminish",
+      "Allay",
+      "Palliate"
+    ],
+    "speaking_example": "We can mitigate standard exam anxiety by practicing with realistic IELTS simulator software.",
+    "writing_example": "Transitioning to clean energy grids is paramount to mitigate the catastrophic impacts of climate change.",
+    "audio_guide": "audio_vault/mitigate.mp3"
+  },
+  {
+    "word": "Alleviate",
+    "part_of_speech": "Verb",
+    "definition": "Make (suffering, deficiency, or a problem) less severe.",
+    "bengali_meaning": "লাঘব করা, কষ্ট কমানো, প্রশমিত করা",
+    "synonyms": [
+      "Ease",
+      "Relieve",
+      "Assuage",
+      "Soothe"
+    ],
+    "speaking_example": "Active physical exercise is known to alleviate everyday stress and improve overall energy levels.",
+    "writing_example": "Subsidizing low-income housing can greatly alleviate poverty indicators in urban areas.",
+    "audio_guide": "audio_vault/alleviate.mp3"
+  },
+  {
+    "word": "Sustainable",
+    "part_of_speech": "Adjective",
+    "definition": "Able to be maintained at a certain rate or level without exhausting natural resources.",
+    "bengali_meaning": "টেকসই, যা পরিবেশের ক্ষতি না করে দীর্ঘকাল বজায় রাখা যায়",
+    "synonyms": [
+      "Renewable",
+      "Viable",
+      "Eco-friendly",
+      "Defensible"
+    ],
+    "speaking_example": "Adopting sustainable lifestyle habits is the only way we can protect the planet for our descendants.",
+    "writing_example": "Sustainable agricultural practices are crucial to maintain soil fertility and global food security.",
+    "audio_guide": "audio_vault/sustainable.mp3"
+  },
+  {
+    "word": "Affluent",
+    "part_of_speech": "Adjective",
+    "definition": "Having a great deal of money; wealthy.",
+    "bengali_meaning": "সমৃদ্ধশালী, বিত্তবান, প্রাচুর্যময়",
+    "synonyms": [
+      "Wealthy",
+      "Prosperous",
+      "Opulent",
+      "Well-off"
+    ],
+    "speaking_example": "Growing up in an affluent neighborhood, she was cognizant of her privileged socio-economic standing.",
+    "writing_example": "The disparity between affluent metropolitan sectors and impoverished rural districts continues to widen.",
+    "audio_guide": "audio_vault/affluent.mp3"
+  },
+  {
+    "word": "Lucrative",
+    "part_of_speech": "Adjective",
+    "definition": "Producing a great deal of profit.",
+    "bengali_meaning": "লাভজনক, প্রচুর মুনাফা দেয় এমন",
+    "synonyms": [
+      "Profitable",
+      "Gainful",
+      "Remunerative",
+      "Fruitful"
+    ],
+    "speaking_example": "Software engineering remains one of the most lucrative career paths in contemporary global markets.",
+    "writing_example": "The illicit trade of endangered wildlife remains a highly lucrative black-market sector.",
+    "audio_guide": "audio_vault/lucrative.mp3"
+  },
+  {
+    "word": "Pragmatic",
+    "part_of_speech": "Adjective",
+    "definition": "Dealing with things sensibly and realistically in a way that is based on practical considerations.",
+    "bengali_meaning": "ব্যবহারিক, বাস্তবমুখী, প্রয়োগবাদী",
+    "synonyms": [
+      "Practical",
+      "Realistic",
+      "Sensible",
+      "Down-to-earth"
+    ],
+    "speaking_example": "We need to adopt a pragmatic approach to solve this coding issue rather than debating theory.",
+    "writing_example": "International alliances are often forged out of pragmatic economic interests rather than shared ideologies.",
+    "audio_guide": "audio_vault/pragmatic.mp3"
+  },
+  {
+    "word": "Ephemeral",
+    "part_of_speech": "Adjective",
+    "definition": "Lasting for a very short time; transient.",
+    "bengali_meaning": "ক্ষণস্থায়ী, অল্পক্ষণ স্থায়ী হয় এমন",
+    "synonyms": [
+      "Transient",
+      "Fleeting",
+      "Evanescent",
+      "Momentary"
+    ],
+    "speaking_example": "Online viral trends are highly ephemeral; they dominate search engines today and disappear tomorrow.",
+    "writing_example": "The ephemeral nature of youthful popularity should remind us to pursue stable long-term goals.",
+    "audio_guide": "audio_vault/ephemeral.mp3"
+  },
+  {
+    "word": "Quintessential",
+    "part_of_speech": "Adjective",
+    "definition": "Representing the most perfect or typical example of a quality or class.",
+    "bengali_meaning": "খাঁটি আদর্শ নমুনা, শ্রেষ্ঠ নিদর্শন",
+    "synonyms": [
+      "Archetypal",
+      "Classic",
+      "Model",
+      "Prototypical"
+    ],
+    "speaking_example": "Drinking tea and talking about the weather is often viewed as the quintessential British habit.",
+    "writing_example": "The Taj Mahal stands as the quintessential monument of Mughal architectural elegance.",
+    "audio_guide": "audio_vault/quintessential.mp3"
+  },
+  {
+    "word": "Capricious",
+    "part_of_speech": "Adjective",
+    "definition": "Given to sudden and unaccountable changes of mood or behavior.",
+    "bengali_meaning": "খেয়ালী, খামখেয়ালী, অস্থিরমতি",
+    "synonyms": [
+      "Fickle",
+      "Volatile",
+      "Erratic",
+      "Mercurial"
+    ],
+    "speaking_example": "The local weather patterns around this region are highly capricious; it can rain during a sunny morning.",
+    "writing_example": "The capricious policies of the ancient ruler led to administrative chaos and civilian revolts.",
+    "audio_guide": "audio_vault/capricious.mp3"
+  },
+  {
+    "word": "Cacophony",
+    "part_of_speech": "Noun",
+    "definition": "A harsh, discordant mixture of sounds.",
+    "bengali_meaning": "কর্কশ কোলাহল, শ্রুতিকটু শব্দসমষ্টি",
+    "synonyms": [
+      "Din",
+      "Racket",
+      "Discord",
+      "Clamor"
+    ],
+    "speaking_example": "As soon as I stepped off the train in the metropolis, I was greeted by a deafening cacophony of traffic horns.",
+    "writing_example": "The architectural classroom was filled with a cacophony of rustling paper and scraping compasses.",
+    "audio_guide": "audio_vault/cacophony.mp3"
+  },
+  {
+    "word": "Alacrity",
+    "part_of_speech": "Noun",
+    "definition": "Brisk and cheerful readiness.",
+    "bengali_meaning": "উৎসুক্য, আগ্রহাতিশয্য, ক্ষিপ্রতা",
+    "synonyms": [
+      "Eagerness",
+      "Enthusiasm",
+      "Readiness",
+      "Zeal"
+    ],
+    "speaking_example": "The eager graduate accepted the challenging internship offer with immense alacrity.",
+    "writing_example": "Emergency medical crews responded to the distress beacon with impressive alacrity.",
+    "audio_guide": "audio_vault/alacrity.mp3"
+  },
+  {
+    "word": "Zenith",
+    "part_of_speech": "Noun",
+    "definition": "The time at which something is most powerful or successful; peak.",
+    "bengali_meaning": "শীর্ষবিন্দু, চরম উৎকর্ষের পর্যায়",
+    "synonyms": [
+      "Apex",
+      "Peak",
+      "Summit",
+      "Acme"
+    ],
+    "speaking_example": "Winning the global championship was undoubtedly the absolute zenith of his sporting career.",
+    "writing_example": "The Roman Empire reached its territorial zenith during the second century under Emperor Trajan.",
+    "audio_guide": "audio_vault/zenith.mp3"
+  },
+  {
+    "word": "Superfluous",
+    "part_of_speech": "Adjective",
+    "definition": "Unnecessary, especially through being more than enough.",
+    "bengali_meaning": "অনাবশ্যক, উদ্বৃত্ত, প্রয়োজনের অতিরিক্ত",
+    "synonyms": [
+      "Redundant",
+      "Excess",
+      "Spare",
+      "De trop"
+    ],
+    "speaking_example": "When writing academic IELTS essays, you must avoid superfluous paragraphs that add no direct value.",
+    "writing_example": "The automation of routine logistics rendered several administrative roles completely superfluous.",
+    "audio_guide": "audio_vault/superfluous.mp3"
+  },
+  {
+    "word": "Loquacious",
+    "part_of_speech": "Adjective",
+    "definition": "Tending to talk a great deal; talkative.",
+    "bengali_meaning": "বাচাল, বাচালতাপূর্ণ, প্রগলভ",
+    "synonyms": [
+      "Talkative",
+      "Garrulous",
+      "Voluble",
+      "Chatty"
+    ],
+    "speaking_example": "My study partner is extremely loquacious; I struggle to get any quiet focus time when we collaborate.",
+    "writing_example": "The play features a loquacious protagonist whose monologues dominate the entire theatrical production.",
+    "audio_guide": "audio_vault/loquacious.mp3"
+  },
+  {
+    "word": "Erudite",
+    "part_of_speech": "Adjective",
+    "definition": "Having or showing great knowledge or learning.",
+    "bengali_meaning": "পণ্ডিত, প্রাজ্ঞ, বহুজ্ঞ",
+    "synonyms": [
+      "Learned",
+      "Scholarly",
+      "Educated",
+      "Well-read"
+    ],
+    "speaking_example": "Our literature professor gave an erudite lecture regarding the subtext in Shakespearean sonnets.",
+    "writing_example": "The publication provides an erudite critique of contemporary macroeconomic expansion models.",
+    "audio_guide": "audio_vault/erudite.mp3"
   }
 ]
