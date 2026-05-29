@@ -2229,7 +2229,7 @@
                             
                             // Load audio url through secure proxy endpoint
                             const secureUrl = "https://relying-film-und-arrange.trycloudflare.com" + data.audio_url;
-                            playVoipResponse(secureUrl, () => {
+                            playVoipResponse(secureUrl, data.text, () => {
                                 // Examiner finished speaking -> start listening to user
                                 startListeningToVoipUser();
                             });
@@ -2256,7 +2256,7 @@
                 }
             }
 
-            function playVoipResponse(url, onEnd) {
+            function playVoipResponse(url, text, onEnd) {
                 if (voipResponseAudio) {
                     voipResponseAudio.pause();
                 }
@@ -2265,7 +2265,30 @@
                 
                 voipResponseAudio = new Audio(url);
                 let endedExecuted = false;
-                const triggerEnd = () => {
+                
+                const triggerFallback = () => {
+                    if (endedExecuted) return;
+                    endedExecuted = true;
+                    
+                    if (window.speechSynthesis) {
+                        window.speechSynthesis.cancel();
+                        const utt = new SpeechSynthesisUtterance(text);
+                        utt.lang = "en-GB";
+                        utt.rate = 0.9;
+                        utt.onend = () => {
+                            voipIsSpeaking = false;
+                            stopVoipAvWaves();
+                            if (onEnd) onEnd();
+                        };
+                        window.speechSynthesis.speak(utt);
+                    } else {
+                        voipIsSpeaking = false;
+                        stopVoipAvWaves();
+                        if (onEnd) onEnd();
+                    }
+                };
+
+                voipResponseAudio.onended = () => {
                     if (endedExecuted) return;
                     endedExecuted = true;
                     voipIsSpeaking = false;
@@ -2273,15 +2296,14 @@
                     if (onEnd) onEnd();
                 };
                 
-                voipResponseAudio.onended = () => {
-                    triggerEnd();
-                };
                 voipResponseAudio.onerror = () => {
-                    triggerEnd();
+                    console.warn("VoIP audio failed to load/play, falling back to SpeechSynthesis");
+                    triggerFallback();
                 };
+                
                 voipResponseAudio.play().catch(err => {
-                    console.warn("VoIP audio play blocked:", err);
-                    triggerEnd();
+                    console.warn("VoIP audio play blocked by browser, falling back to SpeechSynthesis:", err);
+                    triggerFallback();
                 });
             }
 
