@@ -2589,6 +2589,7 @@
             async function startLiveVoipCall() {
                 unlockBrowserAudio();
                 transcriptText = "";
+                window.hasSpokenBusy = false; // Reset busy voice state
                 const tunnelUrl = "relying-film-und-arrange.trycloudflare.com";
 
                 voipOverlay.style.display = "flex";
@@ -2639,6 +2640,12 @@
                             voipStatusBadge.textContent = "🟠 BUSY — QUEUING";
                             voipTranscriptText.innerHTML = `<span style="color:var(--accent-gold); font-weight:600;"><i class="fa-solid fa-hourglass-half fa-spin"></i> ${data.text}</span>`;
                             stopVoipAvWaves();
+                            
+                            // Play dynamic voiced notification once when entering queue
+                            if (!window.hasSpokenBusy) {
+                                window.hasSpokenBusy = true;
+                                playVocabAudio("All AI speaking examiners are currently conducting interviews. Please wait on the line.");
+                            }
                         } else if (data.type === "error") {
                             voipStatusBadge.className = "voip-status-badge error";
                             voipStatusBadge.textContent = "❌ ERROR";
