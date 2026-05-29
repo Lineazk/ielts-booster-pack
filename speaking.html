@@ -1554,16 +1554,37 @@
                         currentAudio = null;
                     }
                     
-                    // Fallback to browser standard speech synthesis
-                    if (window.speechSynthesis) {
-                        window.speechSynthesis.cancel(); // Prevent overlaps
-                        const utt = new SpeechSynthesisUtterance(word);
-                        utt.lang = "en-GB";
-                        utt.onend = () => { if (onEnd) onEnd(); };
-                        window.speechSynthesis.speak(utt);
-                    } else {
-                        if (onEnd) onEnd();
-                    }
+                    // Route through our premium VDS edge-tts neural voice instead of low-quality SpeechSynthesis!
+                    const premiumTtsUrl = `https://relying-film-und-arrange.trycloudflare.com/tts?text=${encodeURIComponent(word)}&voice=en-GB-SoniaNeural`;
+                    const fallbackAudio = new Audio(premiumTtsUrl);
+                    currentAudio = fallbackAudio;
+                    
+                    fallbackAudio.onended = () => { if (onEnd) onEnd(); };
+                    fallbackAudio.onerror = () => {
+                        // Ultimate fail-safe to browser speech synthesis
+                        if (window.speechSynthesis) {
+                            window.speechSynthesis.cancel();
+                            const utt = new SpeechSynthesisUtterance(word);
+                            utt.lang = "en-GB";
+                            utt.rate = 0.9;
+                            utt.onend = () => { if (onEnd) onEnd(); };
+                            window.speechSynthesis.speak(utt);
+                        } else {
+                            if (onEnd) onEnd();
+                        }
+                    };
+                    fallbackAudio.play().catch(() => {
+                        if (window.speechSynthesis) {
+                            window.speechSynthesis.cancel();
+                            const utt = new SpeechSynthesisUtterance(word);
+                            utt.lang = "en-GB";
+                            utt.rate = 0.9;
+                            utt.onend = () => { if (onEnd) onEnd(); };
+                            window.speechSynthesis.speak(utt);
+                        } else {
+                            if (onEnd) onEnd();
+                        }
+                    });
                 };
 
                 audio.onended = () => { 
@@ -1588,7 +1609,6 @@
                     currentAudio.pause();
                     currentAudio = null;
                 }
-                // Pre-generated exam prompt MP3 served from canvas folder
                 const src = `${EXAMINER_AUDIO_BASE}${filename}.mp3`;
                 const audio = new Audio(src);
                 currentAudio = audio;
@@ -1602,18 +1622,38 @@
                         currentAudio = null;
                     }
                     
-                    // fallback standard synthesis
-                    if (window.speechSynthesis) {
-                        window.speechSynthesis.cancel(); // Prevent overlaps
-                        const text = examinerSpeech.textContent;
-                        const utt = new SpeechSynthesisUtterance(text);
-                        utt.lang = "en-GB";
-                        utt.rate = 0.9;
-                        utt.onend = () => { if (onEnd) onEnd(); };
-                        window.speechSynthesis.speak(utt);
-                    } else {
-                        if (onEnd) onEnd();
-                    }
+                    // Route through our premium VDS edge-tts neural voice instead of low-quality SpeechSynthesis!
+                    const textToSpeak = examinerSpeech.textContent;
+                    const premiumTtsUrl = `https://relying-film-und-arrange.trycloudflare.com/tts?text=${encodeURIComponent(textToSpeak)}&voice=en-GB-SoniaNeural`;
+                    const fallbackAudio = new Audio(premiumTtsUrl);
+                    currentAudio = fallbackAudio;
+                    
+                    fallbackAudio.onended = () => { if (onEnd) onEnd(); };
+                    fallbackAudio.onerror = () => {
+                        // Ultimate fail-safe
+                        if (window.speechSynthesis) {
+                            window.speechSynthesis.cancel();
+                            const utt = new SpeechSynthesisUtterance(textToSpeak);
+                            utt.lang = "en-GB";
+                            utt.rate = 0.9;
+                            utt.onend = () => { if (onEnd) onEnd(); };
+                            window.speechSynthesis.speak(utt);
+                        } else {
+                            if (onEnd) onEnd();
+                        }
+                    };
+                    fallbackAudio.play().catch(() => {
+                        if (window.speechSynthesis) {
+                            window.speechSynthesis.cancel();
+                            const utt = new SpeechSynthesisUtterance(textToSpeak);
+                            utt.lang = "en-GB";
+                            utt.rate = 0.9;
+                            utt.onend = () => { if (onEnd) onEnd(); };
+                            window.speechSynthesis.speak(utt);
+                        } else {
+                            if (onEnd) onEnd();
+                        }
+                    });
                 };
 
                 audio.onended = () => { 
@@ -2030,11 +2070,88 @@
             }
 
             // -----------------------------------------------------------------
-            // DYNAMIC IELTS SCORING COACH ENGINE (FRONTEND AI)
+            // DYNAMIC IELTS SCORING COACH ENGINE (VDS AI-VERIFIED & FALLBACK)
             // -----------------------------------------------------------------
-            function analyzeSpokenResponse() {
+            async function analyzeSpokenResponse() {
                 if (!transcriptText) return;
                 
+                // Show loading state
+                simStatus.textContent = "AI ASSESSMENT IN PROGRESS...";
+                simStatus.style.color = "var(--accent-gold)";
+                
+                realtimeTranscriptContainer.style.display = "block";
+                realtimeTranscriptText.innerHTML = `<span style="color:var(--accent-cyan); font-weight: 600;"><i class="fa-solid fa-spinner fa-spin"></i> Directing voice answer to VDS AI... verifying topic relevance and calculating strictly-aligned IELTS band scores.</span>`;
+                
+                try {
+                    const response = await fetch("https://relying-film-und-arrange.trycloudflare.com/grade", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            transcript: transcriptText,
+                            question: currentQuestion.text,
+                            topic: currentQuestion.topic
+                        })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.is_off_topic) {
+                        alert(`Off-Topic Response Detected!\n\nThe AI Examiner noted: "${data.off_topic_reason}"\n\nPlease try again and speak directly about the requested topic ("${currentQuestion.topic}") to receive a band score.`);
+                        if (retryBtn) retryBtn.click();
+                        return;
+                    }
+                    
+                    // Display scores and feedback from VDS AI
+                    examinerPanel.style.display = "none";
+                    scorecardPanel.style.display = "flex";
+                    
+                    scoreFluency.textContent = Number(data.scores.fluency).toFixed(1);
+                    scoreLexical.textContent = Number(data.scores.lexical).toFixed(1);
+                    scoreGrammar.textContent = Number(data.scores.grammar).toFixed(1);
+                    scoreOverall.textContent = Number(data.scores.overall).toFixed(1);
+                    
+                    feedbackText.textContent = data.feedback;
+                    
+                    // Display pronunciation vocabulary training list
+                    struggledWordsList.innerHTML = "";
+                    struggledWordsSection.style.display = "block";
+                    
+                    // Grab 3 random dictionary words for them to repeat
+                    const shuffled = [...vocabData].sort(() => 0.5 - Math.random());
+                    shuffled.slice(0, 3).forEach(w => {
+                        const card = document.createElement("div");
+                        card.style.background = "rgba(255,255,255,0.03)";
+                        card.style.border = "1px solid rgba(255,255,255,0.06)";
+                        card.style.borderRadius = "12px";
+                        card.style.padding = "12px 16px";
+                        card.style.display = "flex";
+                        card.style.justifyContent = "space-between";
+                        card.style.alignItems = "center";
+                        
+                        card.innerHTML = `
+                            <div>
+                                <span style="font-weight:700; color:#fff">${w.word}</span><br>
+                                <small style="color:var(--text-secondary)">${w.bengali_meaning}</small>
+                            </div>
+                            <button class="card-btn" style="padding:6px 12px; font-size:12px;" onclick="window.playVococ(${JSON.stringify(w.word)})">
+                                <i class="fa-solid fa-volume-high"></i> Play
+                            </button>
+                        `;
+                        struggledWordsList.appendChild(card);
+                    });
+                    
+                } catch (err) {
+                    console.warn("AI Grading server offline, running fallback evaluator:", err);
+                    runLocalFallbackGrading();
+                }
+            }
+
+            // Expose globally so inline onclick works
+            window.playVococ = (word) => {
+                unlockBrowserAudio();
+                playVocabAudio(word);
+            };
+
+            function runLocalFallbackGrading() {
                 const words = transcriptText.trim().toLowerCase().split(/\s+/);
                 const wordCount = words.length;
                 
@@ -2085,7 +2202,7 @@
                 else if (lexicalMatches >= 2) lexical = 7.5;
                 else if (lexicalMatches >= 1) lexical = 6.5;
                 
-                // 3. Grammatical Range (sentence length complexity markers)
+                // 3. Grammar (sentence length complexity markers)
                 let grammar = 6.0;
                 if (transcriptText.includes(",") || transcriptText.includes("because") || transcriptText.includes("which") || transcriptText.includes("although")) {
                     grammar = 8.0;
@@ -2117,7 +2234,6 @@
                 struggledWordsSection.style.display = "block";
                 
                 // Grab 3 random dictionary words for them to repeat
-                const targetWords = [];
                 const shuffled = [...vocabData].sort(() => 0.5 - Math.random());
                 shuffled.slice(0, 3).forEach(w => {
                     const card = document.createElement("div");
@@ -2134,7 +2250,7 @@
                             <span style="font-weight:700; color:#fff">${w.word}</span><br>
                             <small style="color:var(--text-secondary)">${w.bengali_meaning}</small>
                         </div>
-                        <button class="card-btn" style="padding:6px 12px; font-size:12px;" onclick="window.playVocab(${JSON.stringify(w.word)})">
+                        <button class="card-btn" style="padding:6px 12px; font-size:12px;" onclick="window.playVococ(${JSON.stringify(w.word)})">
                             <i class="fa-solid fa-volume-high"></i> Play
                         </button>
                     `;
