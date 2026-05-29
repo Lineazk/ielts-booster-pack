@@ -2634,6 +2634,11 @@
                             voipStatusBadge.className = "voip-status-badge processing";
                             voipStatusBadge.textContent = "⚙ PROCESSING";
                             voipTranscriptText.innerHTML = `<span class="voip-transcript-user">You: "${data.text}"</span>`;
+                        } else if (data.type === "line_busy") {
+                            voipStatusBadge.className = "voip-status-badge dialing";
+                            voipStatusBadge.textContent = "🟠 BUSY — QUEUING";
+                            voipTranscriptText.innerHTML = `<span style="color:var(--accent-gold); font-weight:600;"><i class="fa-solid fa-hourglass-half fa-spin"></i> ${data.text}</span>`;
+                            stopVoipAvWaves();
                         } else if (data.type === "error") {
                             voipStatusBadge.className = "voip-status-badge error";
                             voipStatusBadge.textContent = "❌ ERROR";
