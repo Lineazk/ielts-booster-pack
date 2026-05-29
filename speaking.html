@@ -1216,6 +1216,8 @@
             // -----------------------------------------------------------------
             // GLOBALS & STATE
             // -----------------------------------------------------------------
+            const VOICE_SERVER = "http://77.90.8.131:8765"; // edge-tts Microsoft Neural Voice server
+
             let vocabData = [];
             let currentSpellingWord = null;
             let spellingScoreCorrect = 0;
@@ -1227,9 +1229,17 @@
             let recordingStartTime = 0;
             let recordingTimerInterval = null;
             let transcriptText = "";
-            
+            let currentExaminerPrompt = "";
+            let currentAudio = null; // currently playing Audio object
+
+            // Calling Mode State
+            let callWs = null;
+            let callActive = false;
+            let mediaRecorder = null;
+            let callAudioChunks = [];
+
             // Band 9 British Examiner Configs
-            const EXAMINER_PROMPT = "Describe a piece of technology that you find highly ubiquitous in your daily routine.";
+            const EXAMINER_PROMPT = "Describe a piece of technology that you find highly useful in your daily routine. You should say: what it is, how you use it, and explain why you find it so important.";
             const EXAMINER_KEYWORDS = ["technology", "ubiquitous", "gadget", "gadgets", "computer", "computers", "phone", "phones", "routine", "daily", "internet", "device", "devices", "digital", "appliances", "app", "application", "software"];
 
             // -----------------------------------------------------------------
@@ -1293,91 +1303,71 @@
             const faqAccordions = document.querySelectorAll(".faq-accordion");
 
             // -----------------------------------------------------------------
-            // SPEECH SYNTHESIS UTILITY (Band 9 British Voice)
+            // VOICE ENGINE — Microsoft Neural (edge-tts) via VDS server
             // -----------------------------------------------------------------
-            // Chrome Bug Fix: long utterances silently stop.
-            // Solution: split into sentence chunks + keep-alive interval.
-            let _synthKeepAlive = null;
 
-            function getBritishVoice() {
-                const voices = window.speechSynthesis.getVoices();
-                return voices.find(v => v.lang === "en-GB" || v.lang.startsWith("en-GB")) ||
-                       voices.find(v => v.lang.startsWith("en")) ||
-                       voices[0] || null;
-            }
-
-            function speakChunks(chunks, index, onEndCallback) {
-                if (index >= chunks.length) {
-                    clearInterval(_synthKeepAlive);
-                    _synthKeepAlive = null;
-                    if (onEndCallback) onEndCallback();
-                    return;
+            /**
+             * Play any text using the server-side Microsoft Neural British voice.
+             * Falls back to browser TTS only if server is unreachable.
+             * @param {string} text  - The text to speak
+             * @param {string} type  - "examiner" | "coach" | "word"
+             * @param {function} onEnd - Optional callback when audio finishes
+             */
+            async function speakText(text, onEnd = null, type = "examiner") {
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.src = "";
+                    currentAudio = null;
                 }
-                const utterance = new SpeechSynthesisUtterance(chunks[index]);
-                const voice = getBritishVoice();
-                if (voice) utterance.voice = voice;
-                utterance.rate = 0.88;
-                utterance.pitch = 1.0;
-                utterance.onend = () => speakChunks(chunks, index + 1, onEndCallback);
-                utterance.onerror = () => speakChunks(chunks, index + 1, onEndCallback);
-                window.speechSynthesis.speak(utterance);
+
+                const url = `${VOICE_SERVER}/tts?text=${encodeURIComponent(text)}&type=${type}`;
+
+                try {
+                    const audio = new Audio(url);
+                    currentAudio = audio;
+                    audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
+                    audio.onerror = () => {
+                        // Fallback to browser TTS if server unreachable
+                        console.warn("Voice server unavailable, using browser fallback");
+                        browserSpeakFallback(text, onEnd);
+                    };
+                    await audio.play();
+                } catch (err) {
+                    console.warn("Audio play failed:", err);
+                    browserSpeakFallback(text, onEnd);
+                }
             }
 
-            function speakText(text, onEndCallback = null) {
+            /** Browser TTS fallback (used only if server is down) */
+            function browserSpeakFallback(text, onEnd) {
                 if (!window.speechSynthesis) return;
                 window.speechSynthesis.cancel();
-                clearInterval(_synthKeepAlive);
-
-                // Split on sentence boundaries to avoid Chrome's silent cutoff bug
-                const chunks = text.match(/[^.!?]+[.!?]*/g) || [text];
-                const cleanChunks = chunks.map(c => c.trim()).filter(c => c.length > 0);
-
-                // Chrome keep-alive: pause/resume every 10s to prevent internal stall
-                _synthKeepAlive = setInterval(() => {
-                    if (window.speechSynthesis.speaking) {
-                        window.speechSynthesis.pause();
-                        window.speechSynthesis.resume();
-                    }
-                }, 10000);
-
-                speakChunks(cleanChunks, 0, onEndCallback);
+                const utt = new SpeechSynthesisUtterance(text);
+                const voices = window.speechSynthesis.getVoices();
+                const v = voices.find(v => v.lang.startsWith("en-GB")) || voices[0];
+                if (v) utt.voice = v;
+                utt.rate = 0.88;
+                utt.onend = () => { if (onEnd) onEnd(); };
+                window.speechSynthesis.speak(utt);
             }
 
-            // Chrome: voices load asynchronously — wait for them before enabling speech buttons
-            let voicesReady = false;
-            function onVoicesReady() {
-                if (voicesReady) return;
-                const v = window.speechSynthesis.getVoices();
-                if (v && v.length > 0) {
-                    voicesReady = true;
-                    listenBtn.disabled = false;
-                    listenBtn.title = "";
+            /** Play a word's audio: server TTS for crisp pronunciation */
+            async function playWordAudio(word, audioPath) {
+                // Try local MP3 first
+                if (audioPath) {
+                    const audio = new Audio(audioPath);
+                    try {
+                        await audio.play();
+                        return;
+                    } catch(_) {}
                 }
+                // Use server neural voice for pronunciation
+                speakText(word, null, "word");
             }
 
-            if (window.speechSynthesis) {
-                // Disable listen button until voices are confirmed ready
-                listenBtn.disabled = true;
-                listenBtn.title = "Loading examiner voice...";
-                window.speechSynthesis.onvoiceschanged = () => onVoicesReady();
-                // Also try immediately (Firefox/Safari load voices synchronously)
-                setTimeout(() => onVoicesReady(), 300);
-                setTimeout(() => onVoicesReady(), 1000);
-                setTimeout(() => {
-                    // Force-enable after 2s as last resort even if event didn't fire
-                    listenBtn.disabled = false;
-                    listenBtn.title = "";
-                }, 2000);
-            }
-
-            // Play MP3 directly or fallback to speech synthesis
-            function playWordAudio(word, audioPath) {
-                const audio = new Audio(audioPath);
-                audio.play().catch(err => {
-                    // Fallback to high-quality British Voice Synthesis if MP3 is missing
-                    speakText(word);
-                });
-            }
+            // Enable listen button immediately (server handles voice, no delay needed)
+            listenBtn.disabled = false;
 
             // -----------------------------------------------------------------
             // VOCAB VAULT RENDER & SEARCH & FILTER
@@ -1524,18 +1514,30 @@
             // SPEECH SIMULATOR MODULE
             // -----------------------------------------------------------------
             
-            // Examiner Prompt Speech Playback
-            listenBtn.addEventListener("click", () => {
+            // Examiner Prompt Speech Playback — uses Microsoft Neural Voice from VDS
+            async function fetchAndPlayExaminerQuestion(part = 2) {
                 simStatus.textContent = "EXAMINER SPEAKING";
                 simStatus.style.color = "var(--accent-gold)";
                 listenBtn.disabled = true;
-                
-                speakText(EXAMINER_PROMPT, () => {
-                    simStatus.textContent = "IDLE";
-                    simStatus.style.color = "var(--accent-purple)";
+
+                try {
+                    const res = await fetch(`${VOICE_SERVER}/question?part=${part}`);
+                    const data = await res.json();
+                    currentExaminerPrompt = data.question;
+                    examinerSpeech.textContent = `"${currentExaminerPrompt}"`;
+                } catch (_) {
+                    currentExaminerPrompt = EXAMINER_PROMPT;
+                    examinerSpeech.textContent = `"${currentExaminerPrompt}"`;
+                }
+
+                await speakText(currentExaminerPrompt, () => {
+                    simStatus.textContent = "YOUR TURN — Press Mic to Speak";
+                    simStatus.style.color = "var(--accent-cyan)";
                     listenBtn.disabled = false;
-                });
-            });
+                }, "examiner");
+            }
+
+            listenBtn.addEventListener("click", () => fetchAndPlayExaminerQuestion(2));
 
             // Initialize Web Speech Recognition
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1746,6 +1748,44 @@
                 
                 feedbackTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic (WPM: ${wpm})`;
                 feedbackText.innerHTML = diagnostics;
+
+                // 🎙 Voice Coaching — Coach speaks feedback aloud via Microsoft Neural Voice
+                simStatus.textContent = "COACH SPEAKING";
+                simStatus.style.color = "var(--accent-gold)";
+
+                try {
+                    const analysisRes = await fetch(`${VOICE_SERVER}/analyze`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            transcript: spokenText,
+                            expected: currentExaminerPrompt || EXAMINER_PROMPT,
+                            band_score: overallScore
+                        })
+                    });
+                    const analysisData = await analysisRes.json();
+                    const coachText = analysisData.coach_text;
+
+                    // Add voice feedback button to scorecard
+                    const existingCoachBtn = document.getElementById("coachFeedbackBtn");
+                    if (existingCoachBtn) existingCoachBtn.remove();
+                    const coachBtn = document.createElement("button");
+                    coachBtn.id = "coachFeedbackBtn";
+                    coachBtn.className = "btn-primary";
+                    coachBtn.style.cssText = "margin-top:16px; width:100%; font-size:14px;";
+                    coachBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> &nbsp; Hear Voice Coaching Feedback';
+                    coachBtn.onclick = () => speakText(coachText, null, "coach");
+                    feedbackText.after(coachBtn);
+
+                    // Auto-play voice coaching after 1s
+                    setTimeout(() => speakText(coachText, () => {
+                        simStatus.textContent = "IDLE";
+                        simStatus.style.color = "var(--accent-purple)";
+                    }, "coach"), 1000);
+                } catch (_) {
+                    simStatus.textContent = "IDLE";
+                    simStatus.style.color = "var(--accent-purple)";
+                }
 
                 // Render struggled vocabulary words
                 struggledWordsList.innerHTML = "";
