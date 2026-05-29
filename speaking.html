@@ -1524,10 +1524,19 @@
                 const src = `${AUDIO_BASE}${word.toLowerCase()}.mp3`;
                 const audio = new Audio(src);
                 currentAudio = audio;
-                audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
-                audio.onerror = () => {
+                
+                let fallbackExecuted = false;
+                const triggerFallback = () => {
+                    if (fallbackExecuted) return;
+                    fallbackExecuted = true;
+                    
+                    if (currentAudio === audio) {
+                        currentAudio = null;
+                    }
+                    
                     // Fallback to browser standard speech synthesis
                     if (window.speechSynthesis) {
+                        window.speechSynthesis.cancel(); // Prevent overlaps
                         const utt = new SpeechSynthesisUtterance(word);
                         utt.lang = "en-GB";
                         utt.onend = () => { if (onEnd) onEnd(); };
@@ -1536,9 +1545,21 @@
                         if (onEnd) onEnd();
                     }
                 };
+
+                audio.onended = () => { 
+                    if (fallbackExecuted) return;
+                    fallbackExecuted = true;
+                    currentAudio = null; 
+                    if (onEnd) onEnd(); 
+                };
+                
+                audio.onerror = () => {
+                    triggerFallback();
+                };
+                
                 audio.play().catch(err => {
                     console.warn("Autoplay block detected, executing fallback synthesis:", err);
-                    if (audio.onerror) audio.onerror();
+                    triggerFallback();
                 });
             }
 
@@ -1551,10 +1572,19 @@
                 const src = `${EXAMINER_AUDIO_BASE}${filename}.mp3`;
                 const audio = new Audio(src);
                 currentAudio = audio;
-                audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
-                audio.onerror = () => {
+                
+                let fallbackExecuted = false;
+                const triggerFallback = () => {
+                    if (fallbackExecuted) return;
+                    fallbackExecuted = true;
+                    
+                    if (currentAudio === audio) {
+                        currentAudio = null;
+                    }
+                    
                     // fallback standard synthesis
                     if (window.speechSynthesis) {
+                        window.speechSynthesis.cancel(); // Prevent overlaps
                         const text = examinerSpeech.textContent;
                         const utt = new SpeechSynthesisUtterance(text);
                         utt.lang = "en-GB";
@@ -1565,9 +1595,21 @@
                         if (onEnd) onEnd();
                     }
                 };
+
+                audio.onended = () => { 
+                    if (fallbackExecuted) return;
+                    fallbackExecuted = true;
+                    currentAudio = null; 
+                    if (onEnd) onEnd(); 
+                };
+                
+                audio.onerror = () => {
+                    triggerFallback();
+                };
+                
                 audio.play().catch(err => {
                     console.warn("Autoplay block detected, executing fallback synthesis:", err);
-                    if (audio.onerror) audio.onerror();
+                    triggerFallback();
                 });
             }
 
@@ -1857,6 +1899,7 @@
                         recordingStartTime = Date.now();
                         simTimer.textContent = "00:00";
                         recordingTimerInterval = setInterval(updateRecordingTimer, 1000);
+                        transcriptText = ""; // Reset transcript state
                     };
                     
                     standardMediaRecorder.onstop = async () => {
@@ -2152,18 +2195,25 @@
                 startVoipAvWaves();
                 
                 voipResponseAudio = new Audio(url);
-                voipResponseAudio.onended = () => {
+                let endedExecuted = false;
+                const triggerEnd = () => {
+                    if (endedExecuted) return;
+                    endedExecuted = true;
                     voipIsSpeaking = false;
                     stopVoipAvWaves();
                     if (onEnd) onEnd();
+                };
+                
+                voipResponseAudio.onended = () => {
+                    triggerEnd();
                 };
                 voipResponseAudio.onerror = () => {
-                    // Speech fallback
-                    voipIsSpeaking = false;
-                    stopVoipAvWaves();
-                    if (onEnd) onEnd();
+                    triggerEnd();
                 };
-                voipResponseAudio.play();
+                voipResponseAudio.play().catch(err => {
+                    console.warn("VoIP audio play blocked:", err);
+                    triggerEnd();
+                });
             }
 
             // Listen to User Voice chunks and send over WebSocket
