@@ -2568,7 +2568,7 @@
             const VAD_MIN_MS = 10000;   // minimum 10s before silence triggers
             const VAD_MAX_MS = 60000;   // force stop after 60s
             const VAD_SILENCE_MS = 4000; // 4s silence triggers next turn
-            const VAD_THRESHOLD = 0.01; // RMS amplitude threshold
+            const VAD_THRESHOLD = 0.02; // RMS amplitude threshold
 
             function startVoipCallTimer() {
                 voipCallSeconds = 0;
@@ -2742,12 +2742,27 @@
                         }
                     };
 
-                    // ── Set up AudioContext VAD ──
+                    // ── Set up AudioContext VAD with Band-pass filter ──
                     vadAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     vadAnalyser = vadAudioCtx.createAnalyser();
                     vadAnalyser.fftSize = 256;
                     const source = vadAudioCtx.createMediaStreamSource(stream);
-                    source.connect(vadAnalyser);
+
+                    // High-pass filter to remove fan/rumble (<150Hz)
+                    const hpFilter = vadAudioCtx.createBiquadFilter();
+                    hpFilter.type = "highpass";
+                    hpFilter.frequency.value = 150;
+
+                    // Low-pass filter to remove high hiss/squeal (>3000Hz)
+                    const lpFilter = vadAudioCtx.createBiquadFilter();
+                    lpFilter.type = "lowpass";
+                    lpFilter.frequency.value = 3000;
+
+                    // Chain nodes: source -> highpass -> lowpass -> analyzer
+                    source.connect(hpFilter);
+                    hpFilter.connect(lpFilter);
+                    lpFilter.connect(vadAnalyser);
+                    
                     const dataArray = new Uint8Array(vadAnalyser.frequencyBinCount);
 
                     vadRecordingStart = Date.now();
