@@ -1718,28 +1718,33 @@
     <div class="premium-modal" id="premiumPaywallModal">
         <div class="premium-content">
             <button class="close-modal" id="closePremiumModalBtn" style="color:var(--text-secondary);"><i class="fa-solid fa-xmark"></i></button>
-            <div class="premium-crown">👑</div>
-            <div class="premium-title">Upgrade to Premium</div>
-            <div class="premium-subtitle">Unlock unlimited realistic IELTS speaking call practice sessions.</div>
+            <div class="premium-crown" style="font-size:45px; margin-bottom:10px;">👑</div>
+            <div class="premium-title" style="font-size:24px;">Upgrade to Premium</div>
+            <div class="premium-subtitle" style="margin-bottom:15px;">Get unlimited speaking practice and detailed Band 9.0 diagnostic feedback.</div>
             
-            <ul class="premium-bullets">
-                <li><i class="fa-solid fa-circle-check"></i> Unlimited IELTS Speaking Call Duration</li>
-                <li><i class="fa-solid fa-circle-check"></i> Dedicated Band 9.0 Diagnostic Feedback</li>
-                <li><i class="fa-solid fa-circle-check"></i> Advanced Neural British Accent (Dr. Sarah)</li>
-                <li><i class="fa-solid fa-circle-check"></i> Interactive Pronunciation Coach Engine</li>
+            <div style="background:rgba(212,175,55,0.05); border:1px solid rgba(212,175,55,0.2); border-radius:12px; padding:12px; margin-bottom:18px; font-size:13px; text-align:left; color:var(--text-primary);">
+                <div style="font-weight:700; color:#D4AF37; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;"><i class="fa-solid fa-fire"></i> Limited Promo Offer: $1 for 3 Months</div>
+                Get **300 minutes** of total direct calling talk-time with Dr. Sarah.
+            </div>
+
+            <ul class="premium-bullets" style="margin-bottom:18px; max-width:400px;">
+                <li><i class="fa-solid fa-circle-check"></i> **Free Tier**: 20 mins/month (1st call capped at 4 mins, subsequent calls use remaining 16 mins).</li>
+                <li><i class="fa-solid fa-circle-check"></i> **Premium Promo**: 300 minutes total direct call talk-time over 3 months.</li>
+                <li><i class="fa-solid fa-circle-check"></i> **Dr. Sarah AI**: Ultra-advanced Band 9.0 feedback and accent diagnostics.</li>
+                <li><i class="fa-solid fa-circle-check"></i> **Acoustic Clarity**: Advanced frequency filtering & VAD acoustics.</li>
             </ul>
 
             <!-- Settings: license key unlocking -->
-            <div class="premium-key-section">
-                <div class="premium-key-label">Activate Premium Key</div>
+            <div class="premium-key-section" style="margin-bottom:18px; padding:14px;">
+                <div class="premium-key-label" style="font-size:11px; margin-bottom:6px;">Activate Premium License Key</div>
                 <div class="premium-input-wrap">
                     <input type="text" class="premium-key-input" id="premiumLicenseKeyInput" placeholder="Enter license key..." autocomplete="off">
-                    <button class="premium-unlock-btn" id="activatePremiumKeyBtn">Activate</button>
+                    <button class="premium-unlock-btn" id="activatePremiumKeyBtn" style="font-size:12px; padding:8px 14px;">Activate</button>
                 </div>
                 <div class="premium-success-msg" id="premiumSuccessMsg">Premium Activated Successfully! 🚀</div>
             </div>
 
-            <button class="premium-action-btn" onclick="window.open('https://lineazk.github.io/ielts-booster-pack/', '_blank')">Get Unlimited Premium Access</button>
+            <button class="premium-action-btn" onclick="window.open('https://lineazk.github.io/ielts-booster-pack/', '_blank')" style="font-size:14px; padding:12px;">Get Premium Access Now</button>
         </div>
     </div>
 
@@ -3244,7 +3249,7 @@
             }
 
             // Simple validation matching backend preset keys
-            const VALID_PREMIUM_KEYS = ["IELTS_PREMIUM_2026", "DR_SARAH_UNLIMITED", "LINEAZK_MASTER_9"];
+            const VALID_PREMIUM_KEYS = ["IELTS_PREMIUM_2026", "DR_SARAH_UNLIMITED", "LINEAZK_MASTER_9", "PROMO_3MONTHS_300MIN"];
 
             if (activatePremiumKeyBtn) {
                 activatePremiumKeyBtn.addEventListener("click", () => {
