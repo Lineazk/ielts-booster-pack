@@ -1969,6 +1969,14 @@
                         clearInterval(recordingTimerInterval);
                         
                         const audioBlob = new Blob(standardAudioChunks, { type: 'audio/webm' });
+                        
+                        // Optimize API calls: Skip empty or silent recording chunks
+                        if (audioBlob.size < 6000) {
+                            realtimeTranscriptText.innerHTML = `<span style="color:#ff6b6b">No clear speech detected. Please speak clearly into your mic and try again.</span>`;
+                            simStatus.textContent = "IDLE";
+                            return;
+                        }
+                        
                         realtimeTranscriptText.textContent = "🎙️ Analyzing your speech patterns...";
                         
                         // POST to backend HTTP transcribe endpoint
@@ -2442,6 +2450,16 @@
                     voipMediaRecorder.onstop = () => {
                         if (!callActive) return;
                         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                        
+                        // Optimize API calls: Skip empty or silent clicks/breaths
+                        if (audioBlob.size < 6000) {
+                            console.warn("Speech chunk too quiet or brief, skipping transmission to save API usage.");
+                            voipStatusBadge.textContent = "LISTENING — SPEAK NOW";
+                            voipStatusBadge.className = "voip-status-badge listening";
+                            // Restart recording loop immediately
+                            setTimeout(startListeningToVoipUser, 1000);
+                            return;
+                        }
                         
                         // Send binary chunks over socket
                         if (callWs && callWs.readyState === WebSocket.OPEN) {
