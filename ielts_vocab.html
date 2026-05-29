@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IELTS Vocabulary Flashcards</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f0c29;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;display:flex;flex-direction:column;align-items:center;padding:20px}
+h1{font-size:1.8rem;margin:20px 0 5px;background:linear-gradient(90deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.subtitle{color:#94a3b8;font-size:.9rem;margin-bottom:20px;text-align:center}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:20px}
+select,button{padding:8px 16px;border-radius:20px;border:1px solid #a78bfa;background:rgba(167,139,250,.15);color:#fff;cursor:pointer;font-size:.85rem;transition:.3s}
+select:hover,button:hover{background:rgba(167,139,250,.35)}
+.progress{width:100%;max-width:600px;background:rgba(255,255,255,.1);border-radius:10px;height:6px;margin-bottom:15px}
+.progress-bar{height:6px;background:linear-gradient(90deg,#a78bfa,#38bdf8);border-radius:10px;transition:.4s}
+.counter{color:#94a3b8;font-size:.85rem;margin-bottom:15px;text-align:center}
+.scene{width:100%;max-width:600px;height:380px;perspective:1000px;cursor:pointer;margin-bottom:20px}
+.card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:.6s}
+.card.flipped{transform:rotateY(180deg)}
+.front,.back{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:20px;padding:30px;display:flex;flex-direction:column;justify-content:center}
+.front{background:linear-gradient(135deg,rgba(167,139,250,.2),rgba(56,189,248,.1));border:1px solid rgba(167,139,250,.4);align-items:center;text-align:center}
+.back{background:linear-gradient(135deg,rgba(56,189,248,.15),rgba(167,139,250,.1));border:1px solid rgba(56,189,248,.4);transform:rotateY(180deg)}
+.word{font-size:2.2rem;font-weight:700;background:linear-gradient(90deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.pronunciation{color:#94a3b8;font-size:1rem;margin-bottom:8px}
+.category-badge{background:rgba(167,139,250,.3);padding:4px 12px;border-radius:20px;font-size:.75rem;color:#c4b5fd}
+.hint{color:#64748b;font-size:.8rem;margin-top:15px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.row{margin-bottom:12px}
+.label{font-size:.7rem;text-transform:uppercase;color:#a78bfa;letter-spacing:1px;margin-bottom:3px}
+.value{font-size:.95rem;color:#e2e8f0}
+.bangla{font-size:1.1rem;font-weight:600;color:#38bdf8}
+.tip-box{background:rgba(251,191,36,.1);border-left:3px solid #fbbf24;padding:8px 12px;border-radius:0 8px 8px 0;font-size:.85rem;color:#fde68a;margin-top:8px}
+.syn{color:#a3e635;font-size:.85rem;font-style:italic}
+.nav{display:flex;gap:15px;align-items:center;margin-bottom:15px}
+.nav button{padding:10px 24px;border-radius:25px;border:none;font-weight:600;font-size:.9rem}
+#prevBtn{background:rgba(148,163,184,.2);color:#94a3b8}
+#nextBtn{background:linear-gradient(90deg,#a78bfa,#38bdf8);color:#fff}
+#flipBtn{background:rgba(167,139,250,.3);border:1px solid #a78bfa;color:#c4b5fd}
+.stars{display:flex;gap:8px;margin-top:10px;justify-content:center}
+.star{font-size:1.2rem;cursor:pointer;opacity:.4;transition:.2s}
+.star:hover,.star.active{opacity:1}
+.sound-btn{background:linear-gradient(135deg,rgba(167,139,250,.4),rgba(56,189,248,.3));border:1px solid rgba(167,139,250,.6);color:#fff;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:.85rem;font-weight:600;transition:.3s;display:inline-flex;align-items:center;gap:7px;margin-top:12px}
+.sound-btn:hover{background:linear-gradient(135deg,rgba(167,139,250,.7),rgba(56,189,248,.55));transform:scale(1.05);box-shadow:0 0 18px rgba(167,139,250,.4)}
+.sound-btn.playing{animation:soundPulse .6s infinite alternate}
+@keyframes soundPulse{from{box-shadow:0 0 8px rgba(167,139,250,.4)}to{box-shadow:0 0 20px rgba(56,189,248,.7)}}
+</style>
+</head>
+<body>
+<h1>📚 IELTS Vocabulary Flashcards</h1>
+<p class="subtitle">Cambridge IELTS 10-15 | Academic Word List | ক্লিক করুন card flip করতে</p>
+<div class="controls">
+  <select id="catFilter"><option value="all">সব Category</option></select>
+  <button onclick="shuffle()">🔀 Shuffle</button>
+  <button onclick="markDone()">✅ জানি</button>
+  <button onclick="markAgain()">🔁 আবার দেখব</button>
+</div>
+<div class="progress"><div class="progress-bar" id="pbar"></div></div>
+<div class="counter" id="counter">Card 1 of 1</div>
+<div class="scene" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="front">
+      <div class="category-badge" id="fcat"></div>
+      <div class="word" id="fword"></div>
+      <div class="pronunciation" id="fpron"></div>
+      <div class="stars" id="fstars">
+        <span class="star" onclick="rate(event,1)">⭐</span>
+        <span class="star" onclick="rate(event,2)">⭐</span>
+        <span class="star" onclick="rate(event,3)">⭐</span>
+        <span class="star" onclick="rate(event,4)">⭐</span>
+        <span class="star" onclick="rate(event,5)">⭐</span>
+      </div>
+      <div class="hint">👆 click করুন উত্তর দেখতে</div>
+      <button class="sound-btn" id="soundBtn" onclick="event.stopPropagation(); playWord()">
+        <i class="fa-solid fa-volume-high"></i> Pronunciation শুনুন
+      </button>
+    </div>
+    <div class="back">
+      <div class="row"><div class="label">বাংলা অর্থ</div><div class="bangla" id="bbangla"></div></div>
+      <div class="row"><div class="label">Example Sentence</div><div class="value" id="bsent"></div></div>
+      <div class="tip-box" id="btip"></div>
+      <div class="row" style="margin-top:10px"><div class="label">Synonyms</div><div class="syn" id="bsyn"></div></div>
+    </div>
+  </div>
+</div>
+<div class="nav">
+  <button id="prevBtn" onclick="navigate(-1)">← আগের</button>
+  <button id="flipBtn" onclick="flipCard()">🔄 Flip</button>
+  <button id="nextBtn" onclick="navigate(1)">পরের →</button>
+</div>
+
+<script>
+const vocab=[
+["SIGNIFICANT","সিগ-নিফ-ই-কেন্ট","গুরুত্বপূর্ণ / উল্লেখযোগ্য","There has been a significant increase in global temperatures.","💡 'Important'-এর বদলে এটা লিখুন, score বাড়বে!","considerable, substantial, notable, remarkable","Academic"],
+["ENVIRONMENTAL","এন-ভাই-রন-মেন-টাল","পরিবেশগত","Environmental issues are a major global concern.","💡 Spelling: environ + mental (n ভুলবেন না!)","ecological, natural, green","Environment"],
+["CONSEQUENTLY","কন-সি-কোয়েন্ট-লি","ফলস্বরূপ / এর ফলে","He didn't study. Consequently, he failed the exam.","💡 'So'-এর বদলে এটা লিখুন Writing-এ","therefore, thus, as a result, hence","Academic"],
+["APPROXIMATELY","এপ-রক্স-ই-মেট-লি","প্রায় / আনুমানিক","Approximately 60% of people use smartphones daily.","💡 'About'-এর academic বিকল্প, Graph writing-এ অবশ্যই ব্যবহার করুন","roughly, around, nearly, almost","Academic"],
+["DEMONSTRATE","ডেম-ন-স্ট্রেট","প্রমাণ করা / দেখানো","The graph demonstrates a steady rise in temperatures.","💡 'Show'-এর বদলে এটা লিখুন","illustrate, indicate, reveal, display","Academic"],
+["GOVERNMENT","গাভ-আর্ন-মেন্ট","সরকার","The government should invest more in public education.","💡 Spelling trap: 'goverment' নয়, 'govern+ment'","administration, authority, state, regime","Society"],
+["BENEFICIAL","বেন-ই-ফিশ-আল","উপকারী / সুফলদায়ক","Regular exercise is highly beneficial for mental health.","💡 'Good/useful'-এর বদলে এটা লিখুন","advantageous, helpful, useful, favorable","Academic"],
+["MAJORITY","মা-জর-ই-টি","সংখ্যাগরিষ্ঠ / বেশিরভাগ","The majority of students prefer online learning.","💡 'Most people'-এর পরিবর্তে ব্যবহার করুন","most, bulk, mass, preponderance","Academic"],
+["HOWEVER","হাউ-এভ-আর","তবে / কিন্তু","He worked hard. However, he didn't get the job.","💡 'But'-এর academic বিকল্প। Sentence শুরুতে ব্যবহার করুন।","nevertheless, yet, nonetheless, still","Linking"],
+["ACCOMMODATE","আ-কম-ও-ডেট","থাকার ব্যবস্থা করা","The hotel can accommodate up to 200 guests.","💡 Spelling: ac+com+mo+date (দুটো c, দুটো m!)","house, host, contain, hold","General"],
+["SUSTAINABLE","সাস-টেন-আ-বল","টেকসই / দীর্ঘস্থায়ী","We need sustainable energy solutions for the future.","💡 Environment topic-এ must-use word","renewable, viable, eco-friendly, long-term","Environment"],
+["POLLUTION","পো-লু-শন","দূষণ","Air pollution is a serious problem in urban areas.","💡 Types: air, water, noise, soil pollution — সব জানুন","contamination, toxicity, impurity","Environment"],
+["INNOVATION","ই-নো-ভেই-শন","উদ্ভাবন / নতুন আবিষ্কার","Technological innovation has transformed modern life.","💡 Technology topic-এর key word","invention, advancement, breakthrough, discovery","Technology"],
+["FURTHERMORE","ফার-দার-মোর","আরও / এছাড়াও","Smoking is harmful. Furthermore, it is expensive.","💡 'Also/and also'-এর পরিবর্তে Writing-এ ব্যবহার করুন","moreover, additionally, in addition, besides","Linking"],
+["NEVERTHELESS","নেভ-আর-দা-লেস","তবুও / তা সত্ত্বেও","The task was difficult. Nevertheless, she completed it.","💡 'But still'-এর sophisticated বিকল্প","however, yet, despite this, even so","Linking"],
+["UNEMPLOYMENT","আন-এম-প্লয়-মেন্ট","বেকারত্ব","Youth unemployment is rising in many countries.","💡 Economy topic-এর core vocabulary","joblessness, redundancy, worklessness","Economy"],
+["INFRASTRUCTURE","ইন-ফ্রা-স্ট্রাক-চার","অবকাঠামো","Poor infrastructure limits economic development.","💡 Urban planning ও development topic-এ key word","facilities, framework, network, system","Urban"],
+["DIVERSE","ডাই-ভার্স","বৈচিত্র্যময়","Our society is becoming increasingly diverse.","💡 'Different'-এর পরিবর্তে ব্যবহার করুন","varied, mixed, multicultural, heterogeneous","Society"],
+["EMPHASISE","এম-ফা-সাইজ","জোর দেওয়া / গুরুত্ব দেওয়া","Experts emphasise the importance of early education.","💡 American: emphasize, British: emphasise (IELTS British spelling prefer করে)","stress, highlight, underline, accentuate","Academic"],
+["STATISTICS","স্ট্যা-টিস-টিক্স","পরিসংখ্যান","According to statistics, life expectancy has increased.","💡 Graph writing-এ অত্যন্ত জরুরি","data, figures, numbers, percentages","Academic"],
+["GENERATE","জেন-আ-রেট","উৎপাদন করা / সৃষ্টি করা","Solar panels generate clean electricity.","💡 'Produce/create'-এর academic বিকল্প","produce, create, yield, develop","Academic"],
+["IMPACT","ইম-প্যাক্ট","প্রভাব / প্রতিক্রিয়া","Climate change has a severe impact on biodiversity.","💡 'Effect'-এর শক্তিশালী বিকল্প","effect, influence, consequence, outcome","Academic"],
+["ECONOMY","ই-কন-ও-মি","অর্থনীতি","The global economy is recovering slowly.","💡 'economic' (adj) ও 'economical' (মিতব্যয়ী) এর পার্থক্য জানুন","market, financial system, commerce","Economy"],
+["ACADEMIC","অ্যাক-আ-ডেম-ইক","শিক্ষাগত / একাডেমিক","She has an impressive academic background.","💡 Noun form: academia; সঠিক spelling মনে রাখুন","scholarly, educational, intellectual","Education"],
+["RESEARCH","রি-সার্চ","গবেষণা","Recent research shows that exercise reduces stress.","💡 'Studies show' ও 'Research indicates' — Writing-এ বারবার আসে","investigation, study, analysis, inquiry","Academic"],
+["POPULATION","পপ-ইউ-লেই-শন","জনসংখ্যা","The world population is expected to reach 10 billion.","💡 Society ও environment topic-এর core word","inhabitants, residents, people, citizens","Society"],
+["TECHNOLOGY","টেক-নল-ও-জি","প্রযুক্তি","Modern technology has changed the way we communicate.","💡 'technological' (adj) — সঠিক form ব্যবহার করুন","innovation, science, machinery, digital tools","Technology"],
+["EFFICIENT","ই-ফিশ-এন্ট","দক্ষ / কার্যকর","Electric cars are more efficient than petrol vehicles.","💡 'Effective' (কার্যকর) vs 'Efficient' (সাশ্রয়ী ও দ্রুত) — পার্থক্য জানুন","effective, productive, capable, optimal","Academic"],
+["GLOBAL","গ্লো-বাল","বৈশ্বিক / সারাবিশ্বব্যাপী","Global warming is one of the greatest challenges today.","💡 'Worldwide/international'-এর বদলে ব্যবহার করুন","worldwide, international, universal, planetary","Academic"],
+["DECLINE","ডি-ক্লাইন","হ্রাস পাওয়া / কমে যাওয়া","There has been a sharp decline in bee populations.","💡 Graph writing-এ 'decrease/fall/drop'-এর সাথে এটাও শিখুন","decrease, fall, drop, reduction, downfall","Academic"]
+];
+
+let current=0,filtered=[...Array(vocab.length).keys()],isFlipped=false,ratings={};
+
+function init(){
+  const cats=[...new Set(vocab.map(v=>v[6]))];
+  const sel=document.getElementById('catFilter');
+  cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});
+  sel.onchange=()=>{
+    const v=sel.value;
+    filtered=v==='all'?[...Array(vocab.length).keys()]:vocab.reduce((a,w,i)=>w[6]===v?[...a,i]:a,[]);
+    current=0;showCard();
+  };
+  showCard();
+}
+
+let _vocabAudio=null;
+function playWord(){
+  const word=vocab[filtered[current]]?.[0];
+  if(!word) return;
+  const btn=document.getElementById('soundBtn');
+  if(_vocabAudio){_vocabAudio.pause();_vocabAudio=null;}
+  const NEURAL_URL='https://relying-film-und-arrange.trycloudflare.com';
+  const url=`${NEURAL_URL}/tts?text=${encodeURIComponent(word)}&voice=en-GB-SoniaNeural`;
+  const audio=new Audio(url);
+  _vocabAudio=audio;
+  if(btn) btn.classList.add('playing');
+  const done=()=>{_vocabAudio=null;if(btn){btn.classList.remove('playing');}};
+  audio.onended=done;
+  audio.onerror=()=>{
+    done();
+    if(window.speechSynthesis){
+      const utt=new SpeechSynthesisUtterance(word);
+      utt.lang='en-GB';utt.rate=0.9;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utt);
+    }
+  };
+  audio.play().catch(()=>{
+    done();
+    if(window.speechSynthesis){
+      const utt=new SpeechSynthesisUtterance(word);
+      utt.lang='en-GB';utt.rate=0.9;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utt);
+    }
+  });
+}
+
+function showCard(){
+  const idx=filtered[current];
+  const v=vocab[idx];
+  document.getElementById('fcat').textContent=v[6];
+  document.getElementById('fword').textContent=v[0];
+  document.getElementById('fpron').textContent='🔊 '+v[1];
+  document.getElementById('bbangla').textContent=v[2];
+  document.getElementById('bsent').textContent='"'+v[3]+'"';
+  document.getElementById('btip').textContent=v[4];
+  document.getElementById('bsyn').textContent='📝 Synonyms: '+v[5];
+  document.getElementById('counter').textContent=`Card ${current+1} of ${filtered.length}`;
+  const pct=(current+1)/filtered.length*100;
+  document.getElementById('pbar').style.width=pct+'%';
+  if(isFlipped){document.getElementById('card').classList.remove('flipped');isFlipped=false;}
+  updateStars(ratings[idx]||0);
+}
+
+function flipCard(){
+  document.getElementById('card').classList.toggle('flipped');
+  isFlipped=!isFlipped;
+}
+
+function navigate(dir){
+  current=(current+dir+filtered.length)%filtered.length;
+  showCard();
+}
+
+function shuffle(){
+  for(let i=filtered.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[filtered[i],filtered[j]]=[filtered[j],filtered[i],
+["CONSERVATION","কন-সার-ভেই-শন","সংরক্ষণ","Conservation of natural resources is essential for future generations.","💡 Environment topic-এর must-use word","preservation, protection, maintenance","Environment"],
+["MIGRATION","মাই-গ্রেই-শন","অভিবাসন / পরিযান","Economic migration has increased significantly in recent decades.","💡 Animal migration ও human migration দুটোই IELTS-এ আসে","movement, relocation, displacement, emigration","Society"],
+["POVERTY","পভ-আর-টি","দারিদ্র্য","Poverty remains a major challenge in developing nations.","💡 'Poor people'-এর বদলে 'people living in poverty' লিখুন","deprivation, hardship, destitution","Society"],
+["URBANISATION","আর-বান-আই-জেই-শন","নগরায়ন","Rapid urbanisation is putting pressure on city infrastructure.","💡 British spelling: urbanisation (z নয়, s দিয়ে)","city growth, metropolitan expansion","Urban"],
+["INVESTMENT","ইন-ভেস্ট-মেন্ট","বিনিয়োগ","Foreign investment boosts economic development significantly.","💡 invest (v), investment (n), investor (n) সব form শিখুন","funding, capital, finance, expenditure","Economy"],
+["INDICATE","ইন-ডি-কেট","ইঙ্গিত দেওয়া","The data indicates a steady rise in global temperatures.","💡 Graph writing-এ 'show'-এর পরিবর্তে এটা ব্যবহার করুন","show, suggest, demonstrate, reveal","Academic"],
+["ALTHOUGH","অল-দো","যদিও","Although the task was difficult, she completed it on time.","💡 Contrast দেখাতে sentence শুরুতে ব্যবহার করুন","even though, despite the fact that, whilst","Linking"],
+["CONTRIBUTE","কন-ট্রিব-ইউট","অবদান রাখা","Renewable energy can contribute to reducing carbon emissions.","💡 'contribute to + noun/gerund' - common IELTS structure","add to, play a role in, help, support","Academic"],
+["CHALLENGE","চ্যাল-এন্জ","চ্যালেঞ্জ","Climate change is one of the greatest challenges facing humanity.","💡 'Problem'-এর বদলে 'challenge' লিখুন - more academic","difficulty, obstacle, problem, issue","Academic"],
+["IMPLEMENT","ইম-প্লি-মেন্ট","বাস্তবায়ন করা","The government should implement stricter environmental regulations.","💡 'Do/apply'-এর academic বিকল্প","apply, enforce, carry out, execute","Academic"],
+["WHEREAS","হোয়্যার-অ্যাজ","যেখানে / বিপরীতে","Men prefer outdoor activities, whereas women prefer indoor ones.","💡 Writing Task 1-এ দুটো বিপরীত তথ্য তুলনা করতে ব্যবহার করুন","while, but, in contrast, on the other hand","Linking"],
+["ALTERNATIVE","অল-টার-না-টিভ","বিকল্প","Solar energy is a clean alternative to fossil fuels.","💡 'Option'-এর academic বিকল্প","option, substitute, replacement, choice","Academic"],
+["CONSUMPTION","কন-সাম-শন","ভোগ / ব্যবহার","Energy consumption has increased rapidly over the past decade.","💡 Economy ও environment দুই topic-এ আসে","use, expenditure, usage, intake","Economy"],
+["OPPORTUNITY","অপ-অর-টিউ-নি-টি","সুযোগ","Education provides opportunities for economic and social mobility.","💡 'Chance'-এর formal বিকল্প","chance, prospect, opening, possibility","Academic"],
+["INEQUALITY","ইন-ই-কোয়্যাল-ই-টি","বৈষম্য","Income inequality is growing in many developed countries.","💡 'unfair situation'-এর বদলে এটা লিখুন - Band 7+","disparity, gap, imbalance, unfairness","Society"],
+["MENTAL HEALTH","মেন-টাল হেল্থ","মানসিক স্বাস্থ্য","Schools should prioritise students mental health equally with academics.","💡 'psychological well-being' synonym হিসেবে ব্যবহার করুন","psychological well-being, emotional health","Health"],
+["BIODIVERSITY","বায়ো-ডাই-ভার-সি-টি","জীববৈচিত্র্য","Deforestation threatens biodiversity in tropical rainforests.","💡 Environment topic-এর high-score word","variety of life, ecological diversity, species diversity","Environment"],
+["CURRICULUM","কা-রিক-ইউ-লাম","পাঠ্যক্রম","The school curriculum should include digital literacy and critical thinking.","💡 Education topic; plural: curricula","syllabus, course content, programme of study","Education"],
+["ANALYSE","অ্যান-আ-লাইজ","বিশ্লেষণ করা","Scientists analyse data carefully to understand climate patterns.","💡 British spelling: analyse; noun: analysis","examine, study, investigate, evaluate","Academic"],
+["ESSENTIAL","ই-সেন-শাল","অপরিহার্য","Clean water is essential for human health and survival.","💡 'Important/necessary'-এর চেয়ে stronger","vital, crucial, necessary, fundamental","Academic"],
+["POTENTIAL","পো-টেন-শাল","সম্ভাবনা","Renewable energy has enormous potential for the future.","💡 Adjective ও noun দুভাবেই ব্যবহার হয়","possibility, capacity, promise, prospect","Academic"],
+["EMIT","ই-মিট","নির্গত করা","Factories emit large quantities of carbon dioxide daily.","💡 Noun: emission; Environment topic-এ core word","release, discharge, produce, give off","Environment"],
+["RENEWABLE","রি-নিউ-আ-বল","নবায়নযোগ্য","We must transition to renewable sources of energy immediately.","💡 Antonym: non-renewable; fossil fuels = non-renewable","sustainable, clean, green, inexhaustible","Environment"],
+["CONSEQUENCE","কন-সি-কোয়েন্স","পরিণতি","The consequences of climate change are already becoming visible.","💡 'As a consequence' = consequently","result, outcome, effect, repercussion","Academic"],
+["FACILITATE","ফা-সিল-ই-টেট","সহজ করা","Technology facilitates communication across the globe.","💡 'Help/make easy'-এর academic বিকল্প","enable, assist, promote, support","Academic"],
+["ECONOMIC","ই-কো-নম-ইক","অর্থনৈতিক","Economic growth has slowed down in many developing countries.","💡 'economic' (adj) vs 'economical' (মিতব্যয়ী) পার্থক্য জানুন","financial, monetary, fiscal, commercial","Economy"],
+["OBESITY","ও-বি-সি-টি","স্থূলতা","Childhood obesity is increasing at an alarming rate worldwide.","💡 Health topic; 'obese' = adjective form","overweight condition, excessive weight","Health"],
+["LITERACY","লিট-আর-আ-সি","সাক্ষরতা","Improving literacy rates is crucial for national development.","💡 Education topic; 'digital literacy' also very common in IELTS","reading ability, education level, learning","Education"],
+["EXPENDITURE","এক্স-পেন-ডি-চার","ব্যয় / খরচ","Government expenditure on healthcare has increased significantly.","💡 'Spending/cost'-এর academic বিকল্প","spending, outlay, cost, disbursement","Economy"],
+["DISPUTE","ডিস-পিউট","বিবাদ / বিতর্ক","There is ongoing dispute about the causes of climate change.","💡 Noun ও verb দুভাবেই ব্যবহার হয়","argument, conflict, disagreement, controversy","Academic"],
+["HYPOTHESIS","হাই-পথ-ই-সিস","অনুমান / প্রকল্প","Scientists tested the hypothesis through controlled experiments.","💡 Science topic; plural: hypotheses","theory, assumption, proposition, supposition","Academic"],
+["MOREOVER","মোর-ও-ভার","আরও / উপরন্তু","Exercise improves health. Moreover, it reduces stress levels.","💡 'Furthermore/in addition'-এর সাথে একই অর্থ; পরিস্থিতি অনুযায়ী use করুন","furthermore, in addition, additionally, besides","Linking"],
+["RESIDENT","রেজ-ই-ডেন্ট","বাসিন্দা / বাসকারী","Local residents protested against the new factory construction.","💡 'People who live there'-এর বদলে এটা ব্যবহার করুন","inhabitant, citizen, dweller, occupant","Urban"],
+["WORKFORCE","ওয়ার্ক-ফোর্স","কর্মী বাহিনী","The aging workforce is a challenge for many developed economies.","💡 Economy ও society topic-এ common word","employees, workers, labour force, staff","Economy"],
+["HABITAT","হ্যাব-ই-ট্যাট","আবাসস্থল","Deforestation destroys the natural habitat of many species.","💡 Environment topic; 'natural habitat' is a very common collocation","home, environment, territory, ecosystem","Environment"],
+["OBESITY","ও-বি-সি-টি","স্থূলতা","The rise in obesity is linked to poor diet and sedentary lifestyles.","💡 Health topic-এ অত্যন্ত common","excessive weight, overweight condition","Health"],
+["INFRASTRUCTURE","ইন-ফ্রা-স্ট্রাক-চার","অবকাঠামো","Poor infrastructure hinders economic development in rural areas.","💡 Urban topic; transport, roads, bridges সব infrastructure-এর অংশ","facilities, framework, network, system","Urban"],
+["DIVERSITY","ডাই-ভার-সি-টি","বৈচিত্র্য","Cultural diversity enriches communities and promotes tolerance.","💡 'Diverse' (adj); 'diversify' (v); সব form শিখুন","variety, range, mixture, multiculturalism","Society"],
+["STATISTICS","স্ট্যা-টিস-টিক্স","পরিসংখ্যান","According to statistics, life expectancy has increased globally.","💡 Graph writing-এ অত্যন্ত জরুরি","data, figures, numbers, percentages","Academic"],
+["IMPACT","ইম-প্যাক্ট","প্রভাব / প্রতিক্রিয়া","Climate change has a devastating impact on coastal communities.","💡 'Effect'-এর stronger বিকল্প; noun ও verb দুটোই","effect, influence, consequence, outcome","Academic"]
+,
+["VACCINATION","ভ্যাক-সি-নেই-শন","টিকাদান","Mass vaccination programmes have eradicated many deadly diseases.","💡 Health topic; 'vaccine' (n), 'vaccinate' (v) সব form শিখুন","immunisation, inoculation, jab","Health"],
+["EPIDEMIC","এপ-ই-ডেম-ইক","মহামারী (স্থানীয়)","The flu epidemic affected thousands of people last winter.","💡 'epidemic' (এক এলাকায়) vs 'pandemic' (সারা বিশ্বে) পার্থক্য জানুন","outbreak, plague, widespread disease","Health"],
+["CHRONIC","ক্রন-ইক","দীর্ঘস্থায়ী (রোগ)","Diabetes is a chronic condition that requires lifelong management.","💡 'Acute' (হঠাৎ শুরু) vs 'chronic' (দীর্ঘস্থায়ী) পার্থক্য গুরুত্বপূর্ণ","persistent, long-term, prolonged, ongoing","Health"],
+["MORTALITY","মর-ট্যাল-ই-টি","মৃত্যুহার","Child mortality rates have fallen dramatically in developing nations.","💡 'death rate'-এর academic বিকল্প; 'infant mortality' common collocation","death rate, fatality rate","Health"],
+["SEDENTARY","সেড-এন-টা-রি","আসীন / শারীরিকভাবে নিষ্ক্রিয়","A sedentary lifestyle increases the risk of heart disease.","💡 IELTS health topic-এ এই word টি বারবার আসে","inactive, stationary, desk-bound","Health"],
+["NUTRITION","নিউ-ট্রি-শন","পুষ্টি","Good nutrition is essential for children's healthy development.","💡 'nutritious' (adj), 'nutritionist' (n) form গুলোও শিখুন","diet, nourishment, food intake, sustenance","Health"],
+["AUTOMATION","অ-টো-মেই-শন","স্বয়ংক্রিয়করণ","Industrial automation has replaced millions of manual jobs globally.","💡 Technology+Economy topic; 'automate' (v), 'automated' (adj)","mechanisation, robotisation, computerisation","Technology"],
+["ARTIFICIAL INTELLIGENCE","আর-টি-ফি-শিয়াল ইন-টেল-ই-জেন্স","কৃত্রিম বুদ্ধিমত্তা","Artificial intelligence is transforming healthcare and education.","💡 IELTS-এ AI নিয়ে essay অনেক আসে; শুধু 'AI' না লিখে পুরোটা লিখুন","machine learning, AI, deep learning","Technology"],
+["SURVEILLANCE","সার-ভেই-ল্যান্স","নজরদারি","CCTV surveillance has helped reduce crime in urban areas.","💡 Society+Technology topic; privacy vs security debate-এ আসে","monitoring, observation, tracking, supervision","Technology"],
+["INNOVATION","ই-নো-ভেই-শন","উদ্ভাবন","Technological innovation has revolutionised global communication.","💡 'innovative' (adj), 'innovate' (v) form শিখুন","invention, advancement, breakthrough, progress","Technology"],
+["DIGITAL","ডিজ-ই-টাল","ডিজিটাল","Digital technology has transformed how we access information.","💡 'digital divide' = IELTS-এ popular topic phrase","electronic, online, virtual, cyber","Technology"],
+["CONNECTIVITY","কো-নেক-টিভ-ই-টি","সংযোগ / যোগাযোগ ব্যবস্থা","High-speed internet connectivity is crucial for modern businesses.","💡 Technology topic; 'connected' (adj), 'connect' (v)","connection, linkage, network access","Technology"],
+["VOCATIONAL","ভো-কেই-শন-আল","বৃত্তিমূলক","Vocational training provides practical skills for the job market.","💡 'vocational vs academic education' - IELTS Task 2 topic","technical, practical, trade-based, skill-based","Education"],
+["SCHOLARSHIP","স্কল-আর-শিপ","বৃত্তি","She received a full scholarship to study at Oxford University.","💡 Education finance topic-এ key word","grant, bursary, award, fellowship","Education"],
+["PEDAGOGY","পেড-আ-গো-জি","শিক্ষাবিজ্ঞান / শিক্ষণ পদ্ধতি","Modern pedagogy emphasises critical thinking over rote memorisation.","💡 Advanced education word; 'pedagogical' (adj)","teaching method, educational approach","Education"],
+["ASSESSMENT","আ-সেস-মেন্ট","মূল্যায়ন","Continuous assessment is a better measure of student ability than exams.","💡 'assess' (v), 'assessor' (n) form শিখুন","evaluation, examination, appraisal, testing","Education"],
+["GRADUATE","গ্র্যাজ-ইউ-এট","স্নাতক / স্নাতক করা","University graduates often struggle to find employment in their field.","💡 'undergraduate' (স্নাতক পূর্ববর্তী) vs 'postgraduate' জানুন","alumni, degree holder, former student","Education"],
+["DISCRIMINATION","ডিস-ক্রিম-ই-নেই-শন","বৈষম্য / বিভেদ","Racial discrimination remains a serious issue in many societies.","💡 'discriminate against' - common structure","bias, prejudice, unfair treatment, injustice","Society"],
+["INTEGRATION","ইন-টি-গ্রেই-শন","একীভূতকরণ","Social integration of immigrants benefits the entire community.","💡 'integrate' (v), 'integrated' (adj) শিখুন","inclusion, assimilation, merging, incorporation","Society"],
+["WELFARE","ওয়েল-ফেয়ার","কল্যাণ","The government must protect the welfare of its most vulnerable citizens.","💡 'social welfare' = সামাজিক সুরক্ষা; Economy+Society topic","well-being, social support, benefit, aid","Society"],
+["VOLUNTEER","ভল-আন-টিয়ার","স্বেচ্ছাসেবক","Many young people volunteer in their local communities every weekend.","💡 Noun ও verb দুভাবেই ব্যবহার হয়","unpaid worker, community helper, charity worker","Society"],
+["TRADITION","ট্রা-ডিশ-অন","ঐতিহ্য / প্রথা","Local traditions and customs should be respected and preserved.","💡 'traditional' (adj), 'traditionally' (adv) শিখুন","custom, heritage, practice, ritual","Society"],
+["DEFORESTATION","ডি-ফর-ই-স্টেই-শন","বনউজাড়","Widespread deforestation is destroying vital animal habitats.","💡 Environment topic-এর top word; 'reforestation' = antonym","forest clearance, tree felling, logging","Environment"],
+["ECOSYSTEM","ই-কো-সিস-টেম","বাস্তুতন্ত্র","Pollutants are disrupting the delicate balance of marine ecosystems.","💡 Environment topic; 'ecological system' = synonym","natural system, biosphere, environment","Environment"],
+["EMISSION","ই-মি-শন","নির্গমন","Carbon emissions must be reduced to slow global warming.","💡 'emit' (v), 'emissions' (n, plural) শিখুন; 'greenhouse gas emissions' common","discharge, release, output, exhaust","Environment"],
+["DROUGHT","ড্রাউট","খরা","Severe droughts have devastated farming communities across Africa.","💡 Environment + Agriculture topic; 'flood' এর বিপরীত","water shortage, dry spell, arid conditions","Environment"],
+["EXTINCT","এক্স-টিংক্ট","বিলুপ্ত","Several species of birds have become extinct in recent decades.","💡 'extinction' (n), 'go extinct' (phrase) শিখুন","died out, vanished, no longer existing","Environment"],
+["ENTREPRENEUR","অন-ট্রা-প্রা-নার","উদ্যোক্তা","Successful entrepreneurs often take significant financial risks.","💡 Spelling is tricky! 'entrepreneurship' (n)","business owner, startup founder, innovator","Economy"],
+["INFLATION","ইন-ফ্লেই-শন","মুদ্রাস্ফীতি","High inflation reduces the purchasing power of consumers.","💡 Economy topic core word; 'deflation' = antonym","price rise, cost increase, monetary expansion","Economy"],
+["GLOBALISATION","গ্লো-বা-লাই-জেই-শন","বিশ্বায়ন","Globalisation has created both opportunities and economic challenges.","💡 British spelling: globalisation; US: globalization","internationalisation, worldwide integration","Economy"],
+["SUBSIDY","সাব-সি-ডি","ভর্তুকি","Government subsidies help farmers cope with rising production costs.","💡 'subsidise' (v), 'subsidised' (adj) শিখুন","financial support, grant, allowance","Economy"],
+["REVENUE","রেভ-এন-ইউ","রাজস্ব / আয়","Tourism is a major source of revenue for many developing countries.","💡 'income/earnings'-এর government/business context-এ বিকল্প","income, earnings, proceeds, receipts","Economy"],
+["IN CONTRAST","ইন কন-ট্রাস্ট","বিপরীতে","In contrast, developed nations have lower birth rates.","💡 Writing Task 1-এ দুটো item তুলনা করতে সবচেয়ে বেশি কাজে আসে","on the other hand, whereas, conversely","Linking"],
+["AS A RESULT","অ্যাজ আ রি-জাল্ট","ফলস্বরূপ","Deforestation increased. As a result, many species lost their homes.","💡 'therefore/consequently'-এর সাথে অদলবদল করে ব্যবহার করুন","consequently, therefore, thus, hence","Linking"],
+["IN ADDITION","ইন আ-ডিশ-অন","এছাড়াও / অতিরিক্তভাবে","Regular exercise improves health. In addition, it boosts mental well-being.","💡 'Furthermore/moreover'-এর বিকল্প; overuse করবেন না","furthermore, moreover, additionally, also","Linking"],
+["DESPITE","ডি-স্পাইট","সত্ত্বেও","Despite the challenges, the project was completed on time.","💡 'Despite + noun/gerund' (not 'despite of')","in spite of, regardless of, notwithstanding","Linking"],
+["SUBSEQUENTLY","সাব-সি-কোয়েন্ট-লি","পরবর্তীকালে","The factory was built. Subsequently, air pollution worsened.","💡 'Afterwards/later'-এর formal বিকল্প; সময়ের ক্রম বোঝাতে ব্যবহার করুন","afterwards, later, then, following this","Linking"],
+["ULTIMATELY","আল-টি-মেট-লি","চূড়ান্তভাবে / শেষ পর্যন্ত","Ultimately, the success of any policy depends on its implementation.","💡 Conclusion paragraph-এ very effective","in the end, finally, in the long run","Linking"],
+["PREDOMINANTLY","প্রি-ডম-ই-নেন্ট-লি","প্রধানত / অধিকাংশভাবে","The workforce is predominantly made up of young graduates.","💡 'mostly/mainly'-এর academic বিকল্প","mainly, largely, chiefly, primarily, mostly","Linking"],
+["ARGUABLY","আর-গিউ-আব-লি","যুক্তিযুক্তভাবে / কেউ কেউ বলেন","Arguably, education is the most powerful tool for social change.","💡 Opinion দেওয়ার সময় hedge করতে use করুন; Band 7+ word","possibly, perhaps, one could argue, it could be said","Linking"]
+,
+["EVIDENCE","এভ-ই-ডেন্স","প্রমাণ","There is strong scientific evidence linking smoking to cancer.","💡 'proof'-এর academic বিকল্প; 'evidence suggests' - common phrase","proof, data, facts, findings","Academic"],
+["HYPOTHESIS","হাই-পথ-ই-সিস","অনুমান / প্রকল্প","The scientist tested her hypothesis through a series of experiments.","💡 plural: hypotheses; 'test/support/reject a hypothesis' শিখুন","theory, assumption, proposition, supposition","Academic"],
+["METHODOLOGY","মেথ-ও-ডল-ও-জি","পদ্ধতি / গবেষণা পদ্ধতি","The research methodology was clearly explained in the introduction.","💡 'method' থেকে আলাদা - এটা বেশি formal ও systematic","approach, procedure, technique, framework","Academic"],
+["CORRELATION","কর-আ-লেই-শন","পারস্পরিক সম্পর্ক","There is a strong correlation between poverty and poor health outcomes.","💡 'Correlation does not imply causation' - IELTS Writing-এ golden phrase","connection, relationship, association, link","Academic"],
+["EMPIRICAL","এম-পির-ই-কাল","অভিজ্ঞতামূলক / পরীক্ষামূলক","Empirical evidence from clinical trials supports the new drug treatment.","💡 'empirical evidence' = real data থেকে পাওয়া প্রমাণ","experimental, observed, practical, data-based","Academic"],
+["SPECIMEN","স্পেস-ই-মেন","নমুনা","Scientists collected soil specimens from various regions for analysis.","💡 Science topic; 'sample' বলা যায় কিন্তু specimen বেশি specific","sample, example, instance, model","Academic"],
+["PERCEPTION","পার-সেপ-শন","উপলব্ধি / দৃষ্টিভঙ্গি","Public perception of nuclear energy has changed significantly.","💡 'perceive' (v), 'perceptive' (adj) শিখুন","view, opinion, understanding, impression","Psychology"],
+["MOTIVATION","মো-টি-ভেই-শন","অনুপ্রেরণা","Intrinsic motivation leads to better long-term academic performance.","💡 'motivate' (v), 'motivated' (adj); 'extrinsic vs intrinsic motivation' জানুন","drive, incentive, inspiration, reason","Psychology"],
+["BEHAVIOUR","বি-হেভ-ইয়ার","আচরণ","Consumer behaviour has changed dramatically due to online shopping.","💡 British spelling: behaviour (US: behavior); 'behave' (v)","conduct, actions, attitude, manner","Psychology"],
+["COGNITIVE","কগ-নি-টিভ","জ্ঞানীয় / মানসিক প্রক্রিয়া সম্পর্কিত","Regular reading improves cognitive abilities in young children.","💡 Psychology topic; 'cognition' (n) শিখুন","mental, intellectual, thinking-related","Psychology"],
+["ANXIETY","অ্যাং-জাই-এ-টি","উদ্বেগ / দুশ্চিন্তা","Social media use has been linked to increased anxiety in teenagers.","💡 Health+Psychology topic; 'anxious' (adj)","worry, stress, nervousness, apprehension","Psychology"],
+["RESILIENCE","রি-জিল-ই-এন্স","স্থিতিস্থাপকতা / মনোবল","Children who develop resilience cope better with life challenges.","💡 IELTS-এ health ও society topic-এ আসে; 'resilient' (adj)","toughness, adaptability, mental strength","Psychology"],
+["METROPOLITAN","মেট-রো-পল-ই-টান","মহানগরীয়","Metropolitan areas attract workers from surrounding rural regions.","💡 'city'-এর formal বিকল্প; 'metropolitan area' = বড় শহর এলাকা","urban, city, cosmopolitan, municipal","Urban"],
+["CONGESTION","কন-জেস-শন","যানজট / ভিড়","Traffic congestion is a serious problem in most major cities.","💡 'traffic congestion' - very common collocation in IELTS","traffic jam, overcrowding, gridlock","Urban"],
+["PEDESTRIAN","পি-ডেস-ট্রি-আন","পথচারী","Cities should invest in pedestrian-friendly streets and parks.","💡 'pedestrian zone' = হাঁটার এলাকা; Urban planning topic","walker, foot traveller","Urban"],
+["RENOVATION","রেন-ও-ভেই-শন","সংস্কার / নবায়ন","Historic buildings should be protected from unnecessary renovation.","💡 'renovate' (v), 'renovated' (adj) শিখুন","restoration, refurbishment, improvement, rebuild","Urban"],
+["DEMOLITION","ডেম-ও-লিশ-অন","ভাঙন / বিধ্বংস","The demolition of old buildings makes way for modern development.","💡 'demolish' (v); Urban planning ও environment topic","destruction, tearing down, clearance","Urban"],
+["MUNICIPALITY","মিউ-নিস-ই-পাল-ই-টি","পৌরসভা","The municipality is responsible for managing waste and public services.","💡 'local government'-এর formal বিকল্প","local government, city council, town authority","Urban"],
+["SUBSEQUENTLY","সাব-সি-কোয়েন্ট-লি","পরবর্তীকালে","The law was passed, and standards subsequently improved.","💡 Sequence of events বোঝাতে writing-এ use করুন","afterwards, later, then, following this","Linking"],
+["WHEREAS","হোয়্যার-অ্যাজ","যেখানে / বিপরীতে","Developing nations rely on agriculture, whereas developed ones rely on services.","💡 Task 1 writing-এ দুটো শ্রেণির তুলনা করতে ব্যবহার করুন","while, but, in contrast, on the other hand","Linking"],
+["GRADUALLY","গ্র্যাজ-ইউ-আ-লি","ধীরে ধীরে / ক্রমান্বয়ে","Temperatures have gradually risen over the past century.","💡 Graph writing-এ trend বর্ণনায় key word","slowly, progressively, steadily, incrementally","Linking"],
+["DRAMATICALLY","ড্রা-ম্যাট-ইক-আ-লি","নাটকীয়ভাবে","Online shopping has increased dramatically in recent years.","💡 Graph writing-এ sharp change বোঝাতে strong adverb","sharply, rapidly, significantly, steeply","Academic"],
+["APPARENTLY","আ-প্যার-এন্ট-লি","আপাতদৃষ্টে / মনে হচ্ছে","Apparently, the new policy has been largely successful.","💡 Evidence ছাড়া claim করতে hedge word হিসেবে use করুন","seemingly, it seems, evidently, supposedly","Academic"],
+["CONSIDERABLY","কন-সিড-আর-আব-লি","উল্লেখযোগ্যভাবে / যথেষ্ট","Living costs have risen considerably over the last decade.","💡 'significantly'-এর বিকল্প; graph writing-এ ব্যবহার করুন","significantly, substantially, notably, greatly","Academic"],
+["PRECIPITATION","প্রি-সিপ-ই-টেই-শন","বৃষ্টিপাত / বর্ষণ","Annual precipitation levels vary significantly across different regions.","💡 'rainfall'-এর scientific বিকল্প","rainfall, rain, snow, moisture, downpour","Environment"],
+["CONTAMINATION","কন-ট্যাম-ই-নেই-শন","দূষণ / অপবিত্রতা","Water contamination is a major health risk in many rural areas.","💡 'contaminate' (v), 'contaminated' (adj) শিখুন","pollution, impurity, toxicity, infection","Environment"],
+["FOSSIL FUEL","ফস-আল ফিউল","জীবাশ্ম জ্বালানি","The world must reduce its dependence on fossil fuels urgently.","💡 'coal, oil, gas' = fossil fuels; renewable energy = alternative","coal, oil, gas, non-renewable energy","Environment"],
+["GLACIER","গ্লেই-শার","হিমবাহ","Glaciers around the world are melting at an unprecedented rate.","💡 Environment topic; 'glacial' (adj) শিখুন","ice sheet, ice mass, ice cap","Environment"],
+["EROSION","ই-রো-ঝন","ক্ষয়","Soil erosion caused by deforestation reduces agricultural productivity.","💡 'erode' (v), 'eroded' (adj); coastal erosion, soil erosion","wearing away, degradation, corrosion","Environment"],
+["MITIGATION","মিট-ই-গেই-শন","হ্রাস করা / প্রশমন","Climate change mitigation requires global cooperation and commitment.","💡 'mitigate' (v) = reduce the impact of something","reduction, alleviation, minimisation, relief","Environment"],
+["DISPARITY","ডিস-প্যার-ই-টি","বৈষম্য / পার্থক্য","There is a significant disparity between rich and poor nations.","💡 'inequality'-এর সমার্থক; IELTS Task 2-এ common","inequality, gap, difference, imbalance","Economy"],
+["PRODUCTIVITY","প্রো-ডাক-টিভ-ই-টি","উৎপাদনশীলতা","Remote working has actually increased employee productivity significantly.","💡 'productive' (adj), 'produce' (v) শিখুন","efficiency, output, performance, yield","Economy"],
+["COMMODITY","কো-মড-ই-টি","পণ্য / পণ্যদ্রব্য","Oil remains one of the world's most traded commodities globally.","💡 Economy topic; 'commodity prices' = common collocation","product, good, item, resource","Economy"],
+["MONOPOLY","মো-নপ-ও-লি","একচেটিয়া","Large corporations should not be allowed to hold a monopoly on markets.","💡 Economy topic; 'monopolise' (v), 'monopolistic' (adj)","sole control, dominance, exclusive control","Economy"],
+["REHABILITATION","রি-হ্যাব-ই-লি-টেই-শন","পুনর্বাসন","Physical rehabilitation helps patients recover after major surgery.","💡 'rehabilitate' (v); Drug rehabilitation also common","recovery, treatment, restoration, therapy","Health"],
+["PREVENTIVE","প্রি-ভেন-টিভ","প্রতিরোধমূলক","Preventive healthcare is more cost-effective than treating diseases.","💡 'prevention is better than cure' = IELTS essay classic argument","precautionary, protective, prophylactic","Health"],
+["PSYCHOLOGICAL","সাই-কো-লজ-ই-কাল","মানসিক / মনোবৈজ্ঞানিক","The psychological impact of social media on youth is alarming.","💡 'psychology' (n), 'psychologist' (n) শিখুন","mental, emotional, behavioural, psychiatric","Psychology"],
+["IMMUNE","ই-মিউন","রোগ প্রতিরোধী","A strong immune system protects the body from infections naturally.","💡 'immunity' (n), 'immunise' (v) শিখুন","resistant, protected, invulnerable","Health"],
+["HEREDITARY","হি-রেড-ই-টেরি","বংশগত","Some diseases are hereditary and passed down through generations.","💡 'inherit' (v), 'inheritance' (n) শিখুন","genetic, inherited, inborn, congenital","Health"],
+["DIAGNOSIS","ডাই-আগ-নো-সিস","রোগ নির্ণয়","Early diagnosis of cancer significantly improves survival rates.","💡 'diagnose' (v), 'diagnostic' (adj); plural: diagnoses","identification, detection, assessment","Health"]
+,
+["CONSTITUTE","কন-স্টি-টিউট","গঠন করা / নির্মাণ করা","Women now constitute over 50% of university students.","💡 'make up/form'-এর academic বিকল্প","form, make up, compose, comprise","Academic"],
+["SUFFICIENT","সাফ-ই-শেন্ট","যথেষ্ট / পর্যাপ্ত","There is not sufficient evidence to support this claim.","💡 'enough'-এর academic বিকল্প; 'sufficiently' (adv)","enough, adequate, ample, satisfactory","Academic"],
+["OBJECTIVE","অব-জেক-টিভ","উদ্দেশ্য / নিরপেক্ষ","The objective of this study is to measure the impact of social media.","💡 Noun = goal/aim; Adjective = unbiased/impartial","aim, goal, purpose, target (noun); unbiased (adj)","Academic"],
+["CRITERIA","ক্রাই-টির-ই-আ","মানদণ্ড","The criteria for selecting candidates are clearly outlined.","💡 'criterion' = singular, 'criteria' = plural; সঠিক form ব্যবহার করুন","standards, requirements, measures, guidelines","Academic"],
+["PERSPECTIVE","পার-স্পেক-টিভ","দৃষ্টিভঙ্গি","From an economic perspective, free trade benefits all nations.","💡 'From the perspective of...' - Writing Task 2-এ excellent phrase","viewpoint, standpoint, angle, outlook","Academic"],
+["ADEQUATE","অ্যাড-ই-কোয়্যাট","যথেষ্ট / পর্যাপ্ত","Many schools lack adequate resources for quality education.","💡 'Insufficient'-এর antonym; 'adequately' (adv)","sufficient, enough, satisfactory, acceptable","Academic"],
+["COHERENT","কো-হির-এন্ট","সুসংগত / যুক্তিসম্পন্ন","A coherent argument is essential for achieving a high IELTS band.","💡 Writing score criteria-এর একটি - Coherence & Cohesion","logical, consistent, clear, well-organised","Academic"],
+["ABSTRACT","অ্যাব-স্ট্র্যাক্ট","বিমূর্ত / সারসংক্ষেপ","The abstract concept of democracy is interpreted differently worldwide.","💡 Noun form: summary of a research paper","theoretical, conceptual, non-concrete","Academic"],
+["COMPREHENSIVE","কম-প্রি-হেন-সিভ","ব্যাপক / সামগ্রিক","A comprehensive review of the literature was conducted.","💡 'thorough/complete'-এর academic বিকল্প","thorough, complete, extensive, all-inclusive","Academic"],
+["AMBIGUOUS","অ্যাম-বিগ-ইউ-আস","দ্ব্যর্থবোধক / অস্পষ্ট","The results of the study remain ambiguous and inconclusive.","💡 Writing-এ avoid করুন - your arguments should NOT be ambiguous!","unclear, vague, uncertain, open to interpretation","Academic"],
+["PREVALENT","প্রেভ-আ-লেন্ট","প্রচলিত / সাধারণ","Obesity is most prevalent in countries with high-fat diets.","💡 'common/widespread'-এর academic বিকল্প","common, widespread, frequent, rampant","Academic"],
+["PHENOMENON","ফি-নম-ই-নন","ঘটনা / বিষয়","Social media addiction is a relatively new social phenomenon.","💡 plural: phenomena; 'phenomenal' (adj) = extraordinary","event, occurrence, development, trend","Academic"],
+["ACCELERATE","অ্যাক-সেল-আর-এট","ত্বরান্বিত করা / গতি বাড়ানো","Climate change has accelerated the melting of polar ice caps.","💡 'speed up'-এর academic বিকল্প","speed up, increase, hasten, quicken","Academic"],
+["SUSTAINABLE DEVELOPMENT","সাস-টেন-আ-বল ডি-ভেল-অপ-মেন্ট","টেকসই উন্নয়ন","Sustainable development balances economic growth with environmental protection.","💡 IELTS-এ very popular topic; SDGs জানলে ভালো","green development, eco-friendly progress","Environment"],
+["TRANSITION","ট্রান-জিশ-অন","পরিবর্তন / রূপান্তর","The transition from fossil fuels to renewables takes time and investment.","💡 'change'-এর academic বিকল্প; 'transit' (যাতায়াত) থেকে আলাদা","change, shift, transformation, move","Academic"],
+["AGRICULTURAL","অ্যাগ-রি-কাল-চার-আল","কৃষিসম্পর্কিত","Agricultural land is being lost to urban development at an alarming rate.","💡 'farming'-এর academic বিকল্প; 'agriculture' (n)","farming, rural, cultivated","Agriculture"],
+["IRRIGATION","ই-রি-গেই-শন","সেচ","Modern irrigation systems have greatly improved crop yields in dry regions.","💡 Agriculture topic; 'irrigate' (v), 'irrigated' (adj)","water supply, watering system","Agriculture"],
+["CROP","ক্রপ","ফসল / শস্য","Droughts have severely reduced crop yields across East Africa.","💡 'crop failure' = ফসলহানি; 'cash crop' = নগদ ফসল","harvest, produce, yield, grain","Agriculture"],
+["FERTILISER","ফার-টি-লাই-জার","সার","Overuse of chemical fertilisers can damage soil quality long-term.","💡 British spelling: fertiliser; US: fertilizer","manure, nutrients, compost","Agriculture"],
+["ORGANIC","অর-গ্যান-ইক","জৈব / প্রাকৃতিক","Demand for organic food has risen as consumers prioritise health.","💡 'organic farming' = রাসায়নিক সার ছাড়া চাষ","natural, chemical-free, biological","Agriculture"],
+["LEGISLATION","লেজ-ই-স-লেই-শন","আইন / আইন প্রণয়ন","New legislation has been introduced to combat tax evasion.","💡 'legislate' (v), 'legislative' (adj) শিখুন","law, regulation, act, statute","Society"],
+["POLICY","পল-ই-সি","নীতি","Government policy should prioritise renewable energy investment.","💡 'policy-maker' = নীতিনির্ধারক; very common IELTS word","plan, strategy, guideline, regulation","Society"],
+["DEMOCRACY","ডি-মক-রা-সি","গণতন্ত্র","A functioning democracy requires freedom of the press and speech.","💡 'democratic' (adj), 'democratise' (v) শিখুন","representative government, rule of law","Society"],
+["REFORM","রি-ফর্ম","সংস্কার","Educational reform is needed to prepare students for the digital economy.","💡 Noun ও verb দুভাবেই আসে","change, improvement, overhaul, transformation","Society"],
+["AUTHORITY","অ-থর-ই-টি","কর্তৃপক্ষ / ক্ষমতা","Local authorities are responsible for managing public infrastructure.","💡 'authoritative' (adj) শিখুন","power, government body, official agency","Society"],
+["EXPORT","এক্স-পোর্ট","রপ্তানি","Many developing countries rely heavily on the export of raw materials.","💡 Noun ও verb দুভাবেই আসে; 'import' = antonym","sell abroad, ship out, trade","Economy"],
+["TARIFF","ট্যার-ইফ","শুল্ক / আমদানি কর","High tariffs on imported goods can protect local industries.","💡 Economy topic; trade war-এ tariff বাড়ানো হয়","import tax, duty, trade barrier, levy","Economy"],
+["PRIVATISATION","প্রাই-ভেট-আই-জেই-শন","বেসরকারিকরণ","Privatisation of state services has been controversial in many nations.","💡 'privatise' (v); opposite: nationalisation","commercialisation, deregulation","Economy"],
+["TRADE DEFICIT","ট্রেড ডেফ-ই-সিট","বাণিজ্য ঘাটতি","A growing trade deficit signals weakness in a country's economy.","💡 Economy topic; 'trade surplus' = বাণিজ্য উদ্বৃত্ত","import excess, negative trade balance","Economy"],
+["STAKEHOLDER","স্টেক-হোল-ডার","স্বার্থসংশ্লিষ্ট পক্ষ","All stakeholders must be consulted before policy decisions are made.","💡 Business topic; 'shareholder' (শেয়ারহোল্ডার) থেকে আলাদা","interested party, participant, contributor","Economy"],
+["HERITAGE","হেরিটেজ","ঐতিহ্য / উত্তরাধিকার","UNESCO works to protect cultural and natural heritage sites worldwide.","💡 'cultural heritage' = সাংস্কৃতিক ঐতিহ্য; very common collocation","tradition, legacy, inheritance, culture","Society"],
+["ASSIMILATION","আ-সিম-ই-লেই-শন","আত্তীকরণ / একীভূতকরণ","Cultural assimilation of immigrants can lead to loss of identity.","💡 'assimilate' (v); Society+Migration topic","integration, absorption, adaptation","Society"],
+["STEREOTYPE","স্টেরি-ও-টাইপ","গতানুগতিক ধারণা","It is important to challenge gender stereotypes in modern society.","💡 'stereotypical' (adj), 'stereotyping' (n) শিখুন","cliche, generalisation, fixed idea, bias","Society"],
+["TOLERANCE","টল-আর-আন্স","সহিষ্ণুতা","Cultural diversity requires tolerance and respect for different beliefs.","💡 'tolerate' (v), 'tolerant' (adj); opposite: intolerance","acceptance, open-mindedness, understanding","Society"],
+["PHILANTHROPY","ফিল-অ্যান-থ্রো-পি","দাতব্য / পরোপকার","Corporate philanthropy plays an important role in funding social projects.","💡 'philanthropist' (n), 'philanthropic' (adj) শিখুন","charity, generosity, altruism, benevolence","Society"],
+["FLUCTUATE","ফ্লাক-চু-এট","ওঠানামা করা","Oil prices fluctuated significantly throughout the decade.","💡 Graph writing-এ অনিয়মিত পরিবর্তন বোঝাতে use করুন","vary, oscillate, change irregularly, go up and down","Academic"],
+["PLATEAU","প্ল্যাট-ও","সমতল পর্যায়","After rising sharply, growth reached a plateau in 2018.","💡 Graph writing-এ level off করা বোঝাতে ব্যবহার করুন","level off, stabilise, remain steady","Academic"],
+["PEAK","পিক","শীর্ষ / সর্বোচ্চ","Sales peaked in December before dropping in the new year.","💡 Graph writing core word; 'reach a peak', 'hit a peak'","maximum, highest point, summit, zenith","Academic"],
+["SURGE","সার্জ","হঠাৎ বৃদ্ধি","There was a sudden surge in demand for hand sanitiser in 2020.","💡 Graph writing-এ sudden/sharp increase বোঝাতে","sudden increase, spike, rapid rise, jump","Academic"],
+["STEADY","স্টেড-ই","ধারাবাহিক / অপরিবর্তিত","There has been a steady increase in life expectancy over 50 years.","💡 'gradual' ও 'consistent'-এর মতো; graph writing-এ common","gradual, consistent, constant, stable","Academic"],
+["PROPORTION","প্রো-পোর-শন","অনুপাত","A large proportion of the population lives in urban areas now.","💡 'percentage'-এর academic বিকল্প; 'proportional' (adj)","percentage, ratio, share, fraction","Academic"]
+,
+["MEDIA","মি-ডি-আ","গণমাধ্যম","The media plays a crucial role in shaping public opinion.","💡 'media' is plural of 'medium'; 'social media' - very common IELTS topic","press, news outlets, broadcasting, journalism","Society"],
+["BROADCAST","ব্রড-কাস্ট","সম্প্রচার করা","Television stations broadcast news 24 hours a day.","💡 Noun ও verb দুভাবেই ব্যবহার হয়","transmit, air, publish, relay","Technology"],
+["CENSORSHIP","সেন-সার-শিপ","সেন্সরশিপ / নিয়ন্ত্রণ","Internet censorship is controversial in democratic societies.","💡 'censor' (v/n), 'censored' (adj) শিখুন","restriction, suppression, control, regulation","Society"],
+["PROPAGANDA","প্রপ-আ-গ্যান-ডা","প্রচারণা / অপপ্রচার","Governments sometimes use propaganda to influence public behaviour.","💡 Often negative connotation - biased or misleading information","misinformation, indoctrination, bias","Society"],
+["TRANSPARENCY","ট্র্যান-স্প্যার-আন-সি","স্বচ্ছতা","Transparency in government is essential for maintaining public trust.","💡 'transparent' (adj), 'transparently' (adv) শিখুন","openness, accountability, honesty, clarity","Society"],
+["REDUNDANCY","রি-ডান-ডেন-সি","ছাঁটাই / কর্মহীনতা","Many workers faced redundancy as factories became more automated.","💡 British English-এ layoff-এর পরিবর্তে এটা ব্যবহার হয়","layoff, dismissal, unemployment, job loss","Economy"],
+["OCCUPATION","অক-ইউ-পেই-শন","পেশা / কাজ","Healthcare is one of the fastest growing occupations globally.","💡 'job/profession'-এর formal বিকল্প","job, profession, career, vocation","Economy"],
+["COLLEAGUE","কল-িগ","সহকর্মী","She discussed the project with her colleagues before presenting it.","💡 Workplace vocabulary; 'co-worker' সমার্থক","co-worker, associate, fellow worker","Economy"],
+["REMOTE WORKING","রি-মোট ওয়ার-কিং","দূর থেকে কাজ","Remote working has become increasingly popular since the pandemic.","💡 'work from home', 'telecommuting' synonyms; Post-COVID IELTS topic","work from home, telecommuting, flexible working","Technology"],
+["INCENTIVE","ইন-সেন-টিভ","প্রণোদনা / উৎসাহ","Financial incentives encourage businesses to adopt green energy.","💡 'motivate' ও 'encourage'-এর noun form","reward, motivation, inducement, benefit","Economy"],
+["CARBON FOOTPRINT","কার-বন ফুট-প্রিন্ট","কার্বন পদচিহ্ন","Individuals can reduce their carbon footprint by using public transport.","💡 Environment topic-এর trending phrase; IELTS-এ বারবার আসে","environmental impact, carbon emissions","Environment"],
+["DEPLETION","ডি-প্লি-শন","হ্রাস / ক্ষয়","The depletion of the ozone layer is a serious global concern.","💡 'deplete' (v), 'depleted' (adj); 'resource depletion' common collocation","reduction, exhaustion, consumption, decrease","Environment"],
+["REFORESTATION","রি-ফর-ই-স্টেই-শন","পুনর্বনায়ন","Reforestation programmes can help restore damaged ecosystems.","💡 'deforestation'-এর opposite; 'afforestation' = নতুন বনায়ন","tree planting, forest restoration","Environment"],
+["VULNERABILITY","ভাল-নার-আ-বিল-ই-টি","দুর্বলতা / ঝুঁকিপ্রবণতা","Coastal communities face high vulnerability to rising sea levels.","💡 'vulnerable' (adj) - very common in IELTS","weakness, susceptibility, exposure, risk","Environment"],
+["CATASTROPHE","কা-ট্যাস-ট্রো-ফি","বিপর্যয় / মহাবিপদ","An environmental catastrophe could result from unchecked pollution.","💡 'catastrophic' (adj); stronger than 'disaster'","disaster, calamity, crisis, tragedy","Environment"],
+["EPIDEMIC","এপ-ই-ডেম-ইক","মহামারী","The obesity epidemic is a growing public health concern worldwide.","💡 'pandemic' = সারা বিশ্বে; 'epidemic' = নির্দিষ্ট অঞ্চলে","outbreak, widespread disease, health crisis","Health"],
+["THERAPEUTIC","থেরা-পিউ-টিক","চিকিৎসামূলক","Music has therapeutic effects on patients suffering from depression.","💡 'therapy' (n), 'therapist' (n) শিখুন","healing, curative, medicinal, remedial","Health"],
+["CONTAGIOUS","কন-টেই-জাস","সংক্রামক","Influenza is highly contagious and spreads rapidly in crowded places.","💡 'infectious' সমার্থক; 'contagion' (n) শিখুন","infectious, communicable, transmissible","Health"],
+["OBESITY","ও-বি-সি-টি","স্থূলতা","Childhood obesity rates have tripled in many developed countries.","💡 'obese' (adj); BMI over 30 = obese","excessive weight, overweight, corpulence","Health"],
+["SUPPLEMENT","সাপ-লি-মেন্ট","পরিপূরক / সম্পূরক","Many people take vitamin supplements to compensate for poor diets.","💡 Noun ও verb; 'supplement your income' = আয় বাড়ানো","addition, complement, boost, enhancement","Health"],
+["ALGORITHM","অ্যাল-গো-রিদম","অ্যালগরিদম","Social media platforms use algorithms to decide what users see.","💡 Technology topic-এ এটা now very common IELTS word","formula, procedure, process, system","Technology"],
+["CYBERSECURITY","সাই-বার-সি-কিউ-রি-টি","সাইবার নিরাপত্তা","Cybersecurity threats are a growing concern for businesses globally.","💡 Technology+Society topic; 'cyber attack' common collocation","digital security, online protection, data safety","Technology"],
+["DATABASE","ডেই-টা-বেস","তথ্যভাণ্ডার","Hospitals store patient records in secure electronic databases.","💡 Technology topic; 'data' (n) বহুবচন already","data store, information system, digital archive","Technology"],
+["RENEWABLE ENERGY","রি-নিউ-আ-বল এনার-জি","নবায়নযোগ্য শক্তি","Investing in renewable energy is essential for combating climate change.","💡 'solar, wind, hydro' = types of renewable energy","clean energy, green energy, sustainable power","Environment"],
+["PLATFORM","প্ল্যাট-ফর্ম","প্ল্যাটফর্ম / মঞ্চ","Online platforms have created new opportunities for small businesses.","💡 Digital platform = online service","service, system, medium, marketplace","Technology"],
+["CRITICAL THINKING","ক্রিট-ই-কাল থিং-কিং","সমালোচনামূলক চিন্তা","Universities aim to develop critical thinking skills in students.","💡 Education topic-এর key concept; IELTS writing-এ use করুন","analytical thinking, reasoning, evaluation","Education"],
+["DISTANCE LEARNING","ডিস-টেন্স লার্নিং","দূরশিক্ষণ","Distance learning programmes have expanded access to higher education.","💡 'e-learning', 'online education' synonyms","online learning, remote education, e-learning","Education"],
+["TUITION","টিউ-ইশ-অন","শিক্ষা ফি / ব্যক্তিগত শিক্ষা","University tuition fees have increased significantly in recent years.","💡 'tuition fee' = পাঠদান ফি; 'private tuition' = প্রাইভেট পড়া","teaching, instruction, coaching, fees","Education"],
+["COMPULSORY","কম-পাল-সা-রি","বাধ্যতামূলক","Primary education should be compulsory and free for all children.","💡 'mandatory/obligatory'-এর সমার্থক","mandatory, obligatory, required, enforced","Education"],
+["EXAMINATION","এগ-জ্যাম-ই-নেই-শন","পরীক্ষা","High-stakes examinations put enormous pressure on young students.","💡 'exam'-এর formal version; 'examinee' = পরীক্ষার্থী","test, assessment, evaluation, exam","Education"],
+["ON THE OTHER HAND","অন দা আদার হ্যান্ড","অন্যদিকে","Exercise is beneficial. On the other hand, overtraining can cause injury.","💡 Contrast দেখাতে paragraph শুরুতে ব্যবহার করুন","however, in contrast, conversely, whereas","Linking"],
+["FOR INSTANCE","ফর ইন-স্টেন্স","উদাহরণস্বরূপ","Many countries have made progress. For instance, Sweden uses 50% renewables.","💡 'For example'-এর formal বিকল্প; কখনও শুধু 'e.g.' লিখবেন না","for example, such as, to illustrate","Linking"],
+["IN CONCLUSION","ইন কন-ক্লু-ঝন","উপসংহারে","In conclusion, governments must take immediate action on climate change.","💡 Writing Task 2 conclusion paragraph শুরু করার সেরা phrase","to sum up, in summary, overall, finally","Linking"],
+["TO SUM UP","টু সাম আপ","সারসংক্ষেপে","To sum up, both individual and government action are needed to solve this issue.","💡 'In conclusion'-এর বিকল্প; একটু কম formal","in conclusion, in summary, overall, to conclude","Linking"],
+["IT IS ARGUED THAT","ইট ইজ আর্গিউড দ্যাট","যুক্তি দেওয়া হয় যে","It is argued that technology has made people less socially connected.","💡 Academic Writing-এ opinion দিতে impersonal structure ব্যবহার করুন","some believe, it is claimed, many argue","Linking"],
+["THERE IS NO DOUBT THAT","দেয়ার ইজ নো ডাউট দ্যাট","এতে কোনো সন্দেহ নেই যে","There is no doubt that climate change is the defining issue of our era.","💡 Strong statement-এর জন্য; task 2 introduction-এ effective","undoubtedly, it is clear that, unquestionably","Linking"],
+["PERCENTAGE","পার-সেন-টেজ","শতকরা / শতাংশ","The percentage of women in the workforce has increased steadily.","💡 'percent' vs 'percentage' পার্থক্য জানুন","proportion, share, ratio, fraction","Academic"],
+["TRIPLED","ট্রি-পালড","তিনগুণ হয়েছে","The number of electric vehicles tripled between 2018 and 2022.","💡 Graph writing: doubled, tripled, quadrupled শিখুন","increased threefold, grew to three times","Academic"],
+["HALVED","হ্যাভড","অর্ধেক হয়েছে","Crime rates halved following the introduction of new policing methods.","💡 Graph writing: halved, doubled সবচেয়ে বেশি আসে","reduced by half, decreased to 50%","Academic"],
+["SIGNIFICANT RISE","সিগ-নিফ-ই-কেন্ট রাইজ","উল্লেখযোগ্য বৃদ্ধি","There was a significant rise in obesity rates during the 1990s.","💡 Graph writing opening sentence-এর template","notable increase, sharp rise, marked growth","Academic"],
+["DOWNWARD TREND","ডাউন-ওয়ার্ড ট্রেন্ড","নিম্নমুখী প্রবণতা","There has been a downward trend in coal consumption since 2010.","💡 Graph writing-এ fall বোঝাতে; 'upward trend' = বিপরীত","declining pattern, decreasing tendency","Academic"]
+,
+["INEVITABLE","ইন-এভ-ই-টা-বল","অনিবার্য","Technological change is inevitable in a rapidly developing world.","💡 'unavoidable'-এর academic বিকল্প; 'inevitably' (adv)","unavoidable, certain, inescapable, necessary","Academic"],
+["FUNDAMENTAL","ফান-ডা-মেন-টাল","মৌলিক / মূলগত","Access to clean water is a fundamental human right.","💡 'basic/essential'-এর stronger বিকল্প; 'fundamentally' (adv)","basic, essential, core, primary, crucial","Academic"],
+["SUBSTANTIAL","সাব-স্ট্যান-শাল","যথেষ্ট পরিমাণ","There has been a substantial improvement in air quality recently.","💡 'big/large'-এর academic বিকল্প; graph writing-এ ব্যবহার করুন","considerable, significant, large, notable","Academic"],
+["RESTRICTION","রি-স্ট্রিক-শন","বিধিনিষেধ","Speed restrictions help reduce road accidents and save lives.","💡 'restrict' (v), 'restrictive' (adj) শিখুন","limitation, constraint, regulation, rule","Academic"],
+["ACQUISITION","অ্যাক-ওয়ি-জিশ-অন","অর্জন / অধিগ্রহণ","Language acquisition is easiest during early childhood years.","💡 Education topic; also Business - company acquisition","gaining, obtaining, learning, purchase","Academic"],
+["CONTEMPORARY","কন-টেম-পো-রা-রি","সমসাময়িক","Contemporary art often reflects current social and political issues.","💡 'modern/current'-এর academic বিকল্প","modern, current, present-day, recent","Academic"],
+["CONTROVERSIAL","কন-ট্রো-ভার-শাল","বিতর্কিত","Nuclear energy remains a highly controversial topic globally.","💡 'controversy' (n), 'controversially' (adv) শিখুন","debatable, disputed, contested, divisive","Academic"],
+["INEVITABLE","ইন-এভ-ই-টা-বল","অনিবার্য","Climate change is now considered an inevitable consequence of industrialisation.","💡 IELTS Writing-এ strong argument করতে ব্যবহার করুন","unavoidable, certain, inescapable","Academic"],
+["ALLEVIATE","আল-ি-ভি-এট","উপশম করা / কমানো","Exercise can help alleviate symptoms of depression and anxiety.","💡 'reduce/relieve'-এর academic বিকল্প","relieve, reduce, ease, lessen, mitigate","Academic"],
+["DETERIORATE","ডি-টিয়ার-ই-ও-রেট","অবনতি হওয়া","Air quality has deteriorated significantly in many industrial cities.","💡 'get worse'-এর formal বিকল্প; 'deterioration' (n)","worsen, decline, degrade, fall apart","Academic"],
+["EXACERBATE","ইগ-জ্যাস-আর-বেট","আরও খারাপ করা","Poverty exacerbates many social problems including crime and ill-health.","💡 'make worse'-এর academic বিকল্প - Band 8 word!","worsen, aggravate, intensify, compound","Academic"],
+["INEVITABLE","ইন-এভ-ই-টা-বল","অনিবার্য","In a globalised world, cultural exchange is inevitable.","💡 'certain to happen'-এর formal বিকল্প","certain, unavoidable, inescapable, destined","Academic"],
+["PREDOMINANT","প্রি-ডম-ই-নান্ট","প্রধান / প্রভাবশালী","Agriculture remains the predominant source of income in rural areas.","💡 'predominantly' (adv) = mainly; 'major'-এর academic বিকল্প","main, primary, dominant, leading","Academic"],
+["IMPLICATION","ইম-প্লি-কেই-শন","প্রভাব / পরিণতি","The implications of climate change for food security are severe.","💡 'imply' (v), 'implicit' (adj) শিখুন; 'implications of X' - common structure","consequence, effect, result, meaning","Academic"],
+["ADVOCATE","অ্যাড-ভো-কেট","সমর্থন করা / পক্ষে কথা বলা","Many scientists advocate for a complete ban on fossil fuels.","💡 Noun: a person who supports; Verb: to support a cause","support, promote, champion, argue for","Academic"],
+["PHENOMENON","ফি-নম-ই-নন","ঘটনা","Climate migration is a relatively new phenomenon worldwide.","💡 plural: phenomena; 'phenomenal' (adj) = extraordinary","event, occurrence, development, trend","Academic"],
+["PERPETUATE","পার-পেচ-ইউ-এট","স্থায়ী করা / বজায় রাখা","Poverty can perpetuate a cycle of disadvantage across generations.","💡 'maintain/continue' থেকে stronger; implies something negative","continue, maintain, sustain, prolong","Academic"],
+["DISPARITY","ডিস-প্যার-ই-টি","বৈষম্য","There is a growing disparity between the rich and the poor.","💡 'inequality/gap'-এর academic বিকল্প","inequality, difference, gap, imbalance","Economy"],
+["INDIGENOUS","ইন-ডিজ-ই-নাস","আদিবাসী / স্থানীয়","Indigenous communities often have deep knowledge of local ecosystems.","💡 Society+Environment topic; 'native' সমার্থক","native, aboriginal, local, original","Society"],
+["MORTALITY RATE","মর-ট্যাল-ই-টি রেট","মৃত্যুহার","Improved healthcare has significantly reduced infant mortality rates.","💡 'death rate'-এর academic বিকল্প; 'morbidity rate' = রোগের হার","death rate, fatality rate","Health"],
+["PHARMACEUTICAL","ফার-মা-সিউ-টি-কাল","ওষুধ সংক্রান্ত","The pharmaceutical industry spends billions on research and development.","💡 'drug company'-এর academic বিকল্প; 'pharmaceuticals' (n.pl) = medicines","medical, drug-related, medicinal","Health"],
+["ERADICATE","ই-র্যাড-ই-কেট","নির্মূল করা","Vaccination programmes have helped eradicate diseases like smallpox.","💡 'eliminate/wipe out'-এর academic বিকল্প","eliminate, wipe out, destroy, abolish","Health"],
+["SANITATION","স্যান-ই-টেই-শন","স্বাস্থ্যবিধি / পয়ঃনিষ্কাশন","Poor sanitation is a major cause of disease in developing countries.","💡 Water+Health topic; 'sanitary' (adj)","hygiene, sewage system, waste management","Health"],
+["DEMOGRAPHIC","ডেম-ও-গ্রাফ-ইক","জনতাত্ত্বিক","Demographic changes are reshaping economies around the world.","💡 'demographics' (n.pl) = population statistics","population-related, statistical, social","Society"],
+["SEGREGATION","সেগ-রি-গেই-শন","বিচ্ছিন্নতা / পৃথকীকরণ","Racial segregation was abolished in the United States in the 1960s.","💡 'integration'-এর antonym; History+Society topic","separation, division, isolation","Society"],
+["MARGINALISED","মার-জি-না-লাইজড","প্রান্তিক / সমাজের কিনারায় থাকা","Marginalised communities often lack access to quality education.","💡 'marginalise' (v); 'vulnerable' সমার্থক","excluded, disadvantaged, vulnerable, neglected","Society"],
+["AUTONOMY","অ-টন-ও-মি","স্বায়ত্তশাসন / স্বাধীনতা","Giving schools more autonomy can improve educational outcomes.","💡 'autonomous' (adj), 'autonomously' (adv) শিখুন","independence, self-governance, freedom","Society"],
+["PERCEPTION","পার-সেপ-শন","উপলব্ধি / ধারণা","Public perception of climate change has shifted dramatically.","💡 'perceive' (v) - IELTS Writing-এ opinion discussion-এ useful","view, opinion, understanding, attitude","Psychology"],
+["INITIATIVE","ই-নিশ-ই-এটিভ","উদ্যোগ","The government launched an initiative to promote renewable energy.","💡 'take the initiative' = উদ্যোগ নেওয়া; 'initiative' noun-এ ব্যবহার করুন","scheme, programme, plan, drive","Academic"],
+["COLLABORATE","কো-ল্যাব-ও-রেট","সহযোগিতা করা","Scientists across the globe collaborate to find solutions to pandemics.","💡 'collaboration' (n), 'collaborative' (adj) শিখুন","work together, cooperate, partner","Academic"],
+["ENHANCE","এন-হ্যান্স","উন্নত করা / বাড়ানো","Technology can enhance the quality of education for remote students.","💡 'improve'-এর academic বিকল্প","improve, boost, increase, strengthen","Academic"],
+["UNDERMINE","আন-ডার-মাইন","দুর্বল করা / ক্ষতি করা","Corruption undermines public trust in democratic institutions.","💡 'weaken/damage'-এর academic বিকল্প","weaken, damage, sabotage, erode","Academic"],
+["PERCEPTION","পার-সেপ-শন","ধারণা","The perception of crime is often worse than the actual statistics suggest.","💡 'perception vs reality' - IELTS Task 2-এ common theme","view, opinion, impression, belief","Psychology"],
+["OBLIGATION","অব-লি-গেই-শন","দায়িত্ব / বাধ্যবাধকতা","Governments have an obligation to protect their citizens health.","💡 'obligatory' (adj), 'obligate' (v) শিখুন","duty, responsibility, requirement, commitment","Academic"],
+["CONTEMPORARY","কন-টেম-পো-রা-রি","সমকালীন","Contemporary approaches to education focus on collaboration.","💡 'modern' vs 'contemporary' - contemporary = এই সময়ের","current, modern, present-day, today's","Academic"],
+["PREVALENT","প্রেভ-আ-লেন্ট","প্রচলিত","Smartphone addiction is increasingly prevalent among teenagers.","💡 'common/widespread'-এর academic বিকল্প","common, widespread, frequent, rampant","Academic"],
+["ACCELERATE","অ্যাক-সেল-আর-এট","ত্বরান্বিত হওয়া","The pace of urbanisation has accelerated in developing nations.","💡 Graph: 'accelerating growth' = increasingly rapid increase","speed up, quicken, increase, hasten","Academic"],
+["RATIONALE","র্যাশ-এন-আল","যুক্তি / কারণ","The rationale for investing in education is both social and economic.","💡 'reason/justification'-এর academic বিকল্প","reason, justification, basis, logic","Academic"],
+["PROHIBIT","প্রো-হিব-ইট","নিষেধ করা","Many countries have prohibited the use of single-use plastics.","💡 'ban'-এর formal বিকল্প; 'prohibition' (n)","ban, forbid, outlaw, disallow","Academic"],
+["SIMULTANEOUSLY","সাই-মাল-টেই-নি-আস-লি","একই সাথে / যুগপৎ","Developing countries must address poverty and climate change simultaneously.","💡 'at the same time'-এর academic বিকল্প","at the same time, concurrently, together","Academic"],
+["DISTINCTION","ডিস-টিংক-শন","পার্থক্য / বৈশিষ্ট্য","There is an important distinction between climate and weather patterns.","💡 'make a distinction between X and Y' - useful academic phrase","difference, contrast, division, separation","Academic"],
+["CONTROVERSY","কন-ট্রো-ভার-সি","বিতর্ক / মতভেদ","There is significant controversy surrounding the use of nuclear energy.","💡 'controversial' (adj), 'controversially' (adv) শিখুন","debate, dispute, disagreement, argument","Academic"],
+["PREVALENCE","প্রেভ-আ-লেন্স","প্রাদুর্ভাব / ব্যাপকতা","The prevalence of obesity has increased in high-income countries.","💡 'prevalent' (adj); 'increasing prevalence' - common collocation","frequency, commonness, widespread occurrence","Academic"],
+["OFFSET","অফ-সেট","পুষিয়ে নেওয়া / ক্ষতিপূরণ দেওয়া","Planting trees can help offset carbon emissions from industry.","💡 Environment topic; 'carbon offset' = very common phrase","compensate for, balance, counteract","Environment"],
+["UNPRECEDENTED","আন-প্রেস-ই-ডেন-টেড","অভূতপূর্ব","Global temperatures have risen at an unprecedented rate this century.","💡 Very strong word; use only for truly unusual events","unparalleled, extraordinary, unique, historic","Academic"],
+["VIABLE","ভাই-আ-বল","কার্যকর / সম্ভবপর","Solar power is now a commercially viable energy source worldwide.","💡 'feasible/workable'-এর সমার্থক","feasible, workable, practical, achievable","Academic"],
+["SCARCITY","স্কেয়ার-সি-টি","অভাব / স্বল্পতা","Water scarcity is a growing problem in many parts of the world.","💡 'scarce' (adj); 'scarcity of resources' - common phrase","shortage, lack, insufficiency, deficit","Environment"],
+["DELEGATE","ডেল-ই-গেট","ক্ষমতা অর্পণ করা / প্রতিনিধি","Managers should learn to delegate tasks to their team members.","💡 Noun: representative; Verb: to assign responsibility","assign, entrust, transfer, representative","Academic"],
+["PRAGMATIC","প্র্যাগ-ম্যাট-ইক","বাস্তববাদী","A pragmatic approach to environmental policy is more effective.","💡 'practical/realistic'-এর academic বিকল্প","practical, realistic, sensible, logical","Academic"],
+["COHERENT","কো-হির-এন্ট","সুসংগত / যৌক্তিক","A coherent and well-structured essay will score higher in IELTS.","💡 IELTS Writing marking criteria-এর একটি - Coherence","logical, consistent, clear, well-structured","Academic"],
+["MARGINAL","মার-জি-নাল","সামান্য / প্রান্তিক","There has been only a marginal improvement in employment rates.","💡 Graph writing-এ slight/small change বোঝাতে ব্যবহার করুন","slight, small, minor, insignificant","Academic"],
+["EXPONENTIAL","এক্স-পো-নেন-শাল","জ্যামিতিক হারে বৃদ্ধি","The internet has seen exponential growth since the 1990s.","💡 Graph writing-এ very rapid growth বোঝাতে ব্যবহার করুন","rapid, explosive, dramatic, accelerating","Academic"]
+,
+["ACCUMULATE","আক-ইউ-মিউ-লেট","জমা হওয়া","Greenhouse gases accumulate in the atmosphere over time.","💡 'accumulation' (n); 'build up'-এর academic বিকল্প","build up, gather, collect, amass","Environment"],
+["BIODEGRADABLE","বায়ো-ডি-গ্রেড-আ-বল","জৈব বিভাজ্য","Packaging should be made from biodegradable materials to reduce waste.","💡 'non-biodegradable' = পরিবেশের জন্য ক্ষতিকর","eco-friendly, decomposable, natural","Environment"],
+["CARBON NEUTRAL","কার-বন নিউ-ট্রাল","কার্বন নিরপেক্ষ","Many airlines have pledged to become carbon neutral by 2050.","💡 'net zero' সমার্থক; very trending IELTS phrase","net zero, zero emissions, climate neutral","Environment"],
+["EXPLOIT","এক্স-প্লয়ট","শোষণ করা / ব্যবহার করা","Natural resources are often exploited without regard for the environment.","💡 'exploitation' (n); negative connotation","misuse, overuse, take advantage of, extract","Environment"],
+["FINITE","ফাই-নাইট","সীমিত / শেষ হওয়ার মতো","Fossil fuels are finite resources that will eventually run out.","💡 'infinite' = antonym; 'finite resources' - common collocation","limited, exhaustible, restricted, bounded","Environment"],
+["HABITAT LOSS","হ্যাব-ই-ট্যাট লস","আবাসস্থল ধ্বংস","Habitat loss is the leading cause of species extinction worldwide.","💡 Environment topic; combines 'habitat' + 'loss'","habitat destruction, ecosystem loss","Environment"],
+["MARINE","মা-রিন","সামুদ্রিক","Plastic pollution poses a severe threat to marine ecosystems.","💡 'marine life' = সামুদ্রিক প্রাণী; 'maritime' = নৌবাণিজ্য সম্পর্কিত","ocean, sea, aquatic, nautical","Environment"],
+["OZONE LAYER","ও-জোন লেয়ার","ওজোন স্তর","The ozone layer protects Earth from harmful ultraviolet radiation.","💡 'ozone depletion' = ওজোন হ্রাস; CFC causes this","protective layer, atmospheric shield","Environment"],
+["POLLUTANT","পো-লু-ট্যান্ট","দূষণকারী পদার্থ","Industrial pollutants have contaminated rivers across the region.","💡 'pollution' (n), 'pollute' (v), 'pollutant' (n) সব form শিখুন","contaminant, toxic substance, harmful chemical","Environment"],
+["TOXIC","টক-সিক","বিষাক্ত","Toxic chemicals from factories have polluted local water supplies.","💡 'toxicity' (n), 'toxin' (n) শিখুন","poisonous, harmful, hazardous, lethal","Environment"],
+["WELFARE STATE","ওয়েল-ফেয়ার স্টেট","কল্যাণ রাষ্ট্র","The welfare state ensures basic needs are met for all citizens.","💡 Society+Economy topic; Scandinavian countries = best examples","social safety net, social support system","Society"],
+["CIVIC","সিভ-ইক","নাগরিক সম্পর্কিত","Civic responsibility includes voting and paying taxes.","💡 'civil' (adj) থেকে আলাদা; 'civic duty' = common phrase","civil, public, community, municipal","Society"],
+["COHESION","কো-হি-ঝন","সংহতি / ঐক্য","Social cohesion is essential for a stable and peaceful society.","💡 IELTS Writing Band Descriptor-এ Coherence & Cohesion আছে","unity, solidarity, togetherness, harmony","Society"],
+["PREJUDICE","প্রেজ-ইউ-ডিস","পক্ষপাত / কুসংস্কার","Racial prejudice still exists in many parts of the modern world.","💡 'prejudiced' (adj), 'prejudicial' (adj) শিখুন","bias, discrimination, stereotype, unfair opinion","Society"],
+["SOCIOECONOMIC","সো-সি-ও-ই-কো-নম-ইক","সামাজিক-অর্থনৈতিক","Socioeconomic factors strongly influence educational achievement.","💡 Advanced word; combines social + economic","social and economic, class-related","Society"],
+["AUSTERITY","অ-স্টের-ই-টি","কঠোর মিতব্যয়িতা","Government austerity measures led to cuts in public services.","💡 Economy topic; 'austerity measures' = বাজেট কাটছাঁট","economic restraint, budget cuts, fiscal tightening","Economy"],
+["COMMODITY PRICE","কো-মড-ই-টি প্রাইস","পণ্যমূল্য","Rising commodity prices are increasing the cost of living globally.","💡 Economy topic; oil, wheat, gold = commodities","market price, trade price, raw material cost","Economy"],
+["FISCAL","ফিস-কাল","রাজকোষীয় / রাজস্ব সম্পর্কিত","The government announced new fiscal policies to stimulate growth.","💡 'fiscal policy' = সরকারের আয়-ব্যয় নীতি","financial, budgetary, monetary, economic","Economy"],
+["GROSS DOMESTIC PRODUCT","গ্রস ডো-মেস-টিক প্রড-আক্ট","মোট দেশজ উৎপাদন","GDP growth has slowed in most developed economies this year.","💡 Write 'GDP' after first use; Economy topic core term","national output, economic output, GDP","Economy"],
+["INTEREST RATE","ইন-টার-এস্ট রেট","সুদের হার","Central banks raise interest rates to control inflation.","💡 Economy topic; 'low interest rates encourage borrowing'","borrowing rate, lending rate","Economy"],
+["INNOVATION HUB","ইন-নো-ভেই-শন হাব","উদ্ভাবন কেন্দ্র","Silicon Valley is considered the world's leading innovation hub.","💡 Technology+Economy topic; 'tech hub' সমার্থক","technology centre, startup ecosystem","Technology"],
+["OBSOLETE","অব-সো-লিট","অপ্রচলিত / পুরনো","Many traditional jobs have become obsolete due to automation.","💡 'outdated/outmoded'-এর academic বিকল্প","outdated, outmoded, defunct, old-fashioned","Technology"],
+["PROTOTYPE","প্রো-টো-টাইপ","প্রাথমিক নমুনা","Engineers built a prototype of the electric vehicle for testing.","💡 Technology topic; 'prototype testing' = common collocation","model, sample, draft version, pilot","Technology"],
+["VIRTUAL REALITY","ভার-চু-আল রি-অ্যাল-ই-টি","ভার্চুয়াল বাস্তবতা","Virtual reality technology is transforming medical training and education.","💡 VR = abbreviation; Technology topic","simulated environment, immersive technology","Technology"],
+["BANDWIDTH","ব্যান্ড-উইডথ","ব্যান্ডউইথ","High bandwidth is essential for streaming video content online.","💡 Technology topic; 'limited bandwidth' = slow internet","data capacity, internet speed, network capacity","Technology"],
+["APPRENTICESHIP","আ-প্রেন-টিস-শিপ","শিক্ষানবিশি","Apprenticeships provide practical training alongside formal education.","💡 Education+Economy topic; UK-এ very popular system","training programme, internship, on-the-job training","Education"],
+["ENROLMENT","এন-রোল-মেন্ট","তালিকাভুক্তি / ভর্তি","School enrolment rates have increased significantly in Africa.","💡 British: enrolment; US: enrollment; 'enrol' (v)","registration, admission, intake, joining","Education"],
+["INTELLECTUAL","ইন-টেলেক-চু-আল","বৌদ্ধিক / মেধাসম্পন্ন","Higher education should develop intellectual curiosity, not just job skills.","💡 'intelligence' (n), 'intellectually' (adv) শিখুন","academic, scholarly, cognitive, cerebral","Education"],
+["PLAGIARISM","প্লেই-জি-আ-রিজম","সাহিত্যচৌর্য / নকল","Universities have strict policies against plagiarism and academic fraud.","💡 Education topic; 'plagiarise' (v), 'plagiarist' (n)","copying, cheating, intellectual theft","Education"],
+["POSTGRADUATE","পোস্ট-গ্র্যাজ-ইউ-এট","স্নাতকোত্তর","Postgraduate research contributes significantly to scientific advancement.","💡 'undergraduate' (গ্রাড পূর্বে) vs 'postgraduate' (গ্রাডের পরে)","masters, doctoral, advanced degree","Education"],
+["SEDENTARY LIFESTYLE","সেড-এন-টা-রি লাইফ-স্টাইল","আসীন জীবনযাপন","A sedentary lifestyle is a major risk factor for cardiovascular disease.","💡 Health topic; opposite = active lifestyle","inactive lifestyle, physically inactive life","Health"],
+["LIFE EXPECTANCY","লাইফ এক্স-পেক-টেন-সি","গড় আয়ু","Life expectancy has increased significantly in most countries.","💡 Health+Society topic core phrase","average lifespan, longevity, years of life","Health"],
+["MALNUTRITION","মাল-নিউ-ট্রি-শন","অপুষ্টি","Malnutrition affects millions of children in developing countries.","💡 Health+Agriculture topic; 'malnourished' (adj)","undernutrition, food deprivation, poor diet","Health"],
+["PANDEMIC","প্যান-ডেম-ইক","বৈশ্বিক মহামারী","The COVID-19 pandemic exposed weaknesses in global healthcare systems.","💡 'epidemic' (local) vs 'pandemic' (global) পার্থক্য মনে রাখুন","global outbreak, worldwide epidemic, health crisis","Health"],
+["PRESCRIPTION","প্রি-স্ক্রিপ-শন","প্রেসক্রিপশন / চিকিৎসাবিধি","Rising prescription drug costs are a burden on healthcare systems.","💡 'prescribe' (v), 'prescribed' (adj) শিখুন","medical order, doctor's note, medication order","Health"],
+["WELL-BEING","ওয়েল-বি-ইং","সুস্থতা / মানসিক শান্তি","Schools should prioritise the emotional well-being of students.","💡 'wellbeing' ও 'well-being' দুটোই accepted; health+society topic","health, happiness, welfare, quality of life","Health"],
+["HINDER","হিন-ডার","বাধা দেওয়া","Lack of funding can hinder scientific research and development.","💡 'obstacle/barrier'-এর verb form; 'hindrance' (n)","obstruct, impede, slow down, prevent","Academic"],
+["DEPICT","ডি-পিক্ট","চিত্রিত করা","The graph depicts a sharp increase in global temperatures.","💡 Graph writing-এ 'show/illustrate'-এর বিকল্প","show, illustrate, portray, represent","Academic"],
+["ATTAIN","আ-টেন","অর্জন করা","With hard work, students can attain high scores in IELTS.","💡 'achieve/reach'-এর academic বিকল্প","achieve, reach, accomplish, gain","Academic"],
+["FLUCTUATION","ফ্লাক-চু-এই-শন","ওঠানামা","There were significant fluctuations in oil prices throughout the year.","💡 Graph writing-এ অনিয়মিত পরিবর্তন বোঝাতে","variation, change, instability, oscillation","Academic"]
+,
+["ABSTRACT","অ্যাব-স্ট্র্যাক্ট","বিমূর্ত / সারসংক্ষেপ","The abstract of the research paper summarised the key findings.","💡 Academic writing-এ summary; adjective হিসেবেও ব্যবহার হয়","summary, overview, conceptual, theoretical","Academic"],
+["ACCOUNTABILITY","আ-কাউন্ট-আ-বিল-ই-টি","জবাবদিহিতা","Public institutions must demonstrate accountability to citizens.","💡 'accountable' (adj); Government topic-এ key word","responsibility, answerability, transparency","Society"],
+["ASSERTION","আ-সার-শন","দৃঢ় বক্তব্য / দাবি","The author makes the assertion that technology reduces employment.","💡 'assert' (v); Academic writing-এ argument করতে ব্যবহার করুন","claim, statement, declaration, argument","Academic"],
+["CATALYST","ক্যাট-আ-লিস্ট","অনুঘটক / পরিবর্তনের কারণ","The internet acted as a catalyst for globalisation worldwide.","💡 Science শব্দ কিন্তু social context-এ বেশি আসে","trigger, stimulus, driver, spark","Academic"],
+["CHRONIC DISEASE","ক্রন-ইক ডি-জিজ","দীর্ঘমেয়াদী রোগ","Chronic diseases such as diabetes are increasingly prevalent globally.","💡 Health topic; 'non-communicable disease' = সমার্থক","long-term illness, persistent condition","Health"],
+["CIRCULATION","সার-কিউ-লেই-শন","প্রচলন / সঞ্চালন","Money in circulation increases when central banks lower interest rates.","💡 Economy: money circulation; Health: blood circulation","flow, distribution, movement","Economy"],
+["CIVIL SOCIETY","সিভ-আল সো-সাই-আ-টি","সুশীল সমাজ","Civil society organisations play a vital role in democratic governance.","💡 NGO + charitable organisations = civil society","non-governmental sector, public sphere","Society"],
+["COGNITIVE DEVELOPMENT","কগ-নি-টিভ ডি-ভেল-অপ-মেন্ট","মানসিক বিকাশ","Early childhood education is critical for cognitive development.","💡 Education+Psychology topic; 'cognitive' = mental","mental growth, intellectual development","Education"],
+["COMMODITY","কো-মড-ই-টি","পণ্যদ্রব্য","Water is increasingly treated as a commodity rather than a right.","💡 Economy topic; raw materials traded = commodities","product, good, resource, tradeable item","Economy"],
+["COMPLIANCE","কম-প্লাই-আন্স","সম্মতি / মেনে চলা","Companies must ensure compliance with environmental regulations.","💡 'comply with' (v); Law+Business topic","adherence, conformity, obedience, observance","Academic"],
+["CONCEDE","কন-সিড","স্বীকার করা","Even critics concede that renewable energy has become more affordable.","💡 Academic writing-এ counterargument স্বীকার করতে ব্যবহার করুন","admit, acknowledge, accept, grant","Academic"],
+["CONVENTIONAL","কন-ভেন-শন-আল","প্রচলিত / গতানুগতিক","Conventional energy sources are being replaced by renewables.","💡 'unconventional' = antonym; 'traditional'-এর academic বিকল্প","traditional, standard, orthodox, usual","Academic"],
+["COUNTERPRODUCTIVE","কাউন-টার-প্রো-ডাক-টিভ","বিপরীত ফল দেয় এমন","Strict diets can be counterproductive if they trigger overeating.","💡 Strong argument word for disadvantages paragraph","self-defeating, harmful, backfiring","Academic"],
+["DEPRIVATION","ডেপ-রি-ভেই-শন","বঞ্চনা / অভাব","Sleep deprivation severely affects cognitive performance and health.","💡 'deprive' (v); 'social deprivation' = সামাজিক বঞ্চনা","poverty, hardship, lack, shortage","Society"],
+["DETERIORATION","ডি-টিয়ার-ই-ও-রেই-শন","অবনতি","The deterioration of air quality is directly linked to industrialisation.","💡 'deteriorate' (v); 'marked deterioration' common collocation","decline, worsening, degradation, decay","Academic"],
+["DIGITAL DIVIDE","ডিজ-ই-টাল ডাই-ভাইড","ডিজিটাল বিভাজন","The digital divide between rich and poor nations is widening rapidly.","💡 Technology+Society topic; IELTS Task 2-এ hot topic","technological gap, internet inequality","Technology"],
+["DISCRIMINATION","ডিস-ক্রিম-ই-নেই-শন","বৈষম্য","Gender discrimination in the workplace remains a persistent problem.","💡 'discriminate against' (v); 'discriminatory' (adj)","prejudice, bias, unfair treatment, inequality","Society"],
+["DISPLACEMENT","ডিস-প্লেস-মেন্ট","বাস্তুচ্যুতি","Climate change is causing the displacement of millions of people.","💡 'displace' (v); refugee+climate topic","relocation, forced migration, uprooting","Society"],
+["DISTRIBUTE","ডিস-ট্রিব-ইউট","বিতরণ করা","Wealth is unevenly distributed across regions in most countries.","💡 'distribution' (n), 'redistributive' (adj) শিখুন","share, allocate, spread, disperse","Academic"],
+["DOMINANT","ডম-ই-নান্ট","প্রভাবশালী / প্রধান","English has become the dominant language of global communication.","💡 'dominate' (v), 'dominance' (n) শিখুন","leading, main, controlling, prevailing","Academic"],
+["ECOLOGICAL","ই-কো-লজ-ই-কাল","পরিবেশগত","Deforestation has severe ecological consequences for biodiversity.","💡 'ecology' (n), 'ecologist' (n) শিখুন","environmental, natural, biological","Environment"],
+["EMPOWERMENT","এম-পাউ-আর-মেন্ট","ক্ষমতায়ন","Education is key to the economic empowerment of women.","💡 'empower' (v); Society+Education topic","enablement, liberation, independence","Society"],
+["ENDANGER","এন-ডেন-জার","বিপন্ন করা","Pollution endangers the health of millions of urban residents.","💡 'endangered species' = বিপন্ন প্রজাতি","threaten, put at risk, jeopardise","Environment"],
+["ENFORCE","এন-ফোর্স","কার্যকর করা","Governments must enforce stricter regulations on carbon emissions.","💡 'enforcement' (n); Law+Society topic","implement, apply, uphold, impose","Academic"],
+["EQUITY","এক-ওয়ি-টি","ন্যায্যতা / সমতা","Educational equity ensures all students have access to quality learning.","💡 'equality' = সমান; 'equity' = ন্যায্য বণ্টন (subtle difference!)","fairness, justice, impartiality","Society"],
+["ETHICAL","এথ-ই-কাল","নৈতিক","It raises ethical questions about the use of genetic engineering.","💡 'ethics' (n), 'ethically' (adv) শিখুন","moral, principled, virtuous, right","Academic"],
+["EXCLUSION","এক্স-ক্লু-ঝন","বাদ দেওয়া / বর্জন","Social exclusion of minority groups undermines community cohesion.","💡 'exclude' (v), 'exclusive' (adj); 'inclusion' = antonym","rejection, marginalisation, isolation","Society"],
+["EXPLOITATION","এক্স-প্লয়-টেই-শন","শোষণ","The exploitation of cheap labour in developing countries is unethical.","💡 'exploit' (v); negative connotation always","misuse, abuse, taking advantage","Society"],
+["FLUCTUATION","ফ্লাক-চু-এই-শন","ওঠানামা","Fluctuations in temperature can harm agricultural productivity.","💡 Graph writing-এ irregular changes বোঝাতে ব্যবহার করুন","variation, instability, change, oscillation","Academic"],
+["FRAGILE","ফ্র্যাজ-আইল","ভঙ্গুর / নাজুক","Small island nations have fragile ecosystems vulnerable to climate change.","💡 'fragility' (n); Environment+Society topic","delicate, vulnerable, weak, unstable","Academic"],
+["GENDER GAP","জেন-ডার গ্যাপ","লিঙ্গ বৈষম্য","The gender gap in wages persists despite equal opportunity legislation.","💡 Society topic; 'pay gap' সমার্থক এখানে","pay inequality, gender disparity","Society"],
+["GOVERNANCE","গাভ-আর-নেন্স","শাসন ব্যবস্থা","Good governance requires transparency and democratic accountability.","💡 'govern' (v), 'government' (n) থেকে আলাদা concept","management, administration, leadership","Society"],
+["HOMOGENEOUS","হো-মো-জি-নি-আস","একজাতীয় / সমরূপ","A homogeneous society lacks the benefits that diversity provides.","💡 'heterogeneous' = diverse; opposite","uniform, identical, consistent, similar","Society"],
+["INCENTIVISE","ইন-সেন-টি-ভাইজ","প্রণোদনা দেওয়া","Governments should incentivise companies to adopt green energy.","💡 'incentive' (n); Policy topic-এ useful verb","encourage, motivate, reward, stimulate","Economy"],
+["INEQUALITY","ইন-ই-কোয়্যাল-ই-টি","অসমতা","Economic inequality between nations has widened in recent decades.","💡 IELTS Task 2-এ most common discussion topic","disparity, gap, imbalance, injustice","Society"],
+["INFRASTRUCTURE INVESTMENT","ইন-ফ্রা-স্ট্রাক-চার ইন-ভেস্ট-মেন্ট","অবকাঠামো বিনিয়োগ","Infrastructure investment creates jobs and stimulates economic growth.","💡 Economy+Urban topic; combines two important words","capital spending, public investment","Economy"],
+["INTERDEPENDENT","ইন-টার-ডি-পেন-ডেন্ট","পরস্পর নির্ভরশীল","In a globalised world, economies are increasingly interdependent.","💡 'interdependence' (n); Global topics-এ useful","mutually dependent, interconnected, linked","Academic"],
+["INTERVENTION","ইন-টার-ভেন-শন","হস্তক্ষেপ / পদক্ষেপ","Government intervention is sometimes needed to correct market failures.","💡 'intervene' (v); Economy+Society topic","involvement, action, interference, involvement","Academic"],
+["JEOPARDISE","জেপ-আর-ডাইজ","বিপদে ফেলা / ঝুঁকিতে ফেলা","Climate change jeopardises food security for billions worldwide.","💡 'put at risk'-এর academic বিকল্প; British spelling","threaten, endanger, risk, compromise","Academic"],
+["JUSTIFICATION","জাস-টি-ফি-কেই-শন","যৌক্তিক কারণ","There is no justification for cutting education budgets.","💡 'justify' (v), 'justified' (adj) শিখুন","reason, rationale, grounds, basis","Academic"]
+];}
+  current=0;showCard();
+}
+
+function markDone(){navigate(1);}
+function markAgain(){showCard();}
+
+function rate(e,n){
+  e.stopPropagation();
+  ratings[filtered[current]]=n;
+  updateStars(n);
+}
+
+function updateStars(n){
+  document.querySelectorAll('.star').forEach((s,i)=>{
+    s.classList.toggle('active',i<n);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
