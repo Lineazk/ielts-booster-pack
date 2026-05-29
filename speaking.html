@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IELTS Master Suite - Achieve Band 9.0 autonomously</title>
-    <meta name="description" content="Unlock the ultimate IELTS preparation suite. Features premium VoIP live examiner calls, topic-based voiced vocabulary vaults, dictation spelling trainers, and academic essay templates.">
+    <meta name="description" content="Unlock the ultimate IELTS preparation suite. Features live examiner calls, topic-based voiced vocabulary vaults, dictation spelling trainers, and academic essay templates.">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -848,55 +848,102 @@
             font-family: 'Fira Code', monospace;
         }
 
-        /* REAL-TIME VoIP calling screen OVERLAY */
+        /* iOS-STYLE PHONE CALL OVERLAY (Unified Layout) */
         .voip-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #03050a;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(180deg, #0a0a14 0%, #060610 100%);
             z-index: 5000;
             flex-direction: column;
-            justify-content: space-between;
             align-items: center;
-            padding: 60px 20px;
+            justify-content: space-between;
+            padding: env(safe-area-inset-top, 48px) 20px env(safe-area-inset-bottom, 36px);
             color: #fff;
             font-family: 'Outfit', sans-serif;
-            animation: voipFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: voipFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes voipFadeIn {
-            from { opacity: 0; transform: scale(1.05); }
+            from { opacity: 0; transform: scale(1.04); }
             to { opacity: 1; transform: scale(1); }
         }
 
+        .voip-call-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .voip-call-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .voip-call-timer {
+            font-size: 17px;
+            font-family: 'Fira Code', monospace;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 2px;
+        }
+
         .voip-status-badge {
-            background: rgba(0, 229, 255, 0.1);
-            border: 1px solid rgba(0, 229, 255, 0.2);
-            padding: 6px 20px;
+            background: rgba(0,229,255,0.12);
+            border: 1px solid rgba(0,229,255,0.22);
+            padding: 5px 18px;
             border-radius: 50px;
             font-family: 'Fira Code', monospace;
             color: var(--accent-cyan);
-            font-size: 13px;
-            letter-spacing: 1px;
+            font-size: 11px;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
             box-shadow: var(--glow-cyan);
+            transition: var(--transition-smooth);
+        }
+
+        .voip-status-badge.dialing {
+            background: rgba(255, 195, 0, 0.1);
+            border-color: rgba(255, 195, 0, 0.25);
+            color: var(--accent-gold);
+            box-shadow: 0 0 15px rgba(255, 195, 0, 0.15);
         }
 
         .voip-status-badge.listening {
-            background: rgba(139, 92, 246, 0.1);
-            border-color: rgba(139, 92, 246, 0.25);
+            background: rgba(74,222,128,0.12);
+            border-color: rgba(74,222,128,0.3);
+            color: #4ade80;
+            animation: statusPulse 1.5s ease-in-out infinite;
+        }
+
+        .voip-status-badge.speaking {
+            background: rgba(139, 92, 246, 0.12);
+            border-color: rgba(139, 92, 246, 0.3);
             color: var(--accent-purple);
             box-shadow: var(--glow-purple);
         }
 
+        .voip-status-badge.processing {
+            background: rgba(255,195,0,0.1);
+            border-color: rgba(255,195,0,0.25);
+            color: var(--accent-gold);
+        }
+
         .voip-status-badge.error {
-            background: rgba(255, 74, 74, 0.1);
-            border-color: rgba(255, 74, 74, 0.25);
+            background: rgba(255,74,74,0.1);
+            border-color: rgba(255,74,74,0.25);
             color: var(--accent-red);
             box-shadow: 0 0 15px rgba(255, 74, 74, 0.2);
+        }
+
+        @keyframes statusPulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+            50% { box-shadow: 0 0 0 6px rgba(74,222,128,0.15); }
         }
 
         .voip-avatar-wrapper {
@@ -904,127 +951,190 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 40px 0;
+            margin: 8px 0;
         }
 
         .voip-avatar {
-            width: 160px;
-            height: 160px;
-            border-radius: 100px;
-            background: var(--gradient-primary);
-            box-shadow: 0 0 50px rgba(0, 229, 255, 0.35);
+            width: 140px;
+            height: 140px;
+            border-radius: 70px;
+            background: linear-gradient(135deg, #1a1a3e 0%, #0d2044 100%);
+            border: 2px solid rgba(0,229,255,0.25);
+            box-shadow: 0 0 40px rgba(0,229,255,0.2), 0 20px 60px rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 64px;
+            font-size: 56px;
             z-index: 10;
+            overflow: hidden;
         }
 
         .voip-wave {
             position: absolute;
-            width: 160px;
-            height: 160px;
-            border: 2px solid var(--accent-cyan);
-            border-radius: 100px;
-            animation: voip-wave-animate 2s linear infinite;
+            width: 140px; height: 140px;
+            border: 1.5px solid rgba(0,229,255,0.5);
+            border-radius: 70px;
+            animation: voip-wave-animate 2.2s ease-out infinite;
             pointer-events: none;
             opacity: 0;
             z-index: 5;
         }
-
-        .voip-wave.w2 { animation-delay: 0.6s; }
-        .voip-wave.w3 { animation-delay: 1.2s; }
+        .voip-wave.w2 { animation-delay: 0.7s; }
+        .voip-wave.w3 { animation-delay: 1.4s; }
 
         @keyframes voip-wave-animate {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(2.2); opacity: 0; }
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(2.4); opacity: 0; }
         }
 
         .voip-name {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
-            margin-top: 20px;
             text-align: center;
+            margin-top: 16px;
+            letter-spacing: -0.3px;
         }
 
         .voip-subtitle {
-            font-size: 14.5px;
-            color: var(--text-secondary);
-            margin-top: 6px;
-            letter-spacing: 0.5px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+            letter-spacing: 0.4px;
+        }
+
+        /* VAD microphone bars */
+        .voip-vad-bars {
+            display: flex;
+            gap: 5px;
+            align-items: flex-end;
+            height: 28px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .voip-vad-bars.active { opacity: 1; }
+        .voip-vad-bar {
+            width: 5px;
+            height: 24px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.2);
+            transform: scaleY(0.25);
+            transform-origin: bottom;
+            transition: transform 0.08s ease, background-color 0.08s ease;
         }
 
         .voip-transcript-container {
             width: 100%;
-            max-width: 580px;
-            background: rgba(13, 19, 36, 0.6);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 24px;
-            backdrop-filter: blur(12px);
-            min-height: 100px;
-            max-height: 180px;
+            max-width: 520px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 16px 20px;
+            backdrop-filter: blur(10px);
+            min-height: 80px;
+            max-height: 160px;
             overflow-y: auto;
-            text-align: center;
-            font-size: 15px;
+            text-align: left;
+            font-size: 14px;
             line-height: 1.6;
-            margin: 30px 0;
         }
 
         .voip-transcript-user {
-            color: var(--accent-cyan);
+            color: #4ade80;
             font-style: italic;
             font-weight: 500;
         }
 
         .voip-transcript-examiner {
-            color: #fff;
-            font-weight: 550;
+            color: rgba(255,255,255,0.85);
+            font-weight: 500;
         }
 
+        /* iOS-style bottom call controls */
         .voip-controls {
             display: flex;
-            gap: 30px;
+            gap: 32px;
+            align-items: flex-end;
+            justify-content: center;
+            width: 100%;
+            max-width: 360px;
+            padding-bottom: 8px;
+        }
+
+        .voip-ctrl-item {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            margin-top: 20px;
+            gap: 8px;
+        }
+
+        .voip-ctrl-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.5px;
         }
 
         .voip-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50px;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.12);
             color: #fff;
-            transition: var(--transition-smooth);
+            -webkit-tap-highlight-color: transparent;
         }
 
+        .voip-btn:active { transform: scale(0.92); }
+
         .voip-btn-mute {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.10);
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .voip-btn-mute:hover, .voip-btn-mute.muted {
-            background: rgba(255, 195, 0, 0.15);
-            border-color: var(--accent-gold);
-            color: var(--accent-gold);
+        .voip-btn-mute.muted {
+            background: rgba(255,255,255,0.9);
+            color: #111;
+        }
+
+        .voip-btn-speaker {
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .voip-btn-speaker.on {
+            background: rgba(255,255,255,0.9);
+            color: #111;
         }
 
         .voip-btn-end {
-            background: var(--accent-red);
-            box-shadow: 0 0 25px rgba(255, 74, 74, 0.4);
-            width: 70px;
-            height: 70px;
+            background: #ff3b30;
+            width: 68px;
+            height: 68px;
             font-size: 24px;
+            box-shadow: 0 4px 24px rgba(255,59,48,0.5);
         }
+        .voip-btn-end:hover { background: #ff2d20; box-shadow: 0 6px 30px rgba(255,59,48,0.65); }
 
-        .voip-btn-end:hover {
-            transform: scale(1.08);
-            box-shadow: 0 0 35px rgba(255, 74, 74, 0.6);
+        /* Silence progress bar */
+        .voip-silence-bar-wrap {
+            width: 100%; max-width: 300px;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+        .voip-silence-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4ade80, var(--accent-cyan));
+            border-radius: 2px;
+            transition: width 0.2s linear;
         }
 
         /* responsive grid for small viewport */
@@ -1032,8 +1142,9 @@
             h1 { font-size: 36px; letter-spacing: -1px; }
             .writing-grid { grid-template-columns: 1fr; }
             .nav-links { display: none; }
-            .voip-avatar { width: 100px; height: 100px; font-size: 40px; }
-            .voip-wave { width: 100px; height: 100px; }
+            .voip-avatar { width: 110px; height: 110px; font-size: 44px; border-radius: 55px; }
+            .voip-wave { width: 110px; height: 110px; border-radius: 55px; }
+            .voip-name { font-size: 22px; }
             .container { padding: 0 12px; }
             .sim-card { padding: 20px 16px; border-radius: 20px; }
             .score-row { flex-direction: column; gap: 12px; }
@@ -1049,12 +1160,14 @@
             .sim-title { font-size: 16px; }
             #realtimeTranscriptText { font-size: 13px; min-height: 70px; }
             #submitTranscribedBtn { font-size: 14px; padding: 12px 16px; }
-            .voip-overlay { padding: 40px 16px; }
-            .voip-controls { gap: 18px; }
-            .voip-btn { width: 52px; height: 52px; font-size: 18px; }
-            .voip-btn-end { width: 60px; height: 60px; font-size: 22px; }
+            .voip-overlay { padding: 44px 16px 32px; }
+            .voip-controls { gap: 22px; }
+            .voip-btn { width: 54px; height: 54px; font-size: 19px; }
+            .voip-btn-end { width: 64px; height: 64px; font-size: 23px; }
+            .voip-transcript-container { max-height: 120px; font-size: 13px; }
             .ai-review-sheet { padding: 16px; }
             .writing-card { padding: 16px; border-radius: 16px; }
+            .voip-call-top { margin-top: 4px; }
         }
     </style>
 </head>
@@ -1080,8 +1193,8 @@
 
     <!-- HERO HEADER -->
     <header class="hero" id="heroSection">
-        <div class="badge-premium">
-            <i class="fa-solid fa-crown"></i> Enterprise band 9.0 prep
+        <div class="badge-premium" style="background:rgba(0,229,255,0.08);border-color:rgba(0,229,255,0.25);color:var(--accent-cyan)">
+            <i class="fa-solid fa-microphone-lines"></i> Live IELTS Speaking Coach
         </div>
         <h1>Achieve IELTS Band 8.5+ <br><span class="gradient-text">Through Advanced AI Autonomy</span></h1>
         <p>Experience the world's first interactive IELTS Web Calling Suite. Pre-compile advanced academic vocabulary pronunciations natively, receive granular letter-by-letter spelling diff diagnostics, and speak directly with Dr. Sarah.</p>
@@ -1094,30 +1207,35 @@
     <!-- MODULE: LIVE VoIP WEB CALLING -->
     <section class="simulator-section" id="calling-module" style="border-top: 1px solid var(--card-border); padding-top: 80px;">
         <div class="section-header">
-            <h2>Interactive Live VoIP Call Suite</h2>
-            <p>Connect securely to our server over real-time WebSockets. Click below to start a live call, speak naturally, and let the AI Examiner review your speaking coherence in real-time.</p>
+            <h2>Live IELTS Speaking Call</h2>
+            <p>Connect to Dr. Sarah — your AI IELTS tutor. She will ask real exam questions, listen to your answers, teach you pronunciation, and guide you to a higher band score naturally.</p>
         </div>
 
         <div class="simulator-container" style="max-width: 700px; border-color: var(--accent-cyan); box-shadow: var(--glow-cyan);">
             <div class="sim-header">
                 <div class="sim-title" style="color: var(--accent-cyan);">
                     <i class="fa-solid fa-phone-volume"></i>
-                    <span>Premium Voice Assessment Terminal</span>
+                    <span>Live AI Speaking Coach</span>
                 </div>
-                <div class="sim-status" style="color: var(--accent-cyan); background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.15);">SYSTEM ONLINE</div>
+                <div class="sim-status" style="color: var(--accent-cyan); background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.15);">READY</div>
             </div>
 
             <div class="sim-body" style="padding: 20px 0;">
                 <div class="examiner-avatar" style="background: var(--gradient-primary); font-size: 40px; box-shadow: var(--glow-cyan); margin-bottom: 20px;">
-                    <i class="fa-solid fa-headset"></i>
+                    <i class="fa-solid fa-user-nurse"></i>
                 </div>
-                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px;">Premium Neural Examiner Assessment</h3>
-                <p style="font-size: 14.5px; color: var(--text-secondary); max-width: 500px; margin-bottom: 25px; line-height: 1.6;">
-                    Connect to our dedicated assessment system for a full, multi-part interactive speaking evaluation. Speak naturally, receive immediate feedback, and evaluate your performance in real time.
+                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px;">Dr. Sarah — IELTS Speaking Coach</h3>
+                <p style="font-size: 14.5px; color: var(--text-secondary); max-width: 500px; margin-bottom: 10px; line-height: 1.6;">
+                    She will ask you IELTS Part 1, 2 &amp; 3 questions. After each answer she teaches you how to say it better and guides your pronunciation. Silence for 4-5 seconds ends your turn automatically.
                 </p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:25px;">
+                    <span style="background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:var(--accent-cyan);"><i class="fa-solid fa-microphone"></i> Smart Silence Detection</span>
+                    <span style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:var(--accent-purple);"><i class="fa-solid fa-chalkboard-teacher"></i> Tutor Feedback</span>
+                    <span style="background:rgba(255,195,0,0.08);border:1px solid rgba(255,195,0,0.2);padding:4px 12px;border-radius:20px;font-size:12px;color:var(--accent-gold);"><i class="fa-solid fa-volume-high"></i> British Neural Voice</span>
+                </div>
 
                 <button class="btn-primary" id="startCallBtn" style="padding: 16px 45px; font-size: 16px;">
-                    <i class="fa-solid fa-phone"></i> Start Speech Evaluation
+                    <i class="fa-solid fa-phone"></i> Call Dr. Sarah
                 </button>
             </div>
         </div>
@@ -1424,33 +1542,63 @@
 
     <!-- FULL VoIP CALLING SCREEN INTERFACE OVERLAY -->
     <div class="voip-overlay" id="voipOverlay">
-        <div class="voip-status-badge" id="voipStatusBadge">DIALING...</div>
-        
-        <div style="display: flex; flex-direction: column; align-items: center;">
+        <!-- Top: status + call label -->
+        <div class="voip-call-top">
+            <div class="voip-status-badge" id="voipStatusBadge">DIALING...</div>
+            <div class="voip-call-timer" id="voipCallTimer">00:00</div>
+        </div>
+
+        <!-- Centre: avatar + name + VAD bars -->
+        <div style="display:flex;flex-direction:column;align-items:center;">
             <div class="voip-avatar-wrapper">
                 <div class="voip-wave" id="vw1"></div>
                 <div class="voip-wave w2" id="vw2"></div>
                 <div class="voip-wave w3" id="vw3"></div>
-                <div class="voip-avatar">
-                    <i class="fa-solid fa-user-tie"></i>
-                </div>
+                <div class="voip-avatar">👩‍🏫</div>
             </div>
-            
-            <div class="voip-name">Dr. Sarah (Examiner)</div>
-            <div class="voip-subtitle" id="voipSubtitle">IELTS Call Practice Session</div>
+            <div class="voip-name">Dr. Sarah Chen</div>
+            <div class="voip-subtitle">IELTS Speaking Examiner</div>
+
+            <!-- VAD bars — show when user is speaking -->
+            <div class="voip-vad-bars" id="voipVadBars">
+                <div class="voip-vad-bar"></div>
+                <div class="voip-vad-bar"></div>
+                <div class="voip-vad-bar"></div>
+                <div class="voip-vad-bar"></div>
+                <div class="voip-vad-bar"></div>
+            </div>
+
+            <!-- Silence countdown bar -->
+            <div class="voip-silence-bar-wrap" id="voipSilenceWrap">
+                <div class="voip-silence-bar" id="voipSilenceBar"></div>
+            </div>
         </div>
 
+        <!-- Transcript bubble -->
         <div class="voip-transcript-container" id="voipTranscriptContainer">
-            <div class="voip-transcript-examiner" id="voipTranscriptText">"Connecting to speaking session..."</div>
+            <div class="voip-transcript-examiner" id="voipTranscriptText">Connecting to Dr. Sarah...</div>
         </div>
 
+        <!-- iOS bottom controls: Mute | End | Speaker -->
         <div class="voip-controls">
-            <button class="voip-btn voip-btn-mute" id="voipMuteBtn" title="Mute Call">
-                <i class="fa-solid fa-microphone-slash"></i>
-            </button>
-            <button class="voip-btn voip-btn-end" id="voipEndBtn" title="Hang Up">
-                <i class="fa-solid fa-phone-slash"></i>
-            </button>
+            <div class="voip-ctrl-item">
+                <button class="voip-btn voip-btn-mute" id="voipMuteBtn" title="Mute">
+                    <i class="fa-solid fa-microphone-slash"></i>
+                </button>
+                <span class="voip-ctrl-label">Mute</span>
+            </div>
+            <div class="voip-ctrl-item">
+                <button class="voip-btn voip-btn-end" id="voipEndBtn" title="End Call">
+                    <i class="fa-solid fa-phone-slash"></i>
+                </button>
+                <span class="voip-ctrl-label">End</span>
+            </div>
+            <div class="voip-ctrl-item">
+                <button class="voip-btn voip-btn-speaker" id="voipSpeakerBtn" title="Speaker">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <span class="voip-ctrl-label">Speaker</span>
+            </div>
         </div>
     </div>
 
@@ -2403,229 +2551,318 @@
             });
 
             // -----------------------------------------------------------------
-            // INTERACTIVE VoIP PHONE CALL (DR. SARAH LIVE)
+            // INTERACTIVE VoIP PHONE CALL — Dr. Sarah IELTS Coach
             // -----------------------------------------------------------------
             let voipDialTimeout = null;
             let audioQueue = [];
             let isPlayingQueue = false;
+            let voipCallTimerInterval = null;
+            let voipCallSeconds = 0;
+
+            // VAD state
+            let vadAudioCtx = null;
+            let vadAnalyser = null;
+            let vadAnimFrame = null;
+            let vadLastSpeechTime = 0;
+            let vadRecordingStart = 0;
+            const VAD_MIN_MS = 10000;   // minimum 10s before silence triggers
+            const VAD_MAX_MS = 60000;   // force stop after 60s
+            const VAD_SILENCE_MS = 4000; // 4s silence triggers next turn
+            const VAD_THRESHOLD = 0.01; // RMS amplitude threshold
+
+            function startVoipCallTimer() {
+                voipCallSeconds = 0;
+                clearInterval(voipCallTimerInterval);
+                voipCallTimerInterval = setInterval(() => {
+                    voipCallSeconds++;
+                    const m = String(Math.floor(voipCallSeconds / 60)).padStart(2, '0');
+                    const s = String(voipCallSeconds % 60).padStart(2, '0');
+                    const el = document.getElementById('voipCallTimer');
+                    if (el) el.textContent = `${m}:${s}`;
+                }, 1000);
+            }
+
+            function stopVoipCallTimer() {
+                clearInterval(voipCallTimerInterval);
+            }
 
             async function startLiveVoipCall() {
-                unlockBrowserAudio(); // Synchronous unlock in user click context!
-                transcriptText = ""; // Clear any previous transcript states!
-                const tunnelUrl = "relying-film-und-arrange.trycloudflare.com"; // Encrypted secure speaking tunnel
-                
-                // Show call overlay
+                unlockBrowserAudio();
+                transcriptText = "";
+                const tunnelUrl = "relying-film-und-arrange.trycloudflare.com";
+
                 voipOverlay.style.display = "flex";
-                voipStatusBadge.className = "voip-status-badge";
-                voipStatusBadge.textContent = "CONNECTING...";
-                voipTranscriptText.textContent = "Connecting to Speaking Examiner...";
-                
+                voipStatusBadge.className = "voip-status-badge dialing";
+                voipStatusBadge.textContent = "🟠 DIALING...";
+                voipTranscriptText.textContent = "Connecting to Dr. Sarah...";
+                startVoipCallTimer();
+
                 voipDialTimeout = setTimeout(() => {
                     if (tunnelUrl) {
                         connectToVoipWebSocket(tunnelUrl);
                     } else {
-                        // Switch automatically to Client-Side Call Simulator Fallback
                         launchVoipClientSimulator();
                     }
                 }, 1500);
             }
 
-            // Premium voice connection logic
             function connectToVoipWebSocket(url) {
                 try {
-                    // Check wss or ws scheme
                     const wsUrl = url.startsWith("ws://") || url.startsWith("wss://") ? url : `wss://${url.replace(/^https?:\/\//, '')}`;
                     callWs = new WebSocket(`${wsUrl}/ws/call`);
-                    
+
                     callWs.onopen = () => {
                         callActive = true;
-                        voipStatusBadge.textContent = "CONNECTED";
-                        voipTranscriptText.textContent = "Session started. Please listen to the examiner's introduction.";
+                        voipStatusBadge.className = "voip-status-badge";
+                        voipStatusBadge.textContent = "🟢 CONNECTED";
+                        voipTranscriptText.textContent = "Session started. Listen for the examiner...";
                         startVoipAvWaves();
                     };
-                    
+
                     callWs.onmessage = async (event) => {
                         const data = JSON.parse(event.data);
-                        
+
                         if (data.type === "examiner_text") {
-                            // Examiner responded
-                            voipStatusBadge.textContent = "DR. SARAH SPEAKING";
-                            voipStatusBadge.className = "voip-status-badge";
-                            voipTranscriptText.textContent = data.text;
-                            
-                            // Load audio url through secure proxy endpoint
+                            voipStatusBadge.className = "voip-status-badge speaking";
+                            voipStatusBadge.textContent = "💬 EXAMINER SPEAKING";
+                            voipTranscriptText.innerHTML = `<span class="voip-transcript-examiner">${data.text}</span>`;
                             const secureUrl = "https://relying-film-und-arrange.trycloudflare.com" + data.audio_url;
                             playVoipResponse(secureUrl, data.text, () => {
-                                // Examiner finished speaking -> start listening to user
                                 startListeningToVoipUser();
                             });
                         } else if (data.type === "user_transcript") {
-                            voipStatusBadge.textContent = "PROCESSING...";
+                            voipStatusBadge.className = "voip-status-badge processing";
+                            voipStatusBadge.textContent = "⚙ PROCESSING";
                             voipTranscriptText.innerHTML = `<span class="voip-transcript-user">You: "${data.text}"</span>`;
                         } else if (data.type === "error") {
-                            voipStatusBadge.textContent = "CALL ALERT";
                             voipStatusBadge.className = "voip-status-badge error";
+                            voipStatusBadge.textContent = "❌ ERROR";
                             voipTranscriptText.textContent = data.text;
                             setTimeout(startListeningToVoipUser, 2000);
                         }
                     };
-                    
-                    callWs.onerror = () => {
-                        launchVoipClientSimulatorFallback();
-                    };
-                    
-                    callWs.onclose = () => {
-                        endLiveCallSession();
-                    };
+
+                    callWs.onerror = () => { launchVoipClientSimulatorFallback(); };
+                    callWs.onclose = () => { endLiveCallSession(); };
                 } catch(e) {
                     launchVoipClientSimulatorFallback();
                 }
             }
 
             function playVoipResponse(url, text, onEnd) {
-                if (voipResponseAudio) {
-                    voipResponseAudio.pause();
-                }
+                if (voipResponseAudio) voipResponseAudio.pause();
                 voipIsSpeaking = true;
+                stopVadListening();
                 startVoipAvWaves();
-                
+                hideVadBars();
+
                 voipResponseAudio = new Audio(url);
                 let endedExecuted = false;
-                
+
                 const triggerFallback = () => {
                     if (endedExecuted) return;
                     endedExecuted = true;
-                    
                     if (window.speechSynthesis) {
                         window.speechSynthesis.cancel();
                         const utt = new SpeechSynthesisUtterance(text.replace(/IELTS/gi, "Eye-elts"));
-                        utt.lang = "en-GB";
-                        utt.rate = 0.9;
-                        utt.onend = () => {
-                            voipIsSpeaking = false;
-                            stopVoipAvWaves();
-                            if (onEnd) onEnd();
-                        };
+                        utt.lang = "en-GB"; utt.rate = 0.92;
+                        utt.onend = () => { voipIsSpeaking = false; stopVoipAvWaves(); if (onEnd) onEnd(); };
                         window.speechSynthesis.speak(utt);
                     } else {
-                        voipIsSpeaking = false;
-                        stopVoipAvWaves();
-                        if (onEnd) onEnd();
+                        voipIsSpeaking = false; stopVoipAvWaves(); if (onEnd) onEnd();
                     }
                 };
 
                 voipResponseAudio.onended = () => {
                     if (endedExecuted) return;
                     endedExecuted = true;
-                    voipIsSpeaking = false;
-                    stopVoipAvWaves();
-                    if (onEnd) onEnd();
+                    voipIsSpeaking = false; stopVoipAvWaves(); if (onEnd) onEnd();
                 };
-                
-                voipResponseAudio.onerror = () => {
-                    console.warn("VoIP audio failed to load/play, falling back to SpeechSynthesis");
-                    triggerFallback();
-                };
-                
-                voipResponseAudio.play().catch(err => {
-                    console.warn("VoIP audio play blocked by browser, falling back to SpeechSynthesis:", err);
-                    triggerFallback();
-                });
+                voipResponseAudio.onerror = triggerFallback;
+                voipResponseAudio.play().catch(triggerFallback);
             }
 
-            // Listen to User Voice chunks and send over WebSocket
+            // ─── VAD HELPERS ──────────────────────────────────────────────────
+            function showVadBars() {
+                const bars = document.getElementById('voipVadBars');
+                if (bars) bars.classList.add('active');
+            }
+            function hideVadBars() {
+                const bars = document.getElementById('voipVadBars');
+                if (bars) bars.classList.remove('active');
+            }
+            function showSilenceBar(pct) {
+                const wrap = document.getElementById('voipSilenceWrap');
+                const bar = document.getElementById('voipSilenceBar');
+                if (wrap) wrap.style.display = 'block';
+                if (bar) bar.style.width = pct + '%';
+            }
+            function hideSilenceBar() {
+                const wrap = document.getElementById('voipSilenceWrap');
+                if (wrap) wrap.style.display = 'none';
+            }
+            function stopVadListening() {
+                if (vadAnimFrame) { cancelAnimationFrame(vadAnimFrame); vadAnimFrame = null; }
+                if (vadAnalyser) { try { vadAnalyser.disconnect(); } catch(_) {} vadAnalyser = null; }
+                hideSilenceBar();
+                hideVadBars();
+            }
+
+            // ─── SMART VAD LISTENING ──────────────────────────────────────────
             async function startListeningToVoipUser() {
                 if (!callActive) return;
-                
-                voipStatusBadge.textContent = "LISTENING — SPEAK NOW";
+
                 voipStatusBadge.className = "voip-status-badge listening";
-                
+                voipStatusBadge.textContent = "🎤 LISTENING";
+                hideSilenceBar();
+
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     voipMediaRecorder = new MediaRecorder(stream);
                     const chunks = [];
-                    
+
                     voipMediaRecorder.ondataavailable = (e) => {
                         if (e.data.size > 0) chunks.push(e.data);
                     };
-                    
+
                     voipMediaRecorder.onstop = () => {
+                        stopVadListening();
                         if (!callActive) return;
                         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-                        
-                        // Optimize API calls: Skip empty or silent clicks/breaths
-                        if (audioBlob.size < 6000) {
-                            console.warn("Speech chunk too quiet or brief, skipping transmission to save API usage.");
-                            voipStatusBadge.textContent = "LISTENING — SPEAK NOW";
-                            voipStatusBadge.className = "voip-status-badge listening";
-                            // Restart recording loop immediately
-                            setTimeout(startListeningToVoipUser, 1000);
+                        if (audioBlob.size < 5000) {
+                            // Essentially silence — go back to listening
+                            voipStatusBadge.textContent = "🎤 LISTENING";
+                            setTimeout(startListeningToVoipUser, 800);
                             return;
                         }
-                        
-                        // Send binary chunks over socket
                         if (callWs && callWs.readyState === WebSocket.OPEN) {
                             callWs.send(audioBlob);
-                            voipStatusBadge.textContent = "TRANSMITTING VOICE...";
+                            voipStatusBadge.className = "voip-status-badge processing";
+                            voipStatusBadge.textContent = "⚙ PROCESSING";
                         }
                     };
-                    
-                    // Simple silence detection or fixed 4.5s utterance chunking
+
+                    // ── Set up AudioContext VAD ──
+                    vadAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    vadAnalyser = vadAudioCtx.createAnalyser();
+                    vadAnalyser.fftSize = 256;
+                    const source = vadAudioCtx.createMediaStreamSource(stream);
+                    source.connect(vadAnalyser);
+                    const dataArray = new Uint8Array(vadAnalyser.frequencyBinCount);
+
+                    vadRecordingStart = Date.now();
+                    vadLastSpeechTime = Date.now();
+
                     voipMediaRecorder.start();
-                    
-                    setTimeout(() => {
-                        if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                            voipMediaRecorder.stop();
+
+                    const runVad = () => {
+                        if (!callActive || !vadAnalyser) return;
+                        vadAnalyser.getByteTimeDomainData(dataArray);
+
+                        // Compute RMS
+                        let sum = 0;
+                        for (let i = 0; i < dataArray.length; i++) {
+                            const v = (dataArray[i] - 128) / 128;
+                            sum += v * v;
                         }
-                    }, 30000); // 30 seconds recording burst to give candidate ample time to speak
-                    
+                        const rms = Math.sqrt(sum / dataArray.length);
+                        const now = Date.now();
+                        const elapsed = now - vadRecordingStart;
+                        const silenceMs = now - vadLastSpeechTime;
+
+                        if (rms > VAD_THRESHOLD) {
+                            vadLastSpeechTime = now;
+                            showVadBars();
+                            hideSilenceBar();
+                            // Dynamically scale the VAD bars based on RMS
+                            const bars = document.querySelectorAll(".voip-vad-bar");
+                            bars.forEach((bar, idx) => {
+                                const multiplier = 8 + (idx % 3) * 4;
+                                const scale = Math.min(Math.max(rms * multiplier, 0.25), 2.2);
+                                bar.style.transform = `scaleY(${scale})`;
+                                bar.style.backgroundColor = "#4ade80"; // Bright green when speaking
+                            });
+                        } else {
+                            // Dim the bars when silent
+                            const bars = document.querySelectorAll(".voip-vad-bar");
+                            bars.forEach(bar => {
+                                bar.style.transform = "scaleY(0.25)";
+                                bar.style.backgroundColor = "rgba(255, 255, 255, 0.2)"; // Dim grey
+                            });
+                        }
+
+                        // After min wait, show silence progress bar
+                        if (elapsed >= VAD_MIN_MS && rms <= VAD_THRESHOLD) {
+                            const pct = Math.min((silenceMs / VAD_SILENCE_MS) * 100, 100);
+                            showSilenceBar(pct);
+                            if (silenceMs < 1000) hideVadBars();
+                        }
+
+                        // Silence trigger: min elapsed + silence duration met
+                        if (elapsed >= VAD_MIN_MS && silenceMs >= VAD_SILENCE_MS) {
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                voipMediaRecorder.stop();
+                            }
+                            return; // Stop VAD loop
+                        }
+
+                        // Force stop at max time
+                        if (elapsed >= VAD_MAX_MS) {
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                voipMediaRecorder.stop();
+                            }
+                            return;
+                        }
+
+                        vadAnimFrame = requestAnimationFrame(runVad);
+                    };
+
+                    vadAnimFrame = requestAnimationFrame(runVad);
+
                 } catch(e) {
-                    voipStatusBadge.textContent = "MIC ERROR";
                     voipStatusBadge.className = "voip-status-badge error";
+                    voipStatusBadge.textContent = "❌ ERROR";
                 }
             }
 
-            // CLIENT-SIDE CALL SIMULATOR (If backend or tunnel offline)
+            // ─── SIMULATOR FALLBACK ───────────────────────────────────────────
             let simCallIndex = 0;
             const SIM_CONVERSATION = [
-                { examiner: "Hello! Welcome to your IELTS Speaking practice session. I am Doctor Sarah, your examiner today. Let us begin. Could you please tell me your full name?", audio: "p2_person" },
-                { examiner: "Thank you. Now, let us talk about your hometown. Where is it located and what do you like about it?", audio: "p2_place" },
-                { examiner: "Excellent! Let us move to Part Two. Describe a piece of technology you find highly useful in your daily routine.", audio: "p2_technology" },
-                { examiner: "Outstanding responses. This concludes our interactive speaking dictation and VoIP calling practice. Well done!", audio: "p2_helped" }
+                { examiner: "Hello! I am Doctor Sarah, your IELTS speaking coach. Let us start with an easy question. Could you tell me your full name and where you are from?", audio: "p2_person" },
+                { examiner: "Thank you. Now, let us talk about your hometown. What do you like most about where you live?", audio: "p2_place" },
+                { examiner: "Excellent. Let us move to Part Two. Describe a piece of technology you find very useful in your daily life. You have one minute to speak.", audio: "p2_technology" },
+                { examiner: "Very good. For Part Three, how do you think technology will change the way people learn in the next ten years?", audio: "p2_helped" },
+                { examiner: "Great session! That concludes our practice call. Keep practising and you will reach Band Eight very soon. Well done!", audio: "p2_helped" }
             ];
 
             function launchVoipClientSimulator() {
                 callActive = true;
                 simCallIndex = 0;
-                voipStatusBadge.textContent = "CONNECTED";
-                voipTranscriptText.textContent = "Session initialized. Please speak clearly after each question.";
-                
+                voipStatusBadge.className = "voip-status-badge";
+                voipStatusBadge.textContent = "🟢 CONNECTED";
+                voipTranscriptText.textContent = "Session started. Listen for Dr. Sarah...";
                 startVoipAvWaves();
-                setTimeout(playSimCallTurn, 2000);
+                setTimeout(playSimCallTurn, 1500);
             }
 
             function playSimCallTurn() {
                 if (!callActive) return;
                 if (simCallIndex >= SIM_CONVERSATION.length) {
-                    voipTranscriptText.textContent = "Call completed. Thank you!";
+                    voipTranscriptText.textContent = "Great session! Call ending...";
                     setTimeout(endLiveCallSession, 3000);
                     return;
                 }
-                
+
                 const turn = SIM_CONVERSATION[simCallIndex];
-                voipStatusBadge.textContent = "DR. SARAH SPEAKING";
-                voipStatusBadge.className = "voip-status-badge";
-                voipTranscriptText.textContent = turn.examiner;
-                
+                voipStatusBadge.className = "voip-status-badge speaking";
+                voipStatusBadge.textContent = "💬 EXAMINER SPEAKING";
+                voipTranscriptText.innerHTML = `<span class="voip-transcript-examiner">${turn.examiner}</span>`;
                 voipIsSpeaking = true;
                 startVoipAvWaves();
-                
-                // play precompiled static neural wav
+
                 playExaminerPromptAudio(turn.audio, () => {
                     voipIsSpeaking = false;
                     stopVoipAvWaves();
-                    
-                    // Start listening turn
                     simCallIndex++;
                     startListeningSimCallTurn();
                 });
@@ -2633,33 +2870,46 @@
 
             function startListeningSimCallTurn() {
                 if (!callActive) return;
-                voipStatusBadge.textContent = "LISTENING — SPEAK NOW";
                 voipStatusBadge.className = "voip-status-badge listening";
-                startVoipAvWaves(); // Keep waves active for user
-                
-                // Give user 5 seconds to answer, then trigger next turn
-                setTimeout(() => {
-                    if (callActive) {
-                        stopVoipAvWaves();
-                        voipStatusBadge.textContent = "EXAMINER THINKING...";
-                        setTimeout(playSimCallTurn, 1500);
+                voipStatusBadge.textContent = "🎤 LISTENING";
+                showVadBars();
+
+                // Smart timing: min 10s, auto-advance after 15s (sim can't do real VAD)
+                const MIN_SIM = 10000;
+                const AUTO_ADVANCE = 15000;
+                let simListenStart = Date.now();
+
+                const simCheckInterval = setInterval(() => {
+                    const elapsed = Date.now() - simListenStart;
+                    if (elapsed >= MIN_SIM) {
+                        // Show silence progress bar after 10s
+                        const pct = Math.min(((elapsed - MIN_SIM) / 5000) * 100, 100);
+                        showSilenceBar(pct);
                     }
-                }, 5500);
+                    if (elapsed >= AUTO_ADVANCE) {
+                        clearInterval(simCheckInterval);
+                        hideVadBars();
+                        hideSilenceBar();
+                        voipStatusBadge.className = "voip-status-badge processing";
+                        voipStatusBadge.textContent = "⚙ PROCESSING";
+                        setTimeout(playSimCallTurn, 1200);
+                    }
+                }, 200);
             }
 
             function launchVoipClientSimulatorFallback() {
-                voipStatusBadge.textContent = "CONNECTING...";
-                voipTranscriptText.textContent = "Initializing fallback audio channel... ready.";
-                setTimeout(launchVoipClientSimulator, 2000);
+                voipStatusBadge.className = "voip-status-badge dialing";
+                voipStatusBadge.textContent = "🟠 CONNECTING...";
+                voipTranscriptText.textContent = "Switching to offline mode...";
+                setTimeout(launchVoipClientSimulator, 1500);
             }
 
-            // VoIP Avatar pulsing waves
+            // VoIP avatar pulse waves
             function startVoipAvWaves() {
                 vw1.style.opacity = "0.8";
                 vw2.style.opacity = "0.8";
                 vw3.style.opacity = "0.8";
             }
-
             function stopVoipAvWaves() {
                 if (!voipIsSpeaking) {
                     vw1.style.opacity = "0";
@@ -2670,33 +2920,46 @@
 
             function endLiveCallSession() {
                 callActive = false;
+                stopVoipCallTimer();
+                stopVadListening();
                 clearTimeout(voipDialTimeout);
                 if (callWs) {
                     try { callWs.send(JSON.stringify({action: "end_call"})); } catch(_) {}
                     callWs.close();
                 }
-                if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                    voipMediaRecorder.stop();
-                }
+                if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
                 if (voipResponseAudio) voipResponseAudio.pause();
                 if (currentAudio) currentAudio.pause();
-                
                 voipOverlay.style.display = "none";
                 stopVoipAvWaves();
+                hideVadBars();
+                hideSilenceBar();
             }
 
             startCallBtn.addEventListener("click", startLiveVoipCall);
             voipEndBtn.addEventListener("click", endLiveCallSession);
-            
+
             voipMuteBtn.addEventListener("click", () => {
                 voipMuted = !voipMuted;
                 voipMuteBtn.classList.toggle("muted", voipMuted);
-                if (voipMuted) {
-                    voipMuteBtn.innerHTML = `<i class="fa-solid fa-microphone-slash" style="color:var(--accent-red)"></i>`;
-                } else {
-                    voipMuteBtn.innerHTML = `<i class="fa-solid fa-microphone-slash"></i>`;
-                }
+                voipMuteBtn.innerHTML = voipMuted
+                    ? `<i class="fa-solid fa-microphone-slash" style="color:#ff3b30"></i>`
+                    : `<i class="fa-solid fa-microphone-slash"></i>`;
             });
+
+            // Speaker button (visual only — audio plays through device default)
+            const voipSpeakerBtn = document.getElementById('voipSpeakerBtn');
+            if (voipSpeakerBtn) {
+                let speakerOn = false;
+                voipSpeakerBtn.addEventListener("click", () => {
+                    speakerOn = !speakerOn;
+                    voipSpeakerBtn.classList.toggle("on", speakerOn);
+                    voipSpeakerBtn.innerHTML = speakerOn
+                        ? `<i class="fa-solid fa-volume-xmark"></i>`
+                        : `<i class="fa-solid fa-volume-high"></i>`;
+                });
+            }
+
 
             // -----------------------------------------------------------------
             // INIT APP
