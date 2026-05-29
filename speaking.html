@@ -1343,12 +1343,31 @@
                 speakChunks(cleanChunks, 0, onEndCallback);
             }
 
-            // Trigger getVoices() initialization for Chrome/browser compatibility
-            if (window.speechSynthesis) {
-                window.speechSynthesis.getVoices();
-                if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+            // Chrome: voices load asynchronously — wait for them before enabling speech buttons
+            let voicesReady = false;
+            function onVoicesReady() {
+                if (voicesReady) return;
+                const v = window.speechSynthesis.getVoices();
+                if (v && v.length > 0) {
+                    voicesReady = true;
+                    listenBtn.disabled = false;
+                    listenBtn.title = "";
                 }
+            }
+
+            if (window.speechSynthesis) {
+                // Disable listen button until voices are confirmed ready
+                listenBtn.disabled = true;
+                listenBtn.title = "Loading examiner voice...";
+                window.speechSynthesis.onvoiceschanged = () => onVoicesReady();
+                // Also try immediately (Firefox/Safari load voices synchronously)
+                setTimeout(() => onVoicesReady(), 300);
+                setTimeout(() => onVoicesReady(), 1000);
+                setTimeout(() => {
+                    // Force-enable after 2s as last resort even if event didn't fire
+                    listenBtn.disabled = false;
+                    listenBtn.title = "";
+                }, 2000);
             }
 
             // Play MP3 directly or fallback to speech synthesis
@@ -1792,7 +1811,7 @@
                 loadNextSpellingChallenge();
             }
 
-            function loadNextSpellingChallenge() {
+            function loadNextSpellingChallenge(autoPlay = false) {
                 // Pick a random word from database
                 const randomIndex = Math.floor(Math.random() * vocabData.length);
                 currentSpellingWord = vocabData[randomIndex];
@@ -1801,18 +1820,22 @@
                 spellingResult.style.display = "none";
                 nextSpellingBtn.style.display = "none";
                 checkSpellingBtn.disabled = false;
+                spellingInput.focus();
                 
-                // Remove old audio play listener
+                // Remove old audio play listener by cloning button
                 const newPlayBtn = playSpellingAudioBtn.cloneNode(true);
                 playSpellingAudioBtn.parentNode.replaceChild(newPlayBtn, playSpellingAudioBtn);
                 newPlayBtn.addEventListener("click", () => {
                     playWordAudio(currentSpellingWord.word, currentSpellingWord.audio_guide);
                 });
-                
-                // Auto-play spelling audio on load
-                setTimeout(() => {
-                    playWordAudio(currentSpellingWord.word, currentSpellingWord.audio_guide);
-                }, 800);
+
+                // Only auto-play if explicitly requested (e.g., Next Word button)
+                // NOT on initial page load to avoid confusing users
+                if (autoPlay) {
+                    setTimeout(() => {
+                        playWordAudio(currentSpellingWord.word, currentSpellingWord.audio_guide);
+                    }, 300);
+                }
             }
 
             checkSpellingBtn.addEventListener("click", () => {
@@ -1846,7 +1869,7 @@
                 nextSpellingBtn.style.display = "inline-flex";
             });
 
-            nextSpellingBtn.addEventListener("click", loadNextSpellingChallenge);
+            nextSpellingBtn.addEventListener("click", () => loadNextSpellingChallenge(true));
 
             // Allow Enter key to check spelling
             spellingInput.addEventListener("keypress", (e) => {
