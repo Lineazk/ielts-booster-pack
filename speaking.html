@@ -1295,30 +1295,52 @@
             // -----------------------------------------------------------------
             // SPEECH SYNTHESIS UTILITY (Band 9 British Voice)
             // -----------------------------------------------------------------
+            // Chrome Bug Fix: long utterances silently stop.
+            // Solution: split into sentence chunks + keep-alive interval.
+            let _synthKeepAlive = null;
+
+            function getBritishVoice() {
+                const voices = window.speechSynthesis.getVoices();
+                return voices.find(v => v.lang === "en-GB" || v.lang.startsWith("en-GB")) ||
+                       voices.find(v => v.lang.startsWith("en")) ||
+                       voices[0] || null;
+            }
+
+            function speakChunks(chunks, index, onEndCallback) {
+                if (index >= chunks.length) {
+                    clearInterval(_synthKeepAlive);
+                    _synthKeepAlive = null;
+                    if (onEndCallback) onEndCallback();
+                    return;
+                }
+                const utterance = new SpeechSynthesisUtterance(chunks[index]);
+                const voice = getBritishVoice();
+                if (voice) utterance.voice = voice;
+                utterance.rate = 0.88;
+                utterance.pitch = 1.0;
+                utterance.onend = () => speakChunks(chunks, index + 1, onEndCallback);
+                utterance.onerror = () => speakChunks(chunks, index + 1, onEndCallback);
+                window.speechSynthesis.speak(utterance);
+            }
+
             function speakText(text, onEndCallback = null) {
                 if (!window.speechSynthesis) return;
-                window.speechSynthesis.cancel(); // Stop any ongoing speech
-                
-                const utterance = new SpeechSynthesisUtterance(text);
-                
-                // Find en-GB (British) voice
-                const voices = window.speechSynthesis.getVoices();
-                const britishVoice = voices.find(v => v.lang === "en-GB" || v.lang.startsWith("en-GB")) || 
-                                     voices.find(v => v.lang.startsWith("en")) || 
-                                     voices[0];
-                
-                if (britishVoice) {
-                    utterance.voice = britishVoice;
-                }
-                
-                utterance.rate = 0.9;  // Slightly slow, very clear and steady Band 9 examiner cadence
-                utterance.pitch = 1.0; // Professional standard pitch
-                
-                if (onEndCallback) {
-                    utterance.onend = onEndCallback;
-                }
-                
-                window.speechSynthesis.speak(utterance);
+                window.speechSynthesis.cancel();
+                clearInterval(_synthKeepAlive);
+
+                // Split on sentence boundaries to avoid Chrome's silent cutoff bug
+                const chunks = text.match(/[^.!?]+[.!?]*/g) || [text];
+                const cleanChunks = chunks.map(c => c.trim()).filter(c => c.length > 0);
+
+                // Chrome keep-alive: pause/resume every 10s to prevent internal stall
+                _synthKeepAlive = setInterval(() => {
+                    if (window.speechSynthesis.speaking) {
+                        window.speechSynthesis.pause();
+                        window.speechSynthesis.resume();
+                    }
+                }, 10000);
+
+                speakChunks(cleanChunks, 0, onEndCallback);
             }
 
             // Trigger getVoices() initialization for Chrome/browser compatibility
