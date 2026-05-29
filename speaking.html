@@ -1574,7 +1574,8 @@
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
-                recognition.lang = "en-US";
+                recognition.lang = "en-GB"; // British English for IELTS
+                recognition.maxAlternatives = 1;
 
                 recognition.onstart = () => {
                     isRecording = true;
@@ -1608,10 +1609,61 @@
                     realtimeTranscriptText.textContent = `"${transcriptText || "..."}"`;
                 };
 
+                let _networkRetryCount = 0;
+                const MAX_RETRIES = 3;
+
                 recognition.onerror = (event) => {
-                    console.error("Speech recognition error:", event.error);
+                    console.warn("Speech recognition error:", event.error);
+
+                    if (event.error === "network" && _networkRetryCount < MAX_RETRIES && isRecording) {
+                        // Transient network error — silently retry
+                        _networkRetryCount++;
+                        realtimeTranscriptText.textContent = `⚡ Connection hiccup, retrying... (${_networkRetryCount}/${MAX_RETRIES})`;
+                        setTimeout(() => {
+                            if (isRecording) {
+                                try { recognition.start(); } catch(_) {}
+                            }
+                        }, 800);
+                        return;
+                    }
+
+                    if (event.error === "no-speech") {
+                        // User just didn't speak — don't stop, just notify
+                        realtimeTranscriptText.textContent = "🎤 No speech detected. Please speak clearly into your mic.";
+                        return;
+                    }
+
+                    if (event.error === "aborted") {
+                        // Intentional stop — ignore
+                        return;
+                    }
+
+                    // Unrecoverable error — stop and show inline message
                     stopRecordingSession();
-                    alert(`Speech recognition error: ${event.error}. Please check your mic settings and Chrome permissions.`);
+                    _networkRetryCount = 0;
+
+                    // Show friendly inline error (no alert popup!)
+                    realtimeTranscriptContainer.style.display = "block";
+                    realtimeTranscriptText.innerHTML = `
+                        <span style="color:#ff6b6b">⚠ Mic error: <strong>${event.error}</strong></span><br>
+                        <small style="color:var(--text-secondary)">
+                        If this keeps happening: open Chrome Settings → Privacy → Microphone → allow this site.<br>
+                        Or type your answer below:</small><br><br>
+                        <input type="text" id="manualTranscript"
+                            placeholder="Type your answer here..."
+                            style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--card-border);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;"
+                        >
+                        <button id="submitManualBtn" class="btn-primary" style="margin-top:8px;width:100%;font-size:13px;">Submit Written Answer →</button>
+                    `;
+
+                    document.getElementById("submitManualBtn")?.addEventListener("click", () => {
+                        const txt = document.getElementById("manualTranscript")?.value?.trim();
+                        if (txt && txt.length > 3) {
+                            transcriptText = txt;
+                            realtimeTranscriptText.textContent = `"${txt}"`;
+                            analyzeSpokenResponse();
+                        }
+                    });
                 };
 
                 recognition.onend = () => {
@@ -1652,7 +1704,8 @@
                 micBtn.addEventListener("click", () => {
                     if (!isRecording) {
                         // Cancel any examiner speech
-                        if (window.speechSynthesis) window.speechSynthesis.cancel();
+                        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+                        _networkRetryCount = 0;
                         recognition.start();
                     } else {
                         stopRecordingSession();
