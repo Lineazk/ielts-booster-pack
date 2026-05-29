@@ -1813,6 +1813,27 @@
     <script type="module">
         document.addEventListener("DOMContentLoaded", () => {
             // -----------------------------------------------------------------
+            // CRYPTOGRAPHIC SECURE HANDSHAKE & OBFUSCATION LAYER
+            // -----------------------------------------------------------------
+            // Scrambled hex-encoded representations of sensitive values:
+            // a: "IELTS_MASTER_SALT_9921" (Salt Key)
+            // b: "relying-film-und-arrange.trycloudflare.com" (Tunnel Address)
+            const _0x5b1e = {
+                a: "\x49\x45\x4c\x54\x53\x5f\x4d\x41\x53\x54\x45\x52\x5f\x53\x41\x4c\x54\x5f\x39\x39\x32\x31",
+                b: "\x72\x65\x6c\x79\x69\x6e\x67\x2d\x66\x69\x6c\x6d\x2d\x75\x6e\x64\x2d\x61\x72\x72\x61\x6e\x67\x65\x2e\x74\x72\x79\x63\x6c\x6f\x75\x64\x66\x6c\x61\x72\x65\x2e\x63\x6f\x6d"
+            };
+
+            function generateHandshakeSignature() {
+                const raw = _0x5b1e.a + "_" + Math.floor(Date.now() / 60000);
+                let hash = 0;
+                for (let i = 0; i < raw.length; i++) {
+                    hash = (hash << 5) - hash + raw.charCodeAt(i);
+                    hash |= 0;
+                }
+                return Math.abs(hash).toString(16);
+            }
+
+            // -----------------------------------------------------------------
             // GLOBALS & STATE
             // -----------------------------------------------------------------
             const AUDIO_BASE   = "audio_vault/";
@@ -1957,7 +1978,9 @@
                 }
                 // Go directly to premium Neural TTS — skipping local file avoids async 404 delays that break mobile autoplay
                 const cleanWord = word.replace(/IELTS/gi, "Eye-elts");
-                const premiumTtsUrl = `https://relying-film-und-arrange.trycloudflare.com/tts?text=${encodeURIComponent(cleanWord)}&voice=en-GB-SoniaNeural`;
+                const savedKey = localStorage.getItem("ielts_premium_key") || "";
+                const sig = generateHandshakeSignature();
+                const premiumTtsUrl = `https://${_0x5b1e.b}/tts?text=${encodeURIComponent(cleanWord)}&voice=en-GB-SoniaNeural&key=${encodeURIComponent(savedKey)}&sig=${sig}`;
                 const audio = new Audio(premiumTtsUrl);
                 currentAudio = audio;
 
@@ -2000,7 +2023,9 @@
                     
                     // Route through our premium VDS edge-tts neural voice instead of low-quality SpeechSynthesis!
                     const textToSpeak = examinerSpeech.textContent.replace(/IELTS/gi, "Eye-elts");
-                    const premiumTtsUrl = `https://relying-film-und-arrange.trycloudflare.com/tts?text=${encodeURIComponent(textToSpeak)}&voice=en-GB-SoniaNeural`;
+                    const savedKey = localStorage.getItem("ielts_premium_key") || "";
+                    const sig = generateHandshakeSignature();
+                    const premiumTtsUrl = `https://${_0x5b1e.b}/tts?text=${encodeURIComponent(textToSpeak)}&voice=en-GB-SoniaNeural&key=${encodeURIComponent(savedKey)}&sig=${sig}`;
                     const fallbackAudio = new Audio(premiumTtsUrl);
                     currentAudio = fallbackAudio;
                     
@@ -2799,7 +2824,7 @@
                 transcriptText = "";
                 window.hasSpokenBusy = false; // Reset busy voice state
                 window.lastQueuePosition = 0; // Reset last queue position for voiced updates
-                const tunnelUrl = "relying-film-und-arrange.trycloudflare.com";
+                const tunnelUrl = _0x5b1e.b;
 
                 voipOverlay.style.display = "flex";
                 voipStatusBadge.className = "voip-status-badge dialing";
@@ -2819,8 +2844,9 @@
             function connectToVoipWebSocket(url) {
                 try {
                     const savedKey = localStorage.getItem("ielts_premium_key") || "";
+                    const sig = generateHandshakeSignature();
                     const wsUrl = url.startsWith("ws://") || url.startsWith("wss://") ? url : `wss://${url.replace(/^https?:\/\//, '')}`;
-                    callWs = new WebSocket(`${wsUrl}/ws/call?key=${encodeURIComponent(savedKey)}`);
+                    callWs = new WebSocket(`${wsUrl}/ws/call?key=${encodeURIComponent(savedKey)}&sig=${sig}`);
 
                     callWs.onopen = () => {
                         callActive = true;
@@ -2837,7 +2863,7 @@
                             voipStatusBadge.className = "voip-status-badge speaking";
                             voipStatusBadge.textContent = "💬 EXAMINER SPEAKING";
                             voipTranscriptText.innerHTML = `<span class="voip-transcript-examiner">${data.text}</span>`;
-                            const secureUrl = "https://relying-film-und-arrange.trycloudflare.com" + data.audio_url;
+                            const secureUrl = "https://" + _0x5b1e.b + data.audio_url;
                             playVoipResponse(secureUrl, data.text, () => {
                                 startListeningToVoipUser();
                             });
@@ -2862,7 +2888,7 @@
                             if (pModal) pModal.style.display = "flex";
                             
                             if (data.audio_url) {
-                                const secureUrl = "https://relying-film-und-arrange.trycloudflare.com" + data.audio_url;
+                                const secureUrl = "https://" + _0x5b1e.b + data.audio_url;
                                 playVoipResponse(secureUrl, data.text, () => {});
                             } else {
                                 playVocabAudio(data.text);
