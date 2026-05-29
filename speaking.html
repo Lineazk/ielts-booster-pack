@@ -1216,7 +1216,25 @@
             // -----------------------------------------------------------------
             // GLOBALS & STATE
             // -----------------------------------------------------------------
-            const VOICE_SERVER = "http://77.90.8.131:8765"; // edge-tts Microsoft Neural Voice server
+
+            // Pre-generated sherpa-onnx neural voice audio (served from GitHub Pages)
+            // Falls back to edge-tts server if file missing
+            const VOICE_SERVER = "http://77.90.8.131:8765";
+            const AUDIO_BASE   = "examiner_audio/";
+
+            // Examiner question bank mapped to pre-generated audio files
+            const QUESTION_BANK = [
+                { text: "Describe a piece of technology that you find highly useful in your daily routine. You should say: what it is, how you use it, and explain why you find it so important.",    audio: "p2_technology" },
+                { text: "Describe a time when you helped someone. You should say: who you helped, what you did, and explain how helping that person made you feel.",                                   audio: "p2_helped"    },
+                { text: "Describe a place you have visited that made a strong impression on you. You should say: where it was, when you went, and explain what made it so special.",                 audio: "p2_place"     },
+                { text: "Describe a person who has had a significant influence on your life. You should say: who they are, how you know them, and explain the impact they have had.",                audio: "p2_person"   },
+            ];
+            const COACH_AUDIO = {
+                excellent: "coach_excellent",
+                good:      "coach_good",
+                improve:   "coach_improve",
+                retry:     "coach_retry",
+            };
 
             let vocabData = [];
             let currentSpellingWord = null;
@@ -1229,8 +1247,8 @@
             let recordingStartTime = 0;
             let recordingTimerInterval = null;
             let transcriptText = "";
-            let currentExaminerPrompt = "";
-            let currentAudio = null; // currently playing Audio object
+            let currentQuestion = QUESTION_BANK[0];
+            let currentAudio = null;
 
             // Calling Mode State
             let callWs = null;
@@ -1238,8 +1256,8 @@
             let mediaRecorder = null;
             let callAudioChunks = [];
 
-            // Band 9 British Examiner Configs
-            const EXAMINER_PROMPT = "Describe a piece of technology that you find highly useful in your daily routine. You should say: what it is, how you use it, and explain why you find it so important.";
+            // Band 9 Examiner Configs (fallback text)
+            const EXAMINER_PROMPT = QUESTION_BANK[0].text;
             const EXAMINER_KEYWORDS = ["technology", "ubiquitous", "gadget", "gadgets", "computer", "computers", "phone", "phones", "routine", "daily", "internet", "device", "devices", "digital", "appliances", "app", "application", "software"];
 
             // -----------------------------------------------------------------
@@ -1303,70 +1321,85 @@
             const faqAccordions = document.querySelectorAll(".faq-accordion");
 
             // -----------------------------------------------------------------
-            // VOICE ENGINE — Microsoft Neural (edge-tts) via VDS server
+            // VOICE ENGINE — sherpa-onnx Neural Voice (pre-generated WAV files)
             // -----------------------------------------------------------------
 
             /**
-             * Play any text using the server-side Microsoft Neural British voice.
-             * Falls back to browser TTS only if server is unreachable.
-             * @param {string} text  - The text to speak
-             * @param {string} type  - "examiner" | "coach" | "word"
-             * @param {function} onEnd - Optional callback when audio finishes
+             * Play a pre-generated sherpa-onnx WAV file.
+             * Falls back to edge-tts server, then browser TTS.
              */
-            async function speakText(text, onEnd = null, type = "examiner") {
-                // Stop any currently playing audio
+            function playAudioFile(filename, onEnd = null) {
                 if (currentAudio) {
                     currentAudio.pause();
                     currentAudio.src = "";
                     currentAudio = null;
                 }
+                // Try WAV first, then MP3
+                const src = `${AUDIO_BASE}${filename}.wav`;
+                const audio = new Audio(src);
+                currentAudio = audio;
+                audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
+                audio.onerror = () => {
+                    // Fallback: try MP3
+                    const mp3 = new Audio(`${AUDIO_BASE}${filename}.mp3`);
+                    currentAudio = mp3;
+                    mp3.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
+                    mp3.onerror = () => {
+                        // Final fallback: edge-tts server
+                        serverSpeakFallback(filename, onEnd);
+                    };
+                    mp3.play().catch(() => serverSpeakFallback(filename, onEnd));
+                };
+                audio.play().catch(() => {
+                    const mp3 = new Audio(`${AUDIO_BASE}${filename}.mp3`);
+                    currentAudio = mp3;
+                    mp3.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
+                    mp3.onerror = () => serverSpeakFallback(filename, onEnd);
+                    mp3.play().catch(() => serverSpeakFallback(filename, onEnd));
+                });
+            }
 
+            /** edge-tts server fallback for any text */
+            async function speakText(text, onEnd = null, type = "examiner") {
+                if (currentAudio) { currentAudio.pause(); currentAudio.src = ""; currentAudio = null; }
                 const url = `${VOICE_SERVER}/tts?text=${encodeURIComponent(text)}&type=${type}`;
-
                 try {
                     const audio = new Audio(url);
                     currentAudio = audio;
                     audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
-                    audio.onerror = () => {
-                        // Fallback to browser TTS if server unreachable
-                        console.warn("Voice server unavailable, using browser fallback");
-                        browserSpeakFallback(text, onEnd);
-                    };
+                    audio.onerror = () => browserSpeakFallback(text, onEnd);
                     await audio.play();
-                } catch (err) {
-                    console.warn("Audio play failed:", err);
-                    browserSpeakFallback(text, onEnd);
-                }
+                } catch(_) { browserSpeakFallback(text, onEnd); }
             }
 
-            /** Browser TTS fallback (used only if server is down) */
+            async function serverSpeakFallback(filename, onEnd) {
+                // Try edge-tts server with the question text
+                const q = QUESTION_BANK.find(q => q.audio === filename);
+                if (q) { speakText(q.text, onEnd, "examiner"); return; }
+                if (onEnd) onEnd();
+            }
+
+            /** Last-resort browser TTS */
             function browserSpeakFallback(text, onEnd) {
-                if (!window.speechSynthesis) return;
+                if (!window.speechSynthesis) { if (onEnd) onEnd(); return; }
                 window.speechSynthesis.cancel();
                 const utt = new SpeechSynthesisUtterance(text);
                 const voices = window.speechSynthesis.getVoices();
-                const v = voices.find(v => v.lang.startsWith("en-GB")) || voices[0];
+                const v = voices.find(v => v.lang.startsWith("en-GB")) || voices.find(v => v.lang.startsWith("en")) || voices[0];
                 if (v) utt.voice = v;
                 utt.rate = 0.88;
                 utt.onend = () => { if (onEnd) onEnd(); };
                 window.speechSynthesis.speak(utt);
             }
 
-            /** Play a word's audio: server TTS for crisp pronunciation */
+            /** Play word pronunciation — use server TTS for crispness */
             async function playWordAudio(word, audioPath) {
-                // Try local MP3 first
                 if (audioPath) {
-                    const audio = new Audio(audioPath);
-                    try {
-                        await audio.play();
-                        return;
-                    } catch(_) {}
+                    try { const a = new Audio(audioPath); await a.play(); return; } catch(_) {}
                 }
-                // Use server neural voice for pronunciation
                 speakText(word, null, "word");
             }
 
-            // Enable listen button immediately (server handles voice, no delay needed)
             listenBtn.disabled = false;
 
             // -----------------------------------------------------------------
@@ -1514,30 +1547,26 @@
             // SPEECH SIMULATOR MODULE
             // -----------------------------------------------------------------
             
-            // Examiner Prompt Speech Playback — uses Microsoft Neural Voice from VDS
-            async function fetchAndPlayExaminerQuestion(part = 2) {
+            // Examiner Prompt Speech Playback — uses sherpa-onnx pre-generated audio
+            async function fetchAndPlayExaminerQuestion() {
                 simStatus.textContent = "EXAMINER SPEAKING";
                 simStatus.style.color = "var(--accent-gold)";
                 listenBtn.disabled = true;
 
-                try {
-                    const res = await fetch(`${VOICE_SERVER}/question?part=${part}`);
-                    const data = await res.json();
-                    currentExaminerPrompt = data.question;
-                    examinerSpeech.textContent = `"${currentExaminerPrompt}"`;
-                } catch (_) {
-                    currentExaminerPrompt = EXAMINER_PROMPT;
-                    examinerSpeech.textContent = `"${currentExaminerPrompt}"`;
-                }
+                // Pick a random question
+                const idx = Math.floor(Math.random() * QUESTION_BANK.length);
+                currentQuestion = QUESTION_BANK[idx];
+                examinerSpeech.textContent = `"${currentQuestion.text}"`;
 
-                await speakText(currentExaminerPrompt, () => {
+                // Update keyword list for scoring based on selected question
+                playAudioFile(currentQuestion.audio, () => {
                     simStatus.textContent = "YOUR TURN — Press Mic to Speak";
                     simStatus.style.color = "var(--accent-cyan)";
                     listenBtn.disabled = false;
-                }, "examiner");
+                });
             }
 
-            listenBtn.addEventListener("click", () => fetchAndPlayExaminerQuestion(2));
+            listenBtn.addEventListener("click", fetchAndPlayExaminerQuestion);
 
             // Initialize Web Speech Recognition
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1749,43 +1778,32 @@
                 feedbackTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic (WPM: ${wpm})`;
                 feedbackText.innerHTML = diagnostics;
 
-                // 🎙 Voice Coaching — Coach speaks feedback aloud via Microsoft Neural Voice
+                // 🎙 Voice Coaching — sherpa-onnx pre-generated coaching audio
                 simStatus.textContent = "COACH SPEAKING";
                 simStatus.style.color = "var(--accent-gold)";
 
-                try {
-                    const analysisRes = await fetch(`${VOICE_SERVER}/analyze`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            transcript: spokenText,
-                            expected: currentExaminerPrompt || EXAMINER_PROMPT,
-                            band_score: overallScore
-                        })
-                    });
-                    const analysisData = await analysisRes.json();
-                    const coachText = analysisData.coach_text;
+                // Pick coaching audio based on score
+                let coachFile = COACH_AUDIO.improve;
+                if (overallScore >= 7.5) coachFile = COACH_AUDIO.excellent;
+                else if (overallScore >= 6.0) coachFile = COACH_AUDIO.good;
+                else if (overallScore < 4.5) coachFile = COACH_AUDIO.retry;
 
-                    // Add voice feedback button to scorecard
-                    const existingCoachBtn = document.getElementById("coachFeedbackBtn");
-                    if (existingCoachBtn) existingCoachBtn.remove();
-                    const coachBtn = document.createElement("button");
-                    coachBtn.id = "coachFeedbackBtn";
-                    coachBtn.className = "btn-primary";
-                    coachBtn.style.cssText = "margin-top:16px; width:100%; font-size:14px;";
-                    coachBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> &nbsp; Hear Voice Coaching Feedback';
-                    coachBtn.onclick = () => speakText(coachText, null, "coach");
-                    feedbackText.after(coachBtn);
+                // Add "Hear Coaching" button
+                const existingCoachBtn = document.getElementById("coachFeedbackBtn");
+                if (existingCoachBtn) existingCoachBtn.remove();
+                const coachBtn = document.createElement("button");
+                coachBtn.id = "coachFeedbackBtn";
+                coachBtn.className = "btn-primary";
+                coachBtn.style.cssText = "margin-top:16px; width:100%; font-size:14px;";
+                coachBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> &nbsp; Hear Voice Coaching Feedback';
+                coachBtn.onclick = () => playAudioFile(coachFile);
+                feedbackText.after(coachBtn);
 
-                    // Auto-play voice coaching after 1s
-                    setTimeout(() => speakText(coachText, () => {
-                        simStatus.textContent = "IDLE";
-                        simStatus.style.color = "var(--accent-purple)";
-                    }, "coach"), 1000);
-                } catch (_) {
+                // Auto-play coach voice after 1s
+                setTimeout(() => playAudioFile(coachFile, () => {
                     simStatus.textContent = "IDLE";
                     simStatus.style.color = "var(--accent-purple)";
-                }
+                }), 1000);
 
                 // Render struggled vocabulary words
                 struggledWordsList.innerHTML = "";
