@@ -1408,6 +1408,17 @@
             utterance.lang = 'en-GB';
             utterance.rate = 0.9; // Professional deliberate speaking pace
             
+            // DYNAMIC PREMIUM VOICE SELECTION
+            if (synth.getVoices) {
+                let voices = synth.getVoices();
+                // Prioritize natural or premium cloud-based speech voices
+                let premiumVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Ryan') || v.name.includes('Hazel')));
+                if (premiumVoice) {
+                    utterance.voice = premiumVoice;
+                    console.log("[Voice Configured]: Using premium voice -", premiumVoice.name);
+                }
+            }
+
             utterance.onend = () => {
                 simStatus.textContent = 'AWAITING RESPONSE';
                 micBtn.style.opacity = '1';
@@ -1474,22 +1485,26 @@
                         wordCount = Math.round((130 * elapsedSeconds) / 60);
                     } else {
                         simStatus.textContent = 'SPEECH TOO SHORT - FAILED';
-                        alert("Speech response too short! Please turn on your microphone and speak clearly for at least 5 seconds to allow the AI to perform a diagnostic evaluation.");
+                        alert("Speech response too short! Please speak clearly for at least 5 seconds to allow the AI to perform a diagnostic evaluation.");
                         simStatus.textContent = 'AWAITING RESPONSE';
                         return;
                     }
                 }
 
-                // 1. TOPICAL RELEVANCE EVALUATION (Checks if the user talked about technology/daily routine)
+                // 1. STRICT TOPICAL RELEVANCE & MISSING WORD EVALUATION
                 const textLower = cleanTranscript.toLowerCase();
+                
+                // Core topical keywords expected for a technology description
                 const technologyTopicKeywords = ["technology", "device", "phone", "computer", "machine", "internet", "use", "daily", "routine", "screen", "app", "application", "software", "system", "mobile", "laptop", "gadget", "watch", "website", "social"];
                 const matchedTopicKeywords = technologyTopicKeywords.filter(word => textLower.includes(word));
+                const missedKeywords = technologyTopicKeywords.slice(0, 8).filter(word => !textLower.includes(word)); // Check main 8 words
+                
                 const isRelevant = isFallbackMode || matchedTopicKeywords.length > 0;
 
                 // Calculate real-time Speech Rate: Words Per Minute (WPM)
                 const wpm = Math.round((wordCount / elapsedSeconds) * 60);
                 
-                // 2. Calculate Fluency Score based on WPM
+                // 2. Calculate Fluency Score based on WPM & Word Count boundaries
                 let fluencyScore = 5.0;
                 let fluencyFeedback = "";
                 if (wpm >= 110 && wpm <= 160) {
@@ -1506,13 +1521,19 @@
                     fluencyFeedback = `Your speaking rate is slow (${wpm} WPM) or extremely fast. Practice speaking in rhythmic phrases.`;
                 }
 
+                // Strict penalty for extremely short answers (e.g. less than 15 words)
+                if (wordCount < 15 && !isFallbackMode) {
+                    fluencyScore = Math.min(fluencyScore, 5.5);
+                    fluencyFeedback += " Note: Your answer was exceptionally brief. Aim to expand your ideas with extra details for a higher Fluency grade.";
+                }
+
                 // 3. Calculate Lexical Resource (check for key IELTS vocabulary words used)
                 let academicKeywords = ["ubiquitous", "routine", "ameliorate", "cognizant", "fastidious", "pernicious", "essential", "crucial", "benefit", "impact", "application"];
                 let detectedKeywords = academicKeywords.filter(word => textLower.includes(word));
                 
                 let lexicalScore = 5.5;
                 if (isFallbackMode) {
-                    lexicalScore = 7.5; // Standard positive lexical score in fallback
+                    lexicalScore = 7.5; 
                 } else if (detectedKeywords.length >= 3) {
                     lexicalScore = 8.5;
                 } else if (detectedKeywords.length >= 1) {
@@ -1526,9 +1547,14 @@
                 let grammarScore = (wordCount > 35) ? 8.0 : (wordCount > 15) ? 7.0 : 6.0;
 
                 if (!isRelevant) {
-                    lexicalScore = 4.5;
+                    lexicalScore = 4.0;
                     grammarScore = 4.0;
+                    fluencyScore = Math.min(fluencyScore, 5.0);
                     relevanceWarningText = "<br><br><span style='color: var(--accent-gold); font-weight: 700;'><i class='fa-solid fa-triangle-exclamation'></i> Relevance Penalty Applied:</span> Your speaking response did not reference any elements related to technology or daily routine. The prompt specifically asked you to describe a piece of technology. Talk about your phone, computer, or a daily application to get full credit.";
+                } else if (missedKeywords.length >= 6 && !isFallbackMode) {
+                    // Spoke relevant words, but missed too many expected details
+                    lexicalScore = Math.max(5.0, lexicalScore - 1.5);
+                    relevanceWarningText = `<br><br><span style='color: var(--accent-gold); font-weight: 700;'><i class='fa-solid fa-circle-exclamation'></i> Missing Detail Warning:</span> Your answer was slightly incomplete. You did not mention key technological elements such as: <strong>${missedKeywords.slice(0, 4).join(', ')}</strong>. Elaborating on these devices would greatly improve your Lexical band score.`;
                 }
 
                 let overallScore = ((fluencyScore + lexicalScore + grammarScore) / 3).toFixed(1);
