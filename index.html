@@ -1394,23 +1394,34 @@
             if (synth.speaking) {
                 synth.cancel();
                 simStatus.textContent = 'IDLE';
+                micBtn.style.opacity = '1';
+                micBtn.style.pointerEvents = 'auto';
                 return;
             }
             
             simStatus.textContent = 'EXAMINER SPEAKING';
+            // Disable mic button while examiner is actively speaking to prevent audio feedback leak
+            micBtn.style.opacity = '0.4';
+            micBtn.style.pointerEvents = 'none';
+
             let utterance = new SpeechSynthesisUtterance(examinerSpeech.textContent);
             utterance.lang = 'en-GB';
             utterance.rate = 0.9; // Professional deliberate speaking pace
             
             utterance.onend = () => {
                 simStatus.textContent = 'AWAITING RESPONSE';
+                micBtn.style.opacity = '1';
+                micBtn.style.pointerEvents = 'auto';
             };
             
             synth.speak(utterance);
         });
 
         micBtn.addEventListener('click', () => {
-            if (synth.speaking) synth.cancel();
+            // Kill any active voice synthesizer immediately to prevent loop feedback leaks
+            if (synth.speaking) {
+                synth.cancel();
+            }
 
             if (!isRecording) {
                 // Start Recording & Speech Recognition
@@ -1447,7 +1458,10 @@
             simStatus.textContent = 'ANALYZING SPEECH PATTERNS...';
             
             setTimeout(() => {
-                const wordsArray = spokenTranscript.trim().split(/\s+/).filter(Boolean);
+                // Discard any Examiner text segment that got caught in the transcript echo
+                let cleanTranscript = spokenTranscript.replace(/welcome to the (ielts|ilc) speaking section.*describe a piece of technology/gi, "").trim();
+                
+                const wordsArray = cleanTranscript.split(/\s+/).filter(Boolean);
                 const wordCount = wordsArray.length;
                 
                 // CRITICAL FAILSAFE: Verify if the user actually spoke anything substantial
@@ -1458,10 +1472,16 @@
                     return;
                 }
 
+                // 1. TOPICAL RELEVANCE EVALUATION (Checks if the user talked about technology/daily routine)
+                const textLower = cleanTranscript.toLowerCase();
+                const technologyTopicKeywords = ["technology", "device", "phone", "computer", "machine", "internet", "use", "daily", "routine", "screen", "app", "application", "software", "system", "mobile", "laptop", "gadget", "watch", "website", "social"];
+                const matchedTopicKeywords = technologyTopicKeywords.filter(word => textLower.includes(word));
+                const isRelevant = matchedTopicKeywords.length > 0;
+
                 // Calculate real-time Speech Rate: Words Per Minute (WPM)
                 const wpm = Math.round((wordCount / elapsedSeconds) * 60);
                 
-                // 1. Calculate Fluency Score based on WPM
+                // 2. Calculate Fluency Score based on WPM
                 let fluencyScore = 5.0;
                 let fluencyFeedback = "";
                 if (wpm >= 110 && wpm <= 160) {
@@ -1475,12 +1495,11 @@
                     fluencyFeedback = `Noticeable speech hesitation detected (Rate: ${wpm} WPM). Focus on minimizing long silent blocks to improve sentence links.`;
                 } else {
                     fluencyScore = 4.5;
-                    fluencyFeedback = `Your speaking rate is quite slow (${wpm} WPM) or extremely fast. Practice speaking in rhythmic phrases.`;
+                    fluencyFeedback = `Your speaking rate is slow (${wpm} WPM) or extremely fast. Practice speaking in rhythmic phrases.`;
                 }
 
-                // 2. Calculate Lexical Resource (check for key IELTS vocabulary words used)
-                const textLower = spokenTranscript.toLowerCase();
-                let academicKeywords = ["ubiquitous", "technology", "device", "routine", "ameliorate", "cognizant", "fastidious", "pernicious", "essential", "crucial", "benefit", "impact", "application"];
+                // 3. Calculate Lexical Resource (check for key IELTS vocabulary words used)
+                let academicKeywords = ["ubiquitous", "routine", "ameliorate", "cognizant", "fastidious", "pernicious", "essential", "crucial", "benefit", "impact", "application"];
                 let detectedKeywords = academicKeywords.filter(word => textLower.includes(word));
                 
                 let lexicalScore = 5.5;
@@ -1492,8 +1511,16 @@
                     lexicalScore = 6.0;
                 }
 
-                // 3. Grammatical Range and Pronunciation (Simulated based on complexity of text structures)
+                // Apply Relevance Penalty if they just spoke random off-topic words
+                let relevanceWarningText = "";
                 let grammarScore = (wordCount > 35) ? 8.0 : (wordCount > 15) ? 7.0 : 6.0;
+
+                if (!isRelevant) {
+                    lexicalScore = 4.5;
+                    grammarScore = 4.0;
+                    relevanceWarningText = "<br><br><span style='color: var(--accent-gold); font-weight: 700;'><i class='fa-solid fa-triangle-exclamation'></i> Relevance Penalty Applied:</span> Your speaking response did not reference any elements related to technology or daily routine. The prompt specifically asked you to describe a piece of technology. Talk about your phone, computer, or a daily application to get full credit.";
+                }
+
                 let overallScore = ((fluencyScore + lexicalScore + grammarScore) / 3).toFixed(1);
 
                 // Populate scorecard details
@@ -1508,7 +1535,7 @@
                     `You successfully integrated advanced vocabulary terms like: <strong>${detectedKeywords.join(', ')}</strong>.` : 
                     "To increase your Lexical score, try incorporating academic descriptors instead of simple terms like 'good' or 'nice'.";
 
-                feedbackText.innerHTML = `<strong>Speech Captured:</strong> "${spokenTranscript.trim()}"<br><br>${fluencyFeedback} ${detectedText} Overall, this is a very promising Band ${overallScore} attempt. Try our complete premium version to unlock more feedback!`;
+                feedbackText.innerHTML = `<strong>Speech Captured:</strong> "${cleanTranscript}"<br><br>${fluencyFeedback} ${detectedText}${relevanceWarningText}<br><br>Overall, this is a Band ${overallScore} attempt. Try our complete premium version to unlock more feedback!`;
 
                 simStatus.textContent = 'COMPLETED';
                 examinerPanel.style.display = 'none';
@@ -1537,6 +1564,8 @@
             simTimer.textContent = '00:00';
             simStatus.textContent = 'IDLE';
             spokenTranscript = "";
+            micBtn.style.opacity = '1';
+            micBtn.style.pointerEvents = 'auto';
         });
 
         // FAQ ACCORDIONS
