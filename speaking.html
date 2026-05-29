@@ -2590,6 +2590,7 @@
                 unlockBrowserAudio();
                 transcriptText = "";
                 window.hasSpokenBusy = false; // Reset busy voice state
+                window.lastQueuePosition = 0; // Reset last queue position for voiced updates
                 const tunnelUrl = "relying-film-und-arrange.trycloudflare.com";
 
                 voipOverlay.style.display = "flex";
@@ -2641,10 +2642,10 @@
                             voipTranscriptText.innerHTML = `<span style="color:var(--accent-gold); font-weight:600;"><i class="fa-solid fa-hourglass-half fa-spin"></i> ${data.text}</span>`;
                             stopVoipAvWaves();
                             
-                            // Play dynamic voiced notification once when entering queue
-                            if (!window.hasSpokenBusy) {
-                                window.hasSpokenBusy = true;
-                                playVocabAudio("All AI speaking examiners are currently conducting interviews. Please wait on the line.");
+                            // Play dynamic voiced notification when entering queue or when position updates
+                            if (window.lastQueuePosition !== data.queue_position) {
+                                window.lastQueuePosition = data.queue_position;
+                                playVocabAudio(data.text);
                             }
                         } else if (data.type === "error") {
                             voipStatusBadge.className = "voip-status-badge error";
@@ -2964,6 +2965,7 @@
 
             function endLiveCallSession() {
                 callActive = false;
+                window.lastQueuePosition = 0;
                 stopVoipCallTimer();
                 stopVadListening();
                 clearTimeout(voipDialTimeout);
