@@ -975,6 +975,17 @@
                             <i class="fa-solid fa-square-check"></i> Finish & Analyze
                         </button>
                     </div>
+
+                    <!-- MANUAL TRANSCRIPT FALLBACK (PERFECT FOR REMOTE VDS SANS PHYSICAL MIC) -->
+                    <div id="manualInputContainer" style="margin-top: 30px; width: 100%; max-width: 600px; text-align: left; border-top: 1px solid var(--card-border); padding-top: 20px;">
+                        <span style="font-size: 14px; color: var(--text-secondary); display: block; margin-bottom: 10px; font-weight: 600;">
+                            <i class="fa-solid fa-keyboard"></i> Type/Paste Speech Response (Failsafe for VDS / Restricted Mic)
+                        </span>
+                        <textarea id="manualSpeechText" placeholder="Paste your spoken speaking response here to analyze its IELTS criteria... (Example: I find modern gadgets highly ubiquitous in our routine, although their pernicious habits are clear...)" style="width: 100%; height: 80px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; color: #fff; font-family: inherit; font-size: 14px; outline: none; resize: none; transition: var(--transition-smooth);"></textarea>
+                        <button class="card-btn" id="analyzeTextBtn" style="margin-top: 10px; width: 100%; justify-content: center; background: var(--gradient-primary); color: #fff; border-color: transparent;">
+                            <i class="fa-solid fa-chart-simple"></i> Analyze Text Response
+                        </button>
+                    </div>
                 </div>
 
                 <!-- SCORECARD PANEL -->
@@ -1006,6 +1017,17 @@
                     <div class="feedback-box">
                         <h4 id="feedbackTitle"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic</h4>
                         <p id="feedbackText">Outstanding response! Your usage of high-level vocabulary terms like 'ubiquitous' and 'pernicious' was flawless. Sentence structures were complex, and transitions between thoughts felt natural. To elevate your pronunciation score, focus on softening hard 't' and 'd' plosives.</p>
+                    </div>
+
+                    <!-- NEW STRUGGLED WORDS SECTION -->
+                    <div id="struggledWordsSection" style="margin-bottom: 30px; display: none;">
+                        <h4 style="font-size: 16px; color: var(--accent-gold); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>❌ Lesson Vocabulary You Struggled to Pronounce (Practice Below)</span>
+                        </h4>
+                        <div id="struggledWordsList" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Dynamically loaded cards -->
+                        </div>
                     </div>
 
                     <div style="display: flex; gap: 15px; width: 100%;">
@@ -1491,118 +1513,308 @@
             setTimeout(() => {
                 // Discard any Examiner text segment that got caught in the transcript echo
                 let cleanTranscript = spokenTranscript.replace(/welcome to the (ielts|ilc) speaking section.*describe a piece of technology/gi, "").trim();
-                
-                let wordsArray = cleanTranscript.split(/\s+/).filter(Boolean);
-                let wordCount = wordsArray.length;
-                let isFallbackMode = false;
-                
-                // SMART FAILSAFE: If speech recognition failed/restricted but user spoke for 4+ seconds
-                if (wordCount < 4) {
-                    if (elapsedSeconds >= 4) {
-                        isFallbackMode = true;
-                        cleanTranscript = "[Browser Voice Input Captured - Local Transcription Restricted]";
-                        // Assume a natural baseline of 130 WPM for time-based scoring
-                        wordCount = Math.round((130 * elapsedSeconds) / 60);
-                    } else {
-                        simStatus.textContent = 'SPEECH TOO SHORT - FAILED';
-                        alert("Speech response too short! Please speak clearly for at least 5 seconds to allow the AI to perform a diagnostic evaluation.");
-                        simStatus.textContent = 'AWAITING RESPONSE';
-                        return;
-                    }
-                }
-
-                // 1. STRICT TOPICAL RELEVANCE & MISSING WORD EVALUATION
-                const textLower = cleanTranscript.toLowerCase();
-                
-                // Core topical keywords expected for a technology description
-                const technologyTopicKeywords = ["technology", "device", "phone", "computer", "machine", "internet", "use", "daily", "routine", "screen", "app", "application", "software", "system", "mobile", "laptop", "gadget", "watch", "website", "social"];
-                const matchedTopicKeywords = technologyTopicKeywords.filter(word => textLower.includes(word));
-                const missedKeywords = technologyTopicKeywords.slice(0, 8).filter(word => !textLower.includes(word)); // Check main 8 words
-                
-                const isRelevant = isFallbackMode || matchedTopicKeywords.length > 0;
-
-                // Calculate real-time Speech Rate: Words Per Minute (WPM)
-                const wpm = Math.round((wordCount / elapsedSeconds) * 60);
-                
-                // 2. Calculate Fluency Score based on WPM & Word Count boundaries
-                let fluencyScore = 5.0;
-                let fluencyFeedback = "";
-                if (wpm >= 110 && wpm <= 160) {
-                    fluencyScore = 8.5;
-                    fluencyFeedback = `Excellent speech pace of ${wpm} words per minute. Your delivery is extremely natural with zero unnatural pauses.`;
-                } else if (wpm >= 80 && wpm < 110) {
-                    fluencyScore = 7.5;
-                    fluencyFeedback = `Good, steady pace of ${wpm} words per minute. Mild hesitation detected, but speech flows well.`;
-                } else if (wpm >= 50 && wpm < 80) {
-                    fluencyScore = 6.0;
-                    fluencyFeedback = `Noticeable speech hesitation detected (Rate: ${wpm} WPM). Focus on minimizing long silent blocks to improve sentence links.`;
-                } else {
-                    fluencyScore = 4.5;
-                    fluencyFeedback = `Your speaking rate is slow (${wpm} WPM) or extremely fast. Practice speaking in rhythmic phrases.`;
-                }
-
-                // Strict penalty for extremely short answers (e.g. less than 15 words)
-                if (wordCount < 15 && !isFallbackMode) {
-                    fluencyScore = Math.min(fluencyScore, 5.5);
-                    fluencyFeedback += " Note: Your answer was exceptionally brief. Aim to expand your ideas with extra details for a higher Fluency grade.";
-                }
-
-                // 3. Calculate Lexical Resource (check for key IELTS vocabulary words used)
-                let academicKeywords = ["ubiquitous", "routine", "ameliorate", "cognizant", "fastidious", "pernicious", "essential", "crucial", "benefit", "impact", "application"];
-                let detectedKeywords = academicKeywords.filter(word => textLower.includes(word));
-                
-                let lexicalScore = 5.5;
-                if (isFallbackMode) {
-                    lexicalScore = 7.5; 
-                } else if (detectedKeywords.length >= 3) {
-                    lexicalScore = 8.5;
-                } else if (detectedKeywords.length >= 1) {
-                    lexicalScore = 7.0;
-                } else {
-                    lexicalScore = 6.0;
-                }
-
-                // Apply Relevance Penalty if they just spoke random off-topic words
-                let relevanceWarningText = "";
-                let grammarScore = (wordCount > 35) ? 8.0 : (wordCount > 15) ? 7.0 : 6.0;
-
-                if (!isRelevant) {
-                    lexicalScore = 4.0;
-                    grammarScore = 4.0;
-                    fluencyScore = Math.min(fluencyScore, 5.0);
-                    relevanceWarningText = "<br><br><span style='color: var(--accent-gold); font-weight: 700;'><i class='fa-solid fa-triangle-exclamation'></i> Relevance Penalty Applied:</span> Your speaking response did not reference any elements related to technology or daily routine. The prompt specifically asked you to describe a piece of technology. Talk about your phone, computer, or a daily application to get full credit.";
-                } else if (missedKeywords.length >= 6 && !isFallbackMode) {
-                    // Spoke relevant words, but missed too many expected details
-                    lexicalScore = Math.max(5.0, lexicalScore - 1.5);
-                    relevanceWarningText = `<br><br><span style='color: var(--accent-gold); font-weight: 700;'><i class='fa-solid fa-circle-exclamation'></i> Missing Detail Warning:</span> Your answer was slightly incomplete. You did not mention key technological elements such as: <strong>${missedKeywords.slice(0, 4).join(', ')}</strong>. Elaborating on these devices would greatly improve your Lexical band score.`;
-                }
-
-                let overallScore = ((fluencyScore + lexicalScore + grammarScore) / 3).toFixed(1);
-
-                // Populate scorecard details
-                scoreFluency.textContent = fluencyScore.toFixed(1);
-                scoreLexical.textContent = lexicalScore.toFixed(1);
-                scoreGrammar.textContent = grammarScore.toFixed(1);
-                scoreOverall.textContent = overallScore;
-
-                feedbackTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic (WPM: ${wpm})`;
-                
-                let detectedText = "";
-                if (isFallbackMode) {
-                    detectedText = "<strong>⚠️ Browser Note:</strong> Real-time text transcription was restricted by browser/device settings. However, we successfully analyzed your active voice speaking duration of " + elapsedSeconds + " seconds to compute your speech-rate band. Please ensure microphone permissions are granted in your browser settings to enable transcription-based vocabulary grading.";
-                } else {
-                    detectedText = detectedKeywords.length > 0 ? 
-                        `You successfully integrated advanced vocabulary terms like: <strong>${detectedKeywords.join(', ')}</strong>.` : 
-                        "To increase your Lexical score, try incorporating academic descriptors instead of simple terms like 'good' or 'nice'.";
-                }
-
-                feedbackText.innerHTML = `<strong>Speech Captured:</strong> "${cleanTranscript}"<br><br>${fluencyFeedback}<br><br>${detectedText}${relevanceWarningText}<br><br>Overall, this is a Band ${overallScore} attempt. Try our complete premium version to unlock more feedback!`;
-
-                simStatus.textContent = 'COMPLETED';
-                examinerPanel.style.display = 'none';
-                scorecardPanel.style.display = 'flex';
+                analyzeSpeechTranscript(cleanTranscript, elapsedSeconds, false);
             }, 1500);
         });
+
+        // MANUAL TRANSCRIPT ANALYSIS ( failsafe for VDS Chrome context without mic )
+        const analyzeTextBtn = document.getElementById('analyzeTextBtn');
+        const manualSpeechText = document.getElementById('manualSpeechText');
+        
+        analyzeTextBtn.addEventListener('click', () => {
+            let text = manualSpeechText.value.trim();
+            if (!text) {
+                alert("Please type or paste a speaking response transcript first!");
+                return;
+            }
+            simStatus.textContent = 'ANALYZING TEXT TRANSCRIPT...';
+            // Simulate speaking elapsed seconds based on a natural WPM rate of 120 WPM
+            let wordsCount = text.split(/\s+/).filter(Boolean).length;
+            let simulatedTime = Math.max(12, Math.round((wordsCount * 60) / 120));
+            
+            setTimeout(() => {
+                analyzeSpeechTranscript(text, simulatedTime, true);
+            }, 1000);
+        });
+
+        function analyzeSpeechTranscript(cleanTranscript, duration, isManualKeyboard = false) {
+            let wordsArray = cleanTranscript.split(/\s+/).filter(Boolean);
+            let wordCount = wordsArray.length;
+            
+            // STRICT MIC FAILSAFE: If mic is blocked or user didn't speak, do not award high scores
+            if (wordCount < 4 && !isManualKeyboard) {
+                scoreFluency.textContent = "1.0";
+                scoreLexical.textContent = "1.0";
+                scoreGrammar.textContent = "1.0";
+                scoreOverall.textContent = "1.0";
+                
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Speech Analysis Failed`;
+                feedbackText.innerHTML = `<strong>⚠️ Error: Speech Recognition Blocked / No Words Detected</strong><br><br>The browser speech engine was unable to transcribe any spoken words. This commonly happens if:<br>1. You are accessing the website over an insecure connection (<strong>http://</strong>) on a remote VDS, which blocks browser microphone APIs. Use <strong>localhost</strong> or an <strong>https://</strong> URL (like our live GitHub Pages URL).<br>2. The microphone is muted or disconnected.<br><br><em>To test the system on VDS right now, you can use our <strong>Manual Speaking Input</strong> below to type/paste your speech!</em>`;
+                
+                simStatus.textContent = 'ERROR';
+                examinerPanel.style.display = 'none';
+                scorecardPanel.style.display = 'flex';
+                document.getElementById('struggledWordsSection').style.display = 'none';
+                return;
+            }
+
+            const textLower = cleanTranscript.toLowerCase();
+            
+            // 1. STRICT TOPICAL RELEVANCE & MISSING WORD EVALUATION
+            const technologyTopicKeywords = ["technology", "device", "phone", "computer", "machine", "internet", "use", "daily", "routine", "screen", "app", "application", "software", "system", "mobile", "laptop", "gadget", "watch", "website", "social"];
+            const matchedTopicKeywords = technologyTopicKeywords.filter(word => textLower.includes(word));
+            const missedKeywords = technologyTopicKeywords.slice(0, 8).filter(word => !textLower.includes(word)); // Check main 8 words
+            const isRelevant = matchedTopicKeywords.length > 0;
+
+            // Calculate real-time Speech Rate: Words Per Minute (WPM)
+            const wpm = Math.round((wordCount / duration) * 60);
+            
+            // 2. Calculate Fluency Score based on WPM & Word Count boundaries
+            let fluencyScore = 5.0;
+            let fluencyFeedback = "";
+            if (wpm >= 110 && wpm <= 160) {
+                fluencyScore = 8.5;
+                fluencyFeedback = `Excellent speech pace of ${wpm} words per minute. Your delivery is extremely natural with zero unnatural pauses.`;
+            } else if (wpm >= 80 && wpm < 110) {
+                fluencyScore = 7.5;
+                fluencyFeedback = `Good, steady pace of ${wpm} words per minute. Mild hesitation detected, but speech flows well.`;
+            } else if (wpm >= 50 && wpm < 80) {
+                fluencyScore = 6.0;
+                fluencyFeedback = `Noticeable speech hesitation detected (Rate: ${wpm} WPM). Focus on minimizing long silent blocks to improve sentence links.`;
+            } else {
+                fluencyScore = 4.5;
+                fluencyFeedback = `Your speaking rate is slow (${wpm} WPM) or extremely fast. Practice speaking in rhythmic phrases.`;
+            }
+
+            // Strict penalty for extremely short answers (e.g. less than 15 words)
+            if (wordCount < 15) {
+                fluencyScore = Math.min(fluencyScore, 5.5);
+                fluencyFeedback += " Note: Your answer was exceptionally brief. Aim to expand your ideas with extra details for a higher Fluency grade.";
+            }
+
+            // 3. Calculate Lexical Resource (check for key IELTS vocabulary words used)
+            let academicKeywords = ["ubiquitous", "routine", "ameliorate", "cognizant", "fastidious", "pernicious", "essential", "crucial", "benefit", "impact", "application"];
+            let detectedKeywords = academicKeywords.filter(word => textLower.includes(word));
+            
+            let lexicalScore = 5.5;
+            if (detectedKeywords.length >= 3) {
+                lexicalScore = 8.5;
+            } else if (detectedKeywords.length >= 1) {
+                lexicalScore = 7.0;
+            } else {
+                lexicalScore = 6.0;
+            }
+
+            // Apply Relevance Penalty if they just spoke random off-topic words
+            let relevanceWarningText = "";
+            let grammarScore = (wordCount > 35) ? 8.0 : (wordCount > 15) ? 7.0 : 6.0;
+
+            if (!isRelevant) {
+                lexicalScore = 4.0;
+                grammarScore = 4.0;
+                fluencyScore = Math.min(fluencyScore, 5.0);
+                relevanceWarningText = "<br><br><span style='color: var(--accent-gold); font-weight: 700;'><i class='fa-solid fa-triangle-exclamation'></i> Relevance Penalty Applied:</span> Your speaking response did not reference any elements related to technology or daily routine. The prompt specifically asked you to describe a piece of technology. Talk about your phone, computer, or a daily application to get full credit.";
+            } else if (missedKeywords.length >= 6) {
+                // Spoke relevant words, but missed too many expected details
+                lexicalScore = Math.max(5.0, lexicalScore - 1.5);
+                relevanceWarningText = `<br><br><span style='color: var(--accent-gold); font-weight: 700;'><i class='fa-solid fa-circle-exclamation'></i> Missing Detail Warning:</span> Your answer was slightly incomplete. You did not mention key technological elements such as: <strong>${missedKeywords.slice(0, 4).join(', ')}</strong>. Elaborating on these devices would greatly improve your Lexical band score.`;
+            }
+
+            let overallScore = ((fluencyScore + lexicalScore + grammarScore) / 3).toFixed(1);
+
+            // Populate scorecard details
+            scoreFluency.textContent = fluencyScore.toFixed(1);
+            scoreLexical.textContent = lexicalScore.toFixed(1);
+            scoreGrammar.textContent = grammarScore.toFixed(1);
+            scoreOverall.textContent = overallScore;
+
+            feedbackTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic ${isManualKeyboard ? '(Text Mode)' : `(WPM: ${wpm})`}`;
+            
+            let detectedText = detectedKeywords.length > 0 ? 
+                `You successfully integrated advanced vocabulary terms like: <strong>${detectedKeywords.join(', ')}</strong>.` : 
+                "To increase your Lexical score, try incorporating academic descriptors instead of simple terms like 'good' or 'nice'.";
+
+            feedbackText.innerHTML = `<strong>Speech Captured:</strong> "${cleanTranscript}"<br><br>${fluencyFeedback}<br><br>${detectedText}${relevanceWarningText}<br><br>Overall, this is a Band ${overallScore} attempt. Try our complete premium version to unlock more feedback!`;
+
+            // ── DYNAMIC STRUGGLED WORDS PRACTICE COMPILING ──
+            const struggledWordsSection = document.getElementById('struggledWordsSection');
+            const struggledWordsList = document.getElementById('struggledWordsList');
+            
+            // Check which vocabulary words are omitted/missed
+            let missedWordsList = [];
+            vocabData.forEach(item => {
+                let wordLower = item.word.toLowerCase();
+                if (!textLower.includes(wordLower)) {
+                    missedWordsList.push(item);
+                }
+            });
+
+            if (missedWordsList.length > 0) {
+                struggledWordsSection.style.display = 'block';
+                struggledWordsList.innerHTML = '';
+                
+                const phoneticsMap = {
+                    "Ameliorate": "/əˈmiːl.jə.reɪt/",
+                    "Cognizant": "/ˈkɒɡ.nɪ.zənt/",
+                    "Equivocal": "/ɪˈkwɪv.ə.kəl/",
+                    "Fastidious": "/fæsˈtɪd.i.əs/",
+                    "Pernicious": "/pəˈnɪʃ.əs/",
+                    "Ubiquitous": "/juːˈbɪk.wɪ.təs/",
+                    "Venerate": "/ˈven.ər.eɪt/",
+                    "Epistemic": "/ˌep.ɪˈstiː.mɪk/",
+                    "Sycophant": "/ˈsɪk.ə.fænt/",
+                    "Elucidate": "/iˈluː.sɪ.deɪt/"
+                };
+
+                missedWordsList.forEach(item => {
+                    const phonetic = phoneticsMap[item.word] || "";
+                    const card = document.createElement('div');
+                    card.className = 'struggled-card';
+                    card.style.background = 'rgba(255, 255, 255, 0.02)';
+                    card.style.border = '1px solid var(--card-border)';
+                    card.style.borderRadius = '12px';
+                    card.style.padding = '16px';
+                    card.style.display = 'flex';
+                    card.style.flexDirection = 'column';
+                    card.style.gap = '10px';
+                    card.style.transition = 'var(--transition-smooth)';
+                    
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <span style="font-size: 17px; font-weight: 700; color: #fff;">${item.word}</span>
+                                <span style="font-family: 'Fira Code', monospace; font-size: 12px; color: var(--accent-cyan); margin-left: 8px;">${phonetic}</span>
+                            </div>
+                            <span style="font-size: 13px; font-weight: 600; color: var(--accent-gold);"><i class="fa-solid fa-language"></i> ${item.bengali_meaning}</span>
+                        </div>
+                        <div style="font-size: 13.5px; color: var(--text-secondary);">
+                            <strong>Speaking Context Application:</strong> "${item.speaking_example}"
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 5px;">
+                            <button class="card-btn listen-correct-btn" data-word="${item.word}" style="padding: 6px 14px; font-size: 12.5px; border-radius: 50px;">
+                                <i class="fa-solid fa-volume-high"></i> Listen
+                            </button>
+                            <button class="card-btn practice-word-btn" data-word="${item.word}" style="padding: 6px 14px; font-size: 12.5px; border-radius: 50px; background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.2);">
+                                <i class="fa-solid fa-microphone"></i> Practice Saying This Word
+                            </button>
+                            <span class="practice-status" data-word="${item.word}" style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-left: auto;">Not Practiced</span>
+                        </div>
+                        <div class="practice-text-input-container" data-word="${item.word}" style="display: none; margin-top: 5px; flex-direction: column; gap: 8px; width: 100%;">
+                            <div style="display: flex; gap: 8px; width: 100%;">
+                                <input type="text" class="practice-text-input" placeholder="Type the word here to simulate speech..." style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 6px 12px; color:#fff; border-radius: 6px; font-size: 13px; outline:none;" />
+                                <button class="card-btn verify-practice-text-btn" data-word="${item.word}" style="padding: 6px 12px; font-size: 12.5px; border-radius: 6px;">Verify</button>
+                            </div>
+                        </div>
+                    `;
+                    struggledWordsList.appendChild(card);
+                });
+
+                // Bind Listen correct audio pronunciation players
+                document.querySelectorAll('.listen-correct-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const word = btn.getAttribute('data-word');
+                        // Relative fallback link to pre-compiled audio guide database
+                        const audioPath = `audio_vault/${word.toLowerCase()}.mp3`;
+                        const audio = new Audio(audioPath);
+                        audio.play().catch(e => {
+                            // Fallback to client-side speech synthesis if local MP3 is blocked/missing
+                            let utterance = new SpeechSynthesisUtterance(word);
+                            utterance.lang = 'en-GB';
+                            window.speechSynthesis.speak(utterance);
+                        });
+                    });
+                });
+
+                // Bind Practice mic buttons
+                document.querySelectorAll('.practice-word-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const word = btn.getAttribute('data-word');
+                        const card = btn.closest('.struggled-card');
+                        const statusLabel = card.querySelector('.practice-status[data-word="' + word + '"]');
+                        const textInputContainer = card.querySelector('.practice-text-input-container[data-word="' + word + '"]');
+                        
+                        if (SpeechRecognition && recognition) {
+                            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Listening (Speak Now)...';
+                            btn.style.borderColor = 'var(--accent-cyan)';
+                            statusLabel.textContent = 'Listening...';
+                            statusLabel.style.color = 'var(--accent-cyan)';
+                            
+                            let tempRec = new SpeechRecognition();
+                            tempRec.continuous = false;
+                            tempRec.lang = 'en-US';
+                            
+                            tempRec.onresult = (event) => {
+                                const resultText = event.results[0][0].transcript.toLowerCase().trim();
+                                console.log("[Single Word Practice]:", resultText, "Target:", word);
+                                
+                                if (resultText.includes(word.toLowerCase())) {
+                                    card.style.borderColor = 'var(--success)';
+                                    card.style.background = 'rgba(16, 185, 129, 0.05)';
+                                    statusLabel.innerHTML = '<i class="fa-solid fa-circle-check"></i> ✅ Correct Pronunciation!';
+                                    statusLabel.style.color = 'var(--success)';
+                                    btn.style.display = 'none';
+                                    textInputContainer.style.display = 'none';
+                                } else {
+                                    card.style.borderColor = 'var(--danger)';
+                                    statusLabel.innerHTML = `❌ Heard: "${resultText}" (Try again)`;
+                                    statusLabel.style.color = 'var(--danger)';
+                                    btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Practice Saying This Word';
+                                    btn.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                }
+                            };
+                            
+                            tempRec.onerror = (e) => {
+                                console.log(e);
+                                btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Try Typing';
+                                statusLabel.textContent = '⚠️ Mic blocked. Use text verification:';
+                                statusLabel.style.color = 'var(--accent-gold)';
+                                textInputContainer.style.display = 'flex';
+                            };
+                            
+                            try {
+                                tempRec.start();
+                            } catch(e) {
+                                textInputContainer.style.display = 'flex';
+                            }
+                        } else {
+                            statusLabel.textContent = '⚠️ Mic unsupported. Use text verification:';
+                            statusLabel.style.color = 'var(--accent-gold)';
+                            textInputContainer.style.display = 'flex';
+                        }
+                    });
+                });
+
+                // Bind Simulated Keyboard Verify buttons
+                document.querySelectorAll('.verify-practice-text-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const word = btn.getAttribute('data-word');
+                        const card = btn.closest('.struggled-card');
+                        const input = card.querySelector('.practice-text-input');
+                        const statusLabel = card.querySelector('.practice-status[data-word="' + word + '"]');
+                        const pracBtn = card.querySelector('.practice-word-btn[data-word="' + word + '"]');
+                        
+                        if (input.value.toLowerCase().trim() === word.toLowerCase()) {
+                            card.style.borderColor = 'var(--success)';
+                            card.style.background = 'rgba(16, 185, 129, 0.05)';
+                            statusLabel.innerHTML = '<i class="fa-solid fa-circle-check"></i> ✅ Correct Pronunciation Verified!';
+                            statusLabel.style.color = 'var(--success)';
+                            card.querySelector('.practice-text-input-container').style.display = 'none';
+                            pracBtn.style.display = 'none';
+                        } else {
+                            card.style.borderColor = 'var(--danger)';
+                            statusLabel.innerHTML = '❌ Word spelling mismatch (Try again)';
+                            statusLabel.style.color = 'var(--danger)';
+                        }
+                    });
+                });
+            } else {
+                struggledWordsSection.style.display = 'none';
+            }
+
+            simStatus.textContent = 'COMPLETED';
+            examinerPanel.style.display = 'none';
+            scorecardPanel.style.display = 'flex';
+        }
 
         function stopRecording() {
             isRecording = false;
@@ -1625,6 +1837,7 @@
             simTimer.textContent = '00:00';
             simStatus.textContent = 'IDLE';
             spokenTranscript = "";
+            manualSpeechText.value = "";
             micBtn.style.opacity = '1';
             micBtn.style.pointerEvents = 'auto';
         });
