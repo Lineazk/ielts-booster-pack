@@ -891,6 +891,78 @@
             color: var(--accent-cyan);
         }
 
+        /* PRONUNCIATION ERROR STYLES */
+        .error-word {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .error-word:hover {
+            background: rgba(255, 107, 107, 0.15);
+            transform: translateX(5px);
+        }
+
+        .error-word-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .error-word-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+
+        .error-word-play {
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: 50px;
+            padding: 6px 12px;\            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            transition: var(--transition-smooth);
+        }
+
+        .error-word-play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+        }
+
+        .error-word-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .error-word-correction {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(0, 229, 255, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .error-word-correction-label {
+            font-size: 11px;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .error-word-correction-text {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
         /* MOBILE RESPONSIVENESS */
         @media (max-width: 768px) {
             h1 { font-size: 40px; }
@@ -946,7 +1018,7 @@
             <div class="sim-header">
                 <div class="sim-title">
                     <i class="fa-solid fa-robot"></i>
-                    <span>IELTS Speaking Examiner (Mockup)</span>
+                    <span>IELTS Speaking Examiner (Live)</span>
                 </div>
                 <div class="sim-status" id="simStatus">IDLE</div>
             </div>
@@ -958,7 +1030,7 @@
                         <i class="fa-solid fa-user-tie"></i>
                     </div>
                     <div class="examiner-speech" id="examinerSpeech">
-                        "Welcome to the IELTS Speaking Section. Let's begin. Describe a piece of technology that you find highly ubiquitous in your daily routine."
+                        "Describe a piece of technology that you find highly ubiquitous in your daily routine."
                     </div>
                     
                     <button class="card-btn" id="listenBtn" style="margin-bottom: 20px;">
@@ -975,17 +1047,25 @@
                             <i class="fa-solid fa-square-check"></i> Finish & Analyze
                         </button>
                     </div>
-
-                    <!-- MANUAL TRANSCRIPT FALLBACK (PERFECT FOR REMOTE VDS SANS PHYSICAL MIC) -->
-                    <div id="manualInputContainer" style="margin-top: 30px; width: 100%; max-width: 600px; text-align: left; border-top: 1px solid var(--card-border); padding-top: 20px;">
-                        <span style="font-size: 14px; color: var(--text-secondary); display: block; margin-bottom: 10px; font-weight: 600;">
-                            <i class="fa-solid fa-keyboard"></i> Type/Paste Speech Response (Failsafe for VDS / Restricted Mic)
-                        </span>
-                        <textarea id="manualSpeechText" placeholder="Paste your spoken speaking response here to analyze its IELTS criteria... (Example: I find modern gadgets highly ubiquitous in our routine, although their pernicious habits are clear...)" style="width: 100%; height: 80px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; color: #fff; font-family: inherit; font-size: 14px; outline: none; resize: none; transition: var(--transition-smooth);"></textarea>
-                        <button class="card-btn" id="analyzeTextBtn" style="margin-top: 10px; width: 100%; justify-content: center; background: var(--gradient-primary); color: #fff; border-color: transparent;">
-                            <i class="fa-solid fa-chart-simple"></i> Analyze Text Response
-                        </button>
+                    
+                    <!-- SPEECH ERROR MESSAGE -->
+                    <div id="speechError" style="display: none; margin-top: 30px; padding: 20px; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 16px; text-align: center; max-width: 500px;">
+                        <i class="fa-solid fa-microphone-slash" style="font-size: 24px; color: #ff6b6b; margin-bottom: 10px;"></i>
+                        <h4 style="font-size: 16px; color: #ff6b6b; margin-bottom: 10px;">Speech Recognition Blocked</h4>
+                        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                            Browser microphone access is required for the speaking test. Please use a secure HTTPS connection (like our GitHub Pages site) or ensure your microphone permissions are enabled.
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button class="card-btn" id="tryAgainBtn" style="background: var(--gradient-primary); color: #fff; border-color: transparent;">
+                                <i class="fa-solid fa-redo"></i> Try Again
+                            </button>
+                            <a href="#pricing" class="cta-nav" style="padding: 12px 24px; font-size: 14px;">
+                                View Premium Options
+                            </a>
+                        </div>
                     </div>
+
+
                 </div>
 
                 <!-- SCORECARD PANEL -->
@@ -1016,17 +1096,31 @@
 
                     <div class="feedback-box">
                         <h4 id="feedbackTitle"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic</h4>
-                        <p id="feedbackText">Outstanding response! Your usage of high-level vocabulary terms like 'ubiquitous' and 'pernicious' was flawless. Sentence structures were complex, and transitions between thoughts felt natural. To elevate your pronunciation score, focus on softening hard 't' and 'd' plosives.</p>
+                        <p id="feedbackText">Your response has been analyzed. The system detected several pronunciation errors that need improvement. Focus on the highlighted words below and practice them to improve your score.</p>
                     </div>
 
-                    <!-- NEW STRUGGLED WORDS SECTION -->
-                    <div id="struggledWordsSection" style="margin-bottom: 30px; display: none;">
-                        <h4 style="font-size: 16px; color: var(--accent-gold); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                            <span>❌ Lesson Vocabulary You Struggled to Pronounce (Practice Below)</span>
+                    <!-- PRONUNCIATION ERROR DETECTION SECTION -->
+                    <div id="pronunciationErrors" style="margin-bottom: 30px; display: none;">
+                        <h4 style="font-size: 16px; color: #ff6b6b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            <span>🔍 Pronunciation Errors Detected</span>
                         </h4>
-                        <div id="struggledWordsList" style="display: flex; flex-direction: column; gap: 12px;">
-                            <!-- Dynamically loaded cards -->
+                        <div id="errorWordsList" style="display: flex; flex-direction: column; gap: 15px;">
+                            <!-- Error detection cards will be populated here -->
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 12px;">
+                            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 10px;">
+                                <i class="fa-solid fa-lightbulb" style="color: var(--accent-gold); margin-right: 8px;"></i>
+                                <strong>Tip:</strong> Click on each word to hear the correct pronunciation and practice until perfect.
+                            </p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button class="card-btn" id="practiceAllErrorsBtn" style="background: var(--gradient-primary); color: #fff; border-color: transparent;">
+                                    <i class="fa-solid fa-repeat"></i> Practice All Errors
+                                </button>
+                                <button class="card-btn" id="nextQuestionBtn">
+                                    <i class="fa-solid fa-arrow-right"></i> Next Question
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1037,6 +1131,17 @@
                         <a href="#pricing" class="cta-nav" style="flex: 1.5; padding: 14px 20px; font-size: 14px; text-align: center; border-radius: 50px;">
                             Unlock All Examiner Topics
                         </a>
+                    </div>
+                    
+                    <!-- CORRECT PRONUNCIATION GUIDE -->
+                    <div id="pronunciationGuide" style="margin-top: 30px; padding: 20px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 16px; display: none;">
+                        <h4 style="font-size: 16px; color: var(--accent-cyan); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span>🎯 Correct Pronunciation Guide</span>
+                        </h4>
+                        <div id="pronunciationGuideContent">
+                            <!-- Guide content will be populated dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>
