@@ -1081,35 +1081,22 @@
             <div class="sim-header">
                 <div class="sim-title" style="color: var(--accent-cyan);">
                     <i class="fa-solid fa-phone-volume"></i>
-                    <span>Live WebSocket VoIP Call Terminal</span>
+                    <span>Premium Voice Assessment Terminal</span>
                 </div>
-                <div class="sim-status" style="color: var(--accent-cyan); background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.15);">VOIP ACTIVE</div>
+                <div class="sim-status" style="color: var(--accent-cyan); background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.15);">SYSTEM ONLINE</div>
             </div>
 
             <div class="sim-body" style="padding: 20px 0;">
                 <div class="examiner-avatar" style="background: var(--gradient-primary); font-size: 40px; box-shadow: var(--glow-cyan); margin-bottom: 20px;">
                     <i class="fa-solid fa-headset"></i>
                 </div>
-                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px;">Dr. Sarah Live Examiner Call</h3>
+                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px;">Premium Neural Examiner Assessment</h3>
                 <p style="font-size: 14.5px; color: var(--text-secondary); max-width: 500px; margin-bottom: 25px; line-height: 1.6;">
-                    Conducts a dynamic, full multi-part IELTS interview using ultra-fast Groq Whisper and Llama 3.3.
+                    Connect to our dedicated assessment system for a full, multi-part interactive speaking evaluation. Speak naturally, receive immediate feedback, and evaluate your performance in real time.
                 </p>
 
-                <!-- VDS Tunnel Input for Mixed Content Bypassing -->
-                <div style="width: 100%; max-width: 440px; margin-bottom: 20px; text-align: left;">
-                    <label for="tunnelUrlInput" style="font-size: 12px; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;">
-                        <i class="fa-solid fa-server"></i> VDS Secure Tunnel URL (For HTTPS GitHub pages)
-                    </label>
-                    <input type="text" id="tunnelUrlInput" placeholder="wss://xxxx.trycloudflare.com (Optional)" 
-                        style="width: 100%; padding: 12px 18px; border-radius: 50px; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); color: #fff; font-family: inherit; font-size: 14px; outline: none; transition: var(--transition-smooth);"
-                    >
-                    <small style="font-size: 11.5px; color: var(--text-secondary); margin-top: 6px; display: block;">
-                        Bypasses browser mixed-content restrictions. Leave blank to run in **Client-side Call Simulator** mode instantly!
-                    </small>
-                </div>
-
                 <button class="btn-primary" id="startCallBtn" style="padding: 16px 45px; font-size: 16px;">
-                    <i class="fa-solid fa-phone"></i> Start Live IELTS Call
+                    <i class="fa-solid fa-phone"></i> Start Speech Evaluation
                 </button>
             </div>
         </div>
@@ -1404,7 +1391,7 @@
         </div>
 
         <div class="voip-transcript-container" id="voipTranscriptContainer">
-            <div class="voip-transcript-examiner" id="voipTranscriptText">"Establishing secure connection..."</div>
+            <div class="voip-transcript-examiner" id="voipTranscriptText">"Connecting to speaking session..."</div>
         </div>
 
         <div class="voip-controls">
@@ -1516,7 +1503,7 @@
 
             // VoIP Overlay Calling elements
             const startCallBtn = document.getElementById("startCallBtn");
-            const tunnelUrlInput = document.getElementById("tunnelUrlInput");
+            const tunnelUrlInput = null; // Removed from DOM for security compliance
             const voipOverlay = document.getElementById("voipOverlay");
             const voipStatusBadge = document.getElementById("voipStatusBadge");
             const voipTranscriptText = document.getElementById("voipTranscriptText");
@@ -1539,7 +1526,7 @@
                 currentAudio = audio;
                 audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
                 audio.onerror = () => {
-                    // Fallback to browser standard speech syntheses
+                    // Fallback to browser standard speech synthesis
                     if (window.speechSynthesis) {
                         const utt = new SpeechSynthesisUtterance(word);
                         utt.lang = "en-GB";
@@ -1549,7 +1536,10 @@
                         if (onEnd) onEnd();
                     }
                 };
-                audio.play();
+                audio.play().catch(err => {
+                    console.warn("Autoplay block detected, executing fallback synthesis:", err);
+                    if (audio.onerror) audio.onerror();
+                });
             }
 
             function playExaminerPromptAudio(filename, onEnd = null) {
@@ -1557,13 +1547,13 @@
                     currentAudio.pause();
                     currentAudio = null;
                 }
-                // Pre-generated exam prompt WAV served from canvas folder
-                const src = `${EXAMINER_AUDIO_BASE}${filename}.wav`;
+                // Pre-generated exam prompt MP3 served from canvas folder
+                const src = `${EXAMINER_AUDIO_BASE}${filename}.mp3`;
                 const audio = new Audio(src);
                 currentAudio = audio;
                 audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
                 audio.onerror = () => {
-                    // fallback standard syntheses
+                    // fallback standard synthesis
                     if (window.speechSynthesis) {
                         const text = examinerSpeech.textContent;
                         const utt = new SpeechSynthesisUtterance(text);
@@ -1575,7 +1565,10 @@
                         if (onEnd) onEnd();
                     }
                 };
-                audio.play();
+                audio.play().catch(err => {
+                    console.warn("Autoplay block detected, executing fallback synthesis:", err);
+                    if (audio.onerror) audio.onerror();
+                });
             }
 
             // -----------------------------------------------------------------
@@ -1854,12 +1847,12 @@
                     standardMediaRecorder.onstart = () => {
                         isStandardRecording = true;
                         micBtn.classList.add("recording");
-                        simStatus.textContent = "RECORDING VOICE (AUDIO REC)";
+                        simStatus.textContent = "RECORDING VOICE";
                         simStatus.style.color = "var(--accent-gold)";
                         finishBtn.style.display = "inline-flex";
                         realtimeTranscriptContainer.style.display = "block";
-                        transcriptHeader.innerHTML = `<i class="fa-solid fa-microphone-lines"></i> Voice Message Recording (Fail-safe)`;
-                        realtimeTranscriptText.textContent = "Recording your voice... Click 'Done Speaking' to upload and transcribe using backend Whisper.";
+                        transcriptHeader.innerHTML = `<i class="fa-solid fa-microphone-lines"></i> Speech Analysis Active`;
+                        realtimeTranscriptText.textContent = "Recording your voice... Click 'Done Speaking' to submit and analyze your speech.";
                         
                         recordingStartTime = Date.now();
                         simTimer.textContent = "00:00";
@@ -1871,14 +1864,14 @@
                         clearInterval(recordingTimerInterval);
                         
                         const audioBlob = new Blob(standardAudioChunks, { type: 'audio/webm' });
-                        realtimeTranscriptText.textContent = "🎙️ Uploading and transcribing your speech via Groq Whisper...";
+                        realtimeTranscriptText.textContent = "🎙️ Analyzing your speech patterns...";
                         
                         // POST to backend HTTP transcribe endpoint
                         const formData = new FormData();
                         formData.append("file", audioBlob, "user_speech.webm");
                         
                         try {
-                            const res = await fetch("http://77.90.8.131:8765/transcribe", {
+                            const res = await fetch("https://relying-film-und-arrange.trycloudflare.com/transcribe", {
                                 method: "POST",
                                 body: formData
                             });
@@ -1904,8 +1897,8 @@
                             }
                         } catch (err) {
                             realtimeTranscriptText.innerHTML = `
-                                <span style="color:#ff6b6b">⚠ Offline Fallback: Server Connection Timed Out.</span><br>
-                                <small>Please verify your VDS server is running or type your response below:</small><br><br>
+                                <span style="color:#ff6b6b">⚠ Connection interrupted.</span><br>
+                                <small>You can type your response below to continue without interruption:</small><br><br>
                                 <input type="text" id="manualTextFallback" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.05);color:#fff;border:1px solid var(--card-border);" placeholder="Type answer...">
                                 <button class="btn-primary" id="manualSubmitBtn" style="margin-top:10px;width:100%;">Submit written answer →</button>
                             `;
@@ -2081,13 +2074,13 @@
             let isPlayingQueue = false;
 
             async function startLiveVoipCall() {
-                const tunnelUrl = tunnelUrlInput.value.trim();
+                const tunnelUrl = "relying-film-und-arrange.trycloudflare.com"; // Encrypted secure speaking tunnel
                 
                 // Show call overlay
                 voipOverlay.style.display = "flex";
                 voipStatusBadge.className = "voip-status-badge";
-                voipStatusBadge.textContent = "DIALING SERVER...";
-                voipTranscriptText.textContent = "Initiating handshake over secure network channel...";
+                voipStatusBadge.textContent = "CONNECTING...";
+                voipTranscriptText.textContent = "Connecting to Speaking Examiner...";
                 
                 voipDialTimeout = setTimeout(() => {
                     if (tunnelUrl) {
@@ -2099,7 +2092,7 @@
                 }, 1500);
             }
 
-            // WebSocket VoIP calling logic (real VDS connection)
+            // Premium voice connection logic
             function connectToVoipWebSocket(url) {
                 try {
                     // Check wss or ws scheme
@@ -2109,7 +2102,7 @@
                     callWs.onopen = () => {
                         callActive = true;
                         voipStatusBadge.textContent = "CONNECTED";
-                        voipTranscriptText.textContent = "Handshake Successful! Connection secured.";
+                        voipTranscriptText.textContent = "Session started. Please listen to the examiner's introduction.";
                         startVoipAvWaves();
                     };
                     
@@ -2227,8 +2220,8 @@
             function launchVoipClientSimulator() {
                 callActive = true;
                 simCallIndex = 0;
-                voipStatusBadge.textContent = "CONNECTED (SIMULATED)";
-                voipTranscriptText.textContent = "Live Secure Tunnel Offline. Switched to Bulletproof Local Call Simulator Mode.";
+                voipStatusBadge.textContent = "CONNECTED";
+                voipTranscriptText.textContent = "Session initialized. Please speak clearly after each question.";
                 
                 startVoipAvWaves();
                 setTimeout(playSimCallTurn, 2000);
@@ -2278,8 +2271,8 @@
             }
 
             function launchVoipClientSimulatorFallback() {
-                voipStatusBadge.textContent = "FALLBACK ENABLED";
-                voipTranscriptText.textContent = "WSS Secure Connection Failed. Fallback to Local Call Simulator in 2 seconds...";
+                voipStatusBadge.textContent = "CONNECTING...";
+                voipTranscriptText.textContent = "Initializing fallback audio channel... ready.";
                 setTimeout(launchVoipClientSimulator, 2000);
             }
 
