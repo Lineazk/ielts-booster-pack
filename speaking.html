@@ -1029,11 +1029,32 @@
 
         /* responsive grid for small viewport */
         @media (max-width: 768px) {
-            h1 { font-size: 44px; letter-spacing: -1.5px; }
+            h1 { font-size: 36px; letter-spacing: -1px; }
             .writing-grid { grid-template-columns: 1fr; }
             .nav-links { display: none; }
-            .voip-avatar { width: 120px; height: 120px; font-size: 48px; }
-            .voip-wave { width: 120px; height: 120px; }
+            .voip-avatar { width: 100px; height: 100px; font-size: 40px; }
+            .voip-wave { width: 100px; height: 100px; }
+            .container { padding: 0 12px; }
+            .sim-card { padding: 20px 16px; border-radius: 20px; }
+            .score-row { flex-direction: column; gap: 12px; }
+            .score-block { width: 100%; padding: 16px; }
+            .score-block-value { font-size: 36px; }
+            .scorecard { padding: 20px 16px; }
+            .vocab-grid { grid-template-columns: 1fr; gap: 14px; }
+            .search-bar { flex-direction: column; gap: 10px; }
+            .filter-buttons { flex-wrap: wrap; justify-content: flex-start; }
+            .micBtn { width: 72px; height: 72px; font-size: 26px; }
+            .btn-primary, .card-btn { font-size: 14px; padding: 12px 18px; }
+            .sim-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .sim-title { font-size: 16px; }
+            #realtimeTranscriptText { font-size: 13px; min-height: 70px; }
+            #submitTranscribedBtn { font-size: 14px; padding: 12px 16px; }
+            .voip-overlay { padding: 40px 16px; }
+            .voip-controls { gap: 18px; }
+            .voip-btn { width: 52px; height: 52px; font-size: 18px; }
+            .voip-btn-end { width: 60px; height: 60px; font-size: 22px; }
+            .ai-review-sheet { padding: 16px; }
+            .writing-card { padding: 16px; border-radius: 16px; }
         }
     </style>
 </head>
@@ -1145,11 +1166,15 @@
                     <!-- Real-time transcript preview with robust voice message recording status -->
                     <div id="realtimeTranscriptContainer" style="margin-top: 25px; width: 100%; max-width: 600px; display: none; text-align: left;">
                         <span id="transcriptHeader" style="font-size: 12px; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; display: block; margin-bottom: 8px;">
-                            <i class="fa-solid fa-waveform"></i> Live Transcript Preview
+                            <i class="fa-solid fa-waveform"></i> Live Transcript Preview (Click to Edit & Correct Words)
                         </span>
-                        <div id="realtimeTranscriptText" style="width: 100%; min-height: 50px; background: rgba(0, 229, 255, 0.02); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 12px; padding: 12px; color: var(--text-primary); font-size: 14.5px; line-height: 1.6; font-style: italic;">
-                            "Listening to your voice..."
-                        </div>
+                        <textarea id="realtimeTranscriptText" style="width: 100%; min-height: 80px; background: rgba(0, 229, 255, 0.02); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 12px; padding: 12px; color: var(--text-primary); font-size: 14.5px; line-height: 1.6; font-style: italic; resize: vertical; margin-bottom: 12px; font-family: inherit;"></textarea>
+                        
+                        <div id="realtimeTranscriptFallback" style="display: none; margin-bottom: 12px;"></div>
+                        
+                        <button class="btn-primary" id="submitTranscribedBtn" style="width: 100%; display: none; margin-bottom: 15px;">
+                            <i class="fa-solid fa-circle-check"></i> Verify & Submit Answer for Scoring
+                        </button>
                     </div>
                 </div>
 
@@ -1182,6 +1207,31 @@
                     <div class="feedback-box">
                         <h4 id="feedbackTitle"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic</h4>
                         <p id="feedbackText">Speak to generate diagnostics...</p>
+                    </div>
+
+                    <!-- AI EXAMINER DUAL REVIEW SHEET -->
+                    <div id="aiReviewSheet" style="margin-bottom: 25px; width: 100%; display: none; text-align: left;">
+                        <h4 style="font-size: 15px; font-weight: 800; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;"><i class="fa-solid fa-graduation-cap"></i> Examiner's Review & Model Answers</h4>
+                        
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 15px; margin-bottom: 12px;">
+                            <span style="font-size:11px; color:var(--accent-gold); font-weight:700; text-transform:uppercase;"><i class="fa-solid fa-microphone"></i> Your Spoken Answer</span>
+                            <p id="reviewUserAnswer" style="color:var(--text-secondary); margin-top:8px; font-style:italic; line-height:1.6; font-size:14px; margin-bottom:0;"></p>
+                        </div>
+                        
+                        <div style="background: rgba(0, 229, 255, 0.02); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 12px; padding: 15px; margin-bottom: 12px;">
+                            <span style="font-size:11px; color:var(--accent-cyan); font-weight:700; text-transform:uppercase;"><i class="fa-solid fa-wand-magic-sparkles"></i> Polished Band 9.0 Upgrade</span>
+                            <p id="reviewPolishedAnswer" style="color:var(--text-primary); margin-top:8px; font-weight:500; line-height:1.6; font-size:14.5px; margin-bottom:0;"></p>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <span style="font-size:11px; color:var(--accent-cyan); font-weight:700; text-transform:uppercase;"><i class="fa-solid fa-star"></i> Perfect Examiner Model Answer</span>
+                                <button class="card-btn" id="playModelAnswerBtn" style="padding:4px 10px; font-size:11px; margin:0;">
+                                    <i class="fa-solid fa-volume-high"></i> Listen to Model Answer
+                                </button>
+                            </div>
+                            <p id="reviewModelAnswer" style="color:var(--text-secondary); margin-top:8px; line-height:1.6; font-size:14px; margin-bottom:0;"></p>
+                        </div>
                     </div>
 
                     <!-- lesson words struggled pronunciation grid -->
@@ -1482,6 +1532,7 @@
             const simTimer = document.getElementById("simTimer");
             const realtimeTranscriptContainer = document.getElementById("realtimeTranscriptContainer");
             const realtimeTranscriptText = document.getElementById("realtimeTranscriptText");
+            const realtimeTranscriptFallback = document.getElementById("realtimeTranscriptFallback");
             const transcriptHeader = document.getElementById("transcriptHeader");
             const examinerPanel = document.getElementById("examinerPanel");
             
@@ -1495,6 +1546,13 @@
             const struggledWordsSection = document.getElementById("struggledWordsSection");
             const struggledWordsList = document.getElementById("struggledWordsList");
             const retryBtn = document.getElementById("retryBtn");
+            const submitTranscribedBtn = document.getElementById("submitTranscribedBtn");
+            const aiReviewSheet = document.getElementById("aiReviewSheet");
+            const reviewUserAnswer = document.getElementById("reviewUserAnswer");
+            const reviewPolishedAnswer = document.getElementById("reviewPolishedAnswer");
+            const reviewModelAnswer = document.getElementById("reviewModelAnswer");
+            const playModelAnswerBtn = document.getElementById("playModelAnswerBtn");
+            let modelAnswerSpeechText = ""; // Holds the generated model answer to play
 
             // Vocab Vault
             const vocabSearch = document.getElementById("vocabSearch");
@@ -1541,67 +1599,29 @@
                     currentAudio.pause();
                     currentAudio = null;
                 }
-                const src = `${AUDIO_BASE}${word.toLowerCase()}.mp3`;
-                const audio = new Audio(src);
+                // Go directly to premium Neural TTS — skipping local file avoids async 404 delays that break mobile autoplay
+                const cleanWord = word.replace(/IELTS/gi, "Eye-elts");
+                const premiumTtsUrl = `https://relying-film-und-arrange.trycloudflare.com/tts?text=${encodeURIComponent(cleanWord)}&voice=en-GB-SoniaNeural`;
+                const audio = new Audio(premiumTtsUrl);
                 currentAudio = audio;
-                
-                let fallbackExecuted = false;
-                const triggerFallback = () => {
-                    if (fallbackExecuted) return;
-                    fallbackExecuted = true;
-                    
-                    if (currentAudio === audio) {
-                        currentAudio = null;
+
+                const useBrowserFallback = () => {
+                    currentAudio = null;
+                    if (window.speechSynthesis) {
+                        window.speechSynthesis.cancel();
+                        const utt = new SpeechSynthesisUtterance(cleanWord);
+                        utt.lang = "en-GB";
+                        utt.rate = 0.9;
+                        utt.onend = () => { if (onEnd) onEnd(); };
+                        window.speechSynthesis.speak(utt);
+                    } else {
+                        if (onEnd) onEnd();
                     }
-                    
-                    // Route through our premium VDS edge-tts neural voice instead of low-quality SpeechSynthesis!
-                    const premiumTtsUrl = `https://relying-film-und-arrange.trycloudflare.com/tts?text=${encodeURIComponent(word)}&voice=en-GB-SoniaNeural`;
-                    const fallbackAudio = new Audio(premiumTtsUrl);
-                    currentAudio = fallbackAudio;
-                    
-                    fallbackAudio.onended = () => { if (onEnd) onEnd(); };
-                    fallbackAudio.onerror = () => {
-                        // Ultimate fail-safe to browser speech synthesis
-                        if (window.speechSynthesis) {
-                            window.speechSynthesis.cancel();
-                            const utt = new SpeechSynthesisUtterance(word);
-                            utt.lang = "en-GB";
-                            utt.rate = 0.9;
-                            utt.onend = () => { if (onEnd) onEnd(); };
-                            window.speechSynthesis.speak(utt);
-                        } else {
-                            if (onEnd) onEnd();
-                        }
-                    };
-                    fallbackAudio.play().catch(() => {
-                        if (window.speechSynthesis) {
-                            window.speechSynthesis.cancel();
-                            const utt = new SpeechSynthesisUtterance(word);
-                            utt.lang = "en-GB";
-                            utt.rate = 0.9;
-                            utt.onend = () => { if (onEnd) onEnd(); };
-                            window.speechSynthesis.speak(utt);
-                        } else {
-                            if (onEnd) onEnd();
-                        }
-                    });
                 };
 
-                audio.onended = () => { 
-                    if (fallbackExecuted) return;
-                    fallbackExecuted = true;
-                    currentAudio = null; 
-                    if (onEnd) onEnd(); 
-                };
-                
-                audio.onerror = () => {
-                    triggerFallback();
-                };
-                
-                audio.play().catch(err => {
-                    console.warn("Autoplay block detected, executing fallback synthesis:", err);
-                    triggerFallback();
-                });
+                audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
+                audio.onerror = useBrowserFallback;
+                audio.play().catch(useBrowserFallback);
             }
 
             function playExaminerPromptAudio(filename, onEnd = null) {
@@ -1887,11 +1907,13 @@
                     recognition.onstart = () => {
                         isRecording = true;
                         micBtn.classList.add("recording");
-                        simStatus.textContent = "RECORDING VOICE (WEB STT)";
+                        simStatus.textContent = "RECORDING VOICE";
                         simStatus.style.color = "var(--accent-cyan)";
                         finishBtn.style.display = "inline-flex";
+                        submitTranscribedBtn.style.display = "none";
                         realtimeTranscriptContainer.style.display = "block";
-                        realtimeTranscriptText.textContent = "Listening to your answer... speak clearly into your mic.";
+                        transcriptHeader.innerHTML = `<i class="fa-solid fa-waveform"></i> Live Transcript Preview (Click to Edit & Correct Words)`;
+                        realtimeTranscriptText.value = "Listening to your answer... speak clearly into your mic.";
                         
                         recordingStartTime = Date.now();
                         simTimer.textContent = "00:00";
@@ -1907,7 +1929,7 @@
                             else interim += event.results[i][0].transcript;
                         }
                         transcriptText = final || interim;
-                        realtimeTranscriptText.textContent = `"${transcriptText || "..."}"`;
+                        realtimeTranscriptText.value = transcriptText || "...";
                     };
                     
                     recognition.onerror = (e) => {
@@ -1954,9 +1976,10 @@
                         simStatus.textContent = "RECORDING VOICE";
                         simStatus.style.color = "var(--accent-gold)";
                         finishBtn.style.display = "inline-flex";
+                        submitTranscribedBtn.style.display = "none";
                         realtimeTranscriptContainer.style.display = "block";
                         transcriptHeader.innerHTML = `<i class="fa-solid fa-microphone-lines"></i> Speech Analysis Active`;
-                        realtimeTranscriptText.textContent = "Recording your voice... Click 'Done Speaking' to submit and analyze your speech.";
+                        realtimeTranscriptText.value = "Recording your voice... Click 'Done Speaking' to submit and analyze your speech.";
                         
                         recordingStartTime = Date.now();
                         simTimer.textContent = "00:00";
@@ -1972,12 +1995,12 @@
                         
                         // Optimize API calls: Skip empty or silent recording chunks
                         if (audioBlob.size < 6000) {
-                            realtimeTranscriptText.innerHTML = `<span style="color:#ff6b6b">No clear speech detected. Please speak clearly into your mic and try again.</span>`;
+                            realtimeTranscriptText.value = "No clear speech detected. Please speak clearly into your mic and try again.";
                             simStatus.textContent = "IDLE";
                             return;
                         }
                         
-                        realtimeTranscriptText.textContent = "🎙️ Analyzing your speech patterns...";
+                        realtimeTranscriptText.value = "🎙️ Analyzing your speech patterns...";
                         
                         // POST to backend HTTP transcribe endpoint
                         const formData = new FormData();
@@ -1992,58 +2015,38 @@
                             transcriptText = data.text || "";
                             
                             if (transcriptText) {
-                                realtimeTranscriptText.textContent = `"${transcriptText}"`;
-                                analyzeSpokenResponse();
+                                realtimeTranscriptText.value = transcriptText;
+                                transcriptHeader.innerHTML = `<i class="fa-solid fa-waveform"></i> Review & Edit Your Answer Before Scoring`;
+                                simStatus.textContent = "REVIEW YOUR RESPONSE";
+                                simStatus.style.color = "var(--accent-purple)";
+                                submitTranscribedBtn.style.display = "block";
                             } else {
-                                realtimeTranscriptText.innerHTML = `<span style="color:#ff6b6b">Could not transcribe audio. Please type your response below:</span><br><br>
-                                    <input type="text" id="manualTextFallback" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.05);color:#fff;border:1px solid var(--card-border);" placeholder="Type answer...">
-                                    <button class="btn-primary" id="manualSubmitBtn" style="margin-top:10px;width:100%;">Submit written answer →</button>`;
-                                
-                                document.getElementById("manualSubmitBtn")?.addEventListener("click", () => {
-                                    const val = document.getElementById("manualTextFallback")?.value?.trim();
-                                    if (val) {
-                                        transcriptText = val;
-                                        realtimeTranscriptText.textContent = `"${val}"`;
-                                        analyzeSpokenResponse();
-                                    }
-                                });
+                                transcriptHeader.innerHTML = `<i class="fa-solid fa-keyboard"></i> Type Your Answer Manually`;
+                                realtimeTranscriptText.value = "Could not transcribe audio. Please type your answer here...";
+                                realtimeTranscriptText.focus();
+                                simStatus.textContent = "TYPE YOUR ANSWER";
+                                simStatus.style.color = "#ff6b6b";
+                                submitTranscribedBtn.style.display = "block";
                             }
                         } catch (err) {
-                            realtimeTranscriptText.innerHTML = `
-                                <span style="color:#ff6b6b">⚠ Connection interrupted.</span><br>
-                                <small>You can type your response below to continue without interruption:</small><br><br>
-                                <input type="text" id="manualTextFallback" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.05);color:#fff;border:1px solid var(--card-border);" placeholder="Type answer...">
-                                <button class="btn-primary" id="manualSubmitBtn" style="margin-top:10px;width:100%;">Submit written answer →</button>
-                            `;
-                            document.getElementById("manualSubmitBtn")?.addEventListener("click", () => {
-                                const val = document.getElementById("manualTextFallback")?.value?.trim();
-                                if (val) {
-                                    transcriptText = val;
-                                    realtimeTranscriptText.textContent = `"${val}"`;
-                                    // Perform client-side simulated grading
-                                    analyzeSpokenResponse();
-                                }
-                            });
+                            transcriptHeader.innerHTML = `<i class="fa-solid fa-keyboard"></i> Type Your Answer Manually`;
+                            realtimeTranscriptText.value = "Connection interrupted. Please type your answer here...";
+                            realtimeTranscriptText.focus();
+                            simStatus.textContent = "TYPE YOUR ANSWER";
+                            simStatus.style.color = "#ff6b6b";
+                            submitTranscribedBtn.style.display = "block";
                         }
                     };
                     
                     standardMediaRecorder.start();
                 } catch (e) {
                     realtimeTranscriptContainer.style.display = "block";
-                    realtimeTranscriptText.innerHTML = `
-                        <span style="color:#ff6b6b">⚠ Microphone access denied or blocked.</span><br>
-                        <small>Please allow mic permissions in Chrome or type your answer below:</small><br><br>
-                        <input type="text" id="manualTextFallback" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.05);color:#fff;border:1px solid var(--card-border);" placeholder="Type answer...">
-                        <button class="btn-primary" id="manualSubmitBtn" style="margin-top:10px;width:100%;">Submit written answer →</button>
-                    `;
-                    document.getElementById("manualSubmitBtn")?.addEventListener("click", () => {
-                        const val = document.getElementById("manualTextFallback")?.value?.trim();
-                        if (val) {
-                            transcriptText = val;
-                            realtimeTranscriptText.textContent = `"${val}"`;
-                            analyzeSpokenResponse();
-                        }
-                    });
+                    transcriptHeader.innerHTML = `<i class="fa-solid fa-keyboard"></i> Type Your Answer Manually`;
+                    realtimeTranscriptText.value = "Microphone access denied. Please type your answer here...";
+                    realtimeTranscriptText.focus();
+                    simStatus.textContent = "TYPE YOUR ANSWER";
+                    simStatus.style.color = "#ff6b6b";
+                    submitTranscribedBtn.style.display = "block";
                 }
             }
 
@@ -2069,7 +2072,14 @@
                     micBtn.classList.remove("recording");
                     clearInterval(recordingTimerInterval);
                     finishBtn.style.display = "none";
-                    analyzeSpokenResponse();
+                    // Show verify-and-submit button for editable review
+                    if (transcriptText && transcriptText.trim().length > 3) {
+                        simStatus.textContent = "REVIEW YOUR RESPONSE";
+                        simStatus.style.color = "var(--accent-purple)";
+                        submitTranscribedBtn.style.display = "block";
+                    } else {
+                        analyzeSpokenResponse();
+                    }
                 } else if (isStandardRecording && standardMediaRecorder) {
                     standardMediaRecorder.stop();
                     micBtn.classList.remove("recording");
@@ -2078,18 +2088,41 @@
             }
 
             // -----------------------------------------------------------------
-            // DYNAMIC IELTS SCORING COACH ENGINE (VDS AI-VERIFIED & FALLBACK)
+            // LIVE ANALYSIS TIMER & NEURAL GRADING ENGINE
             // -----------------------------------------------------------------
+            const ANALYSIS_STEPS = [
+                "[Step 1/5] Checking acoustic signal & transcribing speech...",
+                "[Step 2/5] Running semantic topic-relevance verification...",
+                "[Step 3/5] Computing strict IELTS sub-band metrics (Fluency, Lexical, Grammar, Pronunciation)...",
+                "[Step 4/5] Aligning diagnostic feedback & phonetic error matching...",
+                "[Step 5/5] Composing native Band 9.0 polished upgrades & examiner model answers..."
+            ];
+            let analysisStartTime = 0;
+            let analysisTimerInterval = null;
+
             async function analyzeSpokenResponse() {
-                if (!transcriptText) return;
-                
-                // Show loading state
-                simStatus.textContent = "AI ASSESSMENT IN PROGRESS...";
+                // Read from editable textarea if available
+                if (realtimeTranscriptText && realtimeTranscriptText.value.trim().length > 3) {
+                    transcriptText = realtimeTranscriptText.value.trim();
+                }
+                if (!transcriptText || transcriptText.trim().length < 3) return;
+
+                submitTranscribedBtn.style.display = "none";
+                simStatus.textContent = "NEURAL ANALYSIS IN PROGRESS...";
                 simStatus.style.color = "var(--accent-gold)";
-                
+
+                // — Live Analysis Timer —
+                analysisStartTime = Date.now();
+                const updateAnalysisDisplay = () => {
+                    const elapsed = ((Date.now() - analysisStartTime) / 1000).toFixed(1);
+                    const stepIdx = Math.min(Math.floor(elapsed / 1.5), ANALYSIS_STEPS.length - 1);
+                    realtimeTranscriptText.value = `⏱ Analysis Time: ${elapsed}s\n\n${ANALYSIS_STEPS[stepIdx]}`;
+                };
                 realtimeTranscriptContainer.style.display = "block";
-                realtimeTranscriptText.innerHTML = `<span style="color:var(--accent-cyan); font-weight: 600;"><i class="fa-solid fa-spinner fa-spin"></i> Directing voice answer to VDS AI... verifying topic relevance and calculating strictly-aligned IELTS band scores.</span>`;
-                
+                transcriptHeader.innerHTML = `<i class="fa-solid fa-brain fa-spin"></i> Neural Grading Examiner — Analysing your response...`;
+                updateAnalysisDisplay();
+                analysisTimerInterval = setInterval(updateAnalysisDisplay, 200);
+
                 try {
                     const response = await fetch("https://relying-film-und-arrange.trycloudflare.com/grade", {
                         method: "POST",
@@ -2101,40 +2134,59 @@
                         })
                     });
                     const data = await response.json();
-                    
+
+                    // Stop timer
+                    clearInterval(analysisTimerInterval);
+                    analysisTimerInterval = null;
+                    const totalTime = ((Date.now() - analysisStartTime) / 1000).toFixed(1);
+
                     if (data.is_off_topic) {
-                        alert(`Off-Topic Response Detected!\n\nThe AI Examiner noted: "${data.off_topic_reason}"\n\nPlease try again and speak directly about the requested topic ("${currentQuestion.topic}") to receive a band score.`);
-                        if (retryBtn) retryBtn.click();
+                        realtimeTranscriptText.value = `⚠ Off-Topic Detected\n\n${data.off_topic_reason || "Your answer does not address the question topic."}\n\nPlease speak about: "${currentQuestion.topic}"`;
+                        transcriptHeader.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:var(--accent-gold)"></i> Topic Relevance Check Failed`;
+                        simStatus.textContent = "OFF-TOPIC — Retrying...";
+                        simStatus.style.color = "#ff6b6b";
+                        setTimeout(() => { if (retryBtn) retryBtn.click(); }, 3000);
                         return;
                     }
-                    
-                    // Display scores and feedback from VDS AI
+
+                    // Show scorecard
                     examinerPanel.style.display = "none";
                     scorecardPanel.style.display = "flex";
-                    
+
+                    // Inject analysis time badge into scorecard title
+                    const scorecardTitle = scorecardPanel.querySelector(".sim-title span");
+                    if (scorecardTitle && !scorecardPanel.querySelector(".analysis-badge")) {
+                        const badge = document.createElement("span");
+                        badge.className = "analysis-badge";
+                        badge.style.cssText = "background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;color:var(--accent-cyan);margin-left:8px;vertical-align:middle;";
+                        badge.innerHTML = `<i class="fa-solid fa-clock"></i> Analysed in ${totalTime}s`;
+                        scorecardTitle.parentElement.appendChild(badge);
+                    }
+
                     scoreFluency.textContent = Number(data.scores.fluency).toFixed(1);
                     scoreLexical.textContent = Number(data.scores.lexical).toFixed(1);
                     scoreGrammar.textContent = Number(data.scores.grammar).toFixed(1);
                     scoreOverall.textContent = Number(data.scores.overall).toFixed(1);
-                    
                     feedbackText.textContent = data.feedback;
-                    
-                    // Display pronunciation vocabulary training list
+
+                    // Populate AI Dual-Review Sheets
+                    if (reviewUserAnswer) reviewUserAnswer.textContent = `"${transcriptText}"`;
+                    if (reviewPolishedAnswer) reviewPolishedAnswer.textContent = data.polished_answer || "";
+                    if (reviewModelAnswer) reviewModelAnswer.textContent = data.model_answer || "";
+                    modelAnswerSpeechText = data.model_answer || "";
+                    if (aiReviewSheet) aiReviewSheet.style.display = "block";
+
+                    // Update transcript display
+                    transcriptHeader.innerHTML = `<i class="fa-solid fa-check-circle" style="color:#4ade80"></i> Analysis Complete — ${totalTime}s`;
+                    realtimeTranscriptText.value = `Your Answer:\n"${transcriptText}"`;
+
+                    // Display practice vocabulary
                     struggledWordsList.innerHTML = "";
                     struggledWordsSection.style.display = "block";
-                    
-                    // Grab 3 random dictionary words for them to repeat
                     const shuffled = [...vocabData].sort(() => 0.5 - Math.random());
                     shuffled.slice(0, 3).forEach(w => {
                         const card = document.createElement("div");
-                        card.style.background = "rgba(255,255,255,0.03)";
-                        card.style.border = "1px solid rgba(255,255,255,0.06)";
-                        card.style.borderRadius = "12px";
-                        card.style.padding = "12px 16px";
-                        card.style.display = "flex";
-                        card.style.justifyContent = "space-between";
-                        card.style.alignItems = "center";
-                        
+                        card.style.cssText = "background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;";
                         card.innerHTML = `
                             <div>
                                 <span style="font-weight:700; color:#fff">${w.word}</span><br>
@@ -2146,9 +2198,16 @@
                         `;
                         struggledWordsList.appendChild(card);
                     });
-                    
+
+                    simStatus.textContent = "ASSESSMENT COMPLETE";
+                    simStatus.style.color = "#4ade80";
+
                 } catch (err) {
-                    console.warn("AI Grading server offline, running fallback evaluator:", err);
+                    clearInterval(analysisTimerInterval);
+                    analysisTimerInterval = null;
+                    console.warn("Neural Grading server offline, running fallback evaluator:", err);
+                    realtimeTranscriptText.value = transcriptText;
+                    transcriptHeader.innerHTML = `<i class="fa-solid fa-waveform"></i> Live Transcript Preview (Click to Edit & Correct Words)`;
                     runLocalFallbackGrading();
                 }
             }
@@ -2264,6 +2323,12 @@
                     `;
                     struggledWordsList.appendChild(card);
                 });
+                // Populate fallback AI Review Sheet
+                if (reviewUserAnswer) reviewUserAnswer.textContent = `"${transcriptText}"`;
+                if (reviewPolishedAnswer) reviewPolishedAnswer.textContent = "Connect to the Neural Grading Examiner server to receive a personalised Band 9.0 polished upgrade of your answer.";
+                if (reviewModelAnswer) reviewModelAnswer.textContent = "Connect to the Neural Grading Examiner server to receive a full Band 9.0 model examiner answer for this question.";
+                modelAnswerSpeechText = "";
+                if (aiReviewSheet) aiReviewSheet.style.display = "block";
             }
 
             // Expose globally so inline onclick works
@@ -2285,19 +2350,56 @@
                 } catch(e) {}
             }
 
+            // submitTranscribedBtn — Verify edited answer and trigger AI scoring
+            submitTranscribedBtn.addEventListener("click", () => {
+                unlockBrowserAudio();
+                const editedText = realtimeTranscriptText.value.trim();
+                if (editedText && editedText.length > 3 &&
+                    !editedText.startsWith("Listening") &&
+                    !editedText.startsWith("Recording") &&
+                    !editedText.startsWith("Could not") &&
+                    !editedText.startsWith("Connection") &&
+                    !editedText.startsWith("Microphone") &&
+                    !editedText.startsWith("⏱")) {
+                    transcriptText = editedText;
+                }
+                analyzeSpokenResponse();
+            });
+
+            // playModelAnswerBtn — Speak the AI model answer
+            if (playModelAnswerBtn) {
+                playModelAnswerBtn.addEventListener("click", () => {
+                    unlockBrowserAudio();
+                    if (modelAnswerSpeechText) {
+                        playVocabAudio(modelAnswerSpeechText);
+                    } else {
+                        const modelText = reviewModelAnswer ? reviewModelAnswer.textContent : "";
+                        if (modelText && modelText.length > 10) playVocabAudio(modelText);
+                    }
+                });
+            }
+
             retryBtn.addEventListener("click", () => {
                 unlockBrowserAudio();
+                if (analysisTimerInterval) { clearInterval(analysisTimerInterval); analysisTimerInterval = null; }
                 scorecardPanel.style.display = "none";
                 examinerPanel.style.display = "flex";
                 simTimer.textContent = "00:00";
                 realtimeTranscriptContainer.style.display = "none";
-                realtimeTranscriptText.textContent = "";
-                transcriptText = ""; // SYNCHRONOUS RESET to prevent race-condition scoring!
-                
+                realtimeTranscriptText.value = "";
+                submitTranscribedBtn.style.display = "none";
+                if (aiReviewSheet) aiReviewSheet.style.display = "none";
+                // Remove analysis badge if present
+                const oldBadge = scorecardPanel.querySelector(".analysis-badge");
+                if (oldBadge) oldBadge.remove();
+                transcriptText = "";
+
                 // Pick a new random question
                 const idx = Math.floor(Math.random() * QUESTION_BANK.length);
                 currentQuestion = QUESTION_BANK[idx];
                 examinerSpeech.textContent = `"${currentQuestion.text}"`;
+                simStatus.textContent = "YOUR TURN — Press Mic to Speak";
+                simStatus.style.color = "var(--accent-cyan)";
             });
 
             // -----------------------------------------------------------------
