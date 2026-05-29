@@ -2565,10 +2565,10 @@
             let vadAnimFrame = null;
             let vadLastSpeechTime = 0;
             let vadRecordingStart = 0;
-            const VAD_MIN_MS = 10000;   // minimum 10s before silence triggers
-            const VAD_MAX_MS = 60000;   // force stop after 60s
-            const VAD_SILENCE_MS = 4000; // 4s silence triggers next turn
-            const VAD_THRESHOLD = 0.02; // RMS amplitude threshold
+            const VAD_MIN_MS = 3000;     // minimum 3s speaking time before silence can trigger
+            const VAD_MAX_MS = 60000;    // force stop after 60s
+            const VAD_SILENCE_MS = 2500; // 2.5s silence triggers next turn
+            const VAD_THRESHOLD = 20;    // Vocal band average energy threshold (0-255)
 
             function startVoipCallTimer() {
                 voipCallSeconds = 0;
@@ -2767,38 +2767,55 @@
 
                     vadRecordingStart = Date.now();
                     vadLastSpeechTime = Date.now();
+                    
+                    // Adaptive Noise Floor calibration states
+                    let localNoiseFloor = 10;
+                    const calibrationSamples = [];
 
                     voipMediaRecorder.start();
 
                     const runVad = () => {
                         if (!callActive || !vadAnalyser) return;
-                        vadAnalyser.getByteTimeDomainData(dataArray);
+                        vadAnalyser.getByteFrequencyData(dataArray);
 
-                        // Compute RMS
-                        let sum = 0;
-                        for (let i = 0; i < dataArray.length; i++) {
-                            const v = (dataArray[i] - 128) / 128;
-                            sum += v * v;
+                        // Human vocal band energy: Bins 2 to 20 (approx 340Hz to 3440Hz)
+                        let speechSum = 0;
+                        let speechCount = 0;
+                        for (let i = 2; i <= 20; i++) {
+                            speechSum += dataArray[i];
+                            speechCount++;
                         }
-                        const rms = Math.sqrt(sum / dataArray.length);
+                        const voiceEnergy = speechSum / speechCount; // average energy (0-255)
+
                         const now = Date.now();
                         const elapsed = now - vadRecordingStart;
                         const silenceMs = now - vadLastSpeechTime;
 
-                        if (rms > VAD_THRESHOLD) {
+                        // Calibration phase (collect noise levels for the first 1 second)
+                        if (elapsed < 1000) {
+                            calibrationSamples.push(voiceEnergy);
+                            const sumFloor = calibrationSamples.reduce((a, b) => a + b, 0);
+                            localNoiseFloor = Math.max((sumFloor / calibrationSamples.length) + 6, 12);
+                        }
+
+                        // Determine if speech is active based on adaptive threshold
+                        const activeThreshold = Math.max(localNoiseFloor, VAD_THRESHOLD);
+                        const isSpeaking = voiceEnergy > activeThreshold;
+
+                        if (isSpeaking) {
                             vadLastSpeechTime = now;
                             showVadBars();
                             hideSilenceBar();
-                            // Dynamically scale the VAD bars based on RMS
+                            // Dynamically scale VAD bars based on speech energy
                             const bars = document.querySelectorAll(".voip-vad-bar");
                             bars.forEach((bar, idx) => {
-                                const multiplier = 8 + (idx % 3) * 4;
-                                const scale = Math.min(Math.max(rms * multiplier, 0.25), 2.2);
+                                const multiplier = 1 + (idx % 2) * 0.15;
+                                const scale = Math.min(Math.max((voiceEnergy / 50) * multiplier, 0.25), 2.2);
                                 bar.style.transform = `scaleY(${scale})`;
                                 bar.style.backgroundColor = "#4ade80"; // Bright green when speaking
                             });
                         } else {
-                            // Dim the bars when silent
+                            // Dim bars when silent
                             const bars = document.querySelectorAll(".voip-vad-bar");
                             bars.forEach(bar => {
                                 bar.style.transform = "scaleY(0.25)";
@@ -2806,11 +2823,11 @@
                             });
                         }
 
-                        // After min wait, show silence progress bar
-                        if (elapsed >= VAD_MIN_MS && rms <= VAD_THRESHOLD) {
+                        // After min wait, show silence progress bar if silent
+                        if (elapsed >= VAD_MIN_MS && !isSpeaking) {
                             const pct = Math.min((silenceMs / VAD_SILENCE_MS) * 100, 100);
                             showSilenceBar(pct);
-                            if (silenceMs < 1000) hideVadBars();
+                            if (silenceMs < 800) hideVadBars();
                         }
 
                         // Silence trigger: min elapsed + silence duration met
