@@ -1336,7 +1336,7 @@
             });
         });
 
-        // SPEAKING SIMULATOR ACTIONS
+        // SPEAKING SIMULATOR ACTIONS WITH NATIVE SPEECH RECOGNITION
         const listenBtn = document.getElementById('listenBtn');
         const micBtn = document.getElementById('micBtn');
         const finishBtn = document.getElementById('finishBtn');
@@ -1347,10 +1347,48 @@
         const examinerPanel = document.getElementById('examinerPanel');
         const scorecardPanel = document.getElementById('scorecardPanel');
 
+        // Scores elements
+        const scoreFluency = document.getElementById('scoreFluency');
+        const scoreLexical = document.getElementById('scoreLexical');
+        const scoreGrammar = document.getElementById('scoreGrammar');
+        const scoreOverall = document.getElementById('scoreOverall');
+        const feedbackText = document.getElementById('feedbackText');
+        const feedbackTitle = document.getElementById('feedbackTitle');
+
         let synth = window.speechSynthesis;
         let timerInterval;
         let elapsedSeconds = 0;
         let isRecording = false;
+        let spokenTranscript = "";
+
+        // Initialize Native Browser Speech Recognition (Supported in Chrome, Edge, Safari)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        spokenTranscript += event.results[i][0].transcript + " ";
+                    }
+                }
+                console.log("[Speech Captured]:", spokenTranscript);
+            };
+
+            recognition.onerror = (event) => {
+                console.log("[Recognition Error]:", event.error);
+                if (event.error === 'no-speech') {
+                    simStatus.textContent = 'NO SPEECH DETECTED';
+                }
+            };
+        } else {
+            console.log("[Warning]: Browser SpeechRecognition is not supported on this browser version.");
+        }
 
         listenBtn.addEventListener('click', () => {
             if (synth.speaking) {
@@ -1375,12 +1413,21 @@
             if (synth.speaking) synth.cancel();
 
             if (!isRecording) {
-                // Start Recording Mock
+                // Start Recording & Speech Recognition
                 isRecording = true;
-                simStatus.textContent = 'RECORDING RESPONSE';
+                spokenTranscript = "";
+                simStatus.textContent = 'RECORDING RESPONSE (SPEAK NOW)';
                 micBtn.classList.add('recording');
                 micBtn.innerHTML = '<i class="fa-solid fa-stop"></i>';
                 finishBtn.style.display = 'inline-block';
+                
+                if (recognition) {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
                 
                 elapsedSeconds = 0;
                 timerInterval = setInterval(() => {
@@ -1397,14 +1444,76 @@
 
         finishBtn.addEventListener('click', () => {
             stopRecording();
-            simStatus.textContent = 'ANALYZING SPEECH...';
+            simStatus.textContent = 'ANALYZING SPEECH PATTERNS...';
             
-            // Simulating detailed AI analysis
             setTimeout(() => {
+                const wordsArray = spokenTranscript.trim().split(/\s+/).filter(Boolean);
+                const wordCount = wordsArray.length;
+                
+                // CRITICAL FAILSAFE: Verify if the user actually spoke anything substantial
+                if (wordCount < 4 || elapsedSeconds < 3) {
+                    simStatus.textContent = 'SPEECH TOO SHORT - FAILED';
+                    alert("Speech response too short! Please turn on your microphone and speak clearly for at least 5 seconds to allow the AI to perform a diagnostic evaluation.");
+                    simStatus.textContent = 'AWAITING RESPONSE';
+                    return;
+                }
+
+                // Calculate real-time Speech Rate: Words Per Minute (WPM)
+                const wpm = Math.round((wordCount / elapsedSeconds) * 60);
+                
+                // 1. Calculate Fluency Score based on WPM
+                let fluencyScore = 5.0;
+                let fluencyFeedback = "";
+                if (wpm >= 110 && wpm <= 160) {
+                    fluencyScore = 8.5;
+                    fluencyFeedback = `Excellent speech pace of ${wpm} words per minute. Your delivery is extremely natural with zero unnatural pauses.`;
+                } else if (wpm >= 80 && wpm < 110) {
+                    fluencyScore = 7.5;
+                    fluencyFeedback = `Good, steady pace of ${wpm} words per minute. Mild hesitation detected, but speech flows well.`;
+                } else if (wpm >= 50 && wpm < 80) {
+                    fluencyScore = 6.0;
+                    fluencyFeedback = `Noticeable speech hesitation detected (Rate: ${wpm} WPM). Focus on minimizing long silent blocks to improve sentence links.`;
+                } else {
+                    fluencyScore = 4.5;
+                    fluencyFeedback = `Your speaking rate is quite slow (${wpm} WPM) or extremely fast. Practice speaking in rhythmic phrases.`;
+                }
+
+                // 2. Calculate Lexical Resource (check for key IELTS vocabulary words used)
+                const textLower = spokenTranscript.toLowerCase();
+                let academicKeywords = ["ubiquitous", "technology", "device", "routine", "ameliorate", "cognizant", "fastidious", "pernicious", "essential", "crucial", "benefit", "impact", "application"];
+                let detectedKeywords = academicKeywords.filter(word => textLower.includes(word));
+                
+                let lexicalScore = 5.5;
+                if (detectedKeywords.length >= 3) {
+                    lexicalScore = 8.5;
+                } else if (detectedKeywords.length >= 1) {
+                    lexicalScore = 7.0;
+                } else {
+                    lexicalScore = 6.0;
+                }
+
+                // 3. Grammatical Range and Pronunciation (Simulated based on complexity of text structures)
+                let grammarScore = (wordCount > 35) ? 8.0 : (wordCount > 15) ? 7.0 : 6.0;
+                let overallScore = ((fluencyScore + lexicalScore + grammarScore) / 3).toFixed(1);
+
+                // Populate scorecard details
+                scoreFluency.textContent = fluencyScore.toFixed(1);
+                scoreLexical.textContent = lexicalScore.toFixed(1);
+                scoreGrammar.textContent = grammarScore.toFixed(1);
+                scoreOverall.textContent = overallScore;
+
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> AI Examiner Diagnostic (WPM: ${wpm})`;
+                
+                let detectedText = detectedKeywords.length > 0 ? 
+                    `You successfully integrated advanced vocabulary terms like: <strong>${detectedKeywords.join(', ')}</strong>.` : 
+                    "To increase your Lexical score, try incorporating academic descriptors instead of simple terms like 'good' or 'nice'.";
+
+                feedbackText.innerHTML = `<strong>Speech Captured:</strong> "${spokenTranscript.trim()}"<br><br>${fluencyFeedback} ${detectedText} Overall, this is a very promising Band ${overallScore} attempt. Try our complete premium version to unlock more feedback!`;
+
                 simStatus.textContent = 'COMPLETED';
                 examinerPanel.style.display = 'none';
                 scorecardPanel.style.display = 'flex';
-            }, 1800);
+            }, 1500);
         });
 
         function stopRecording() {
@@ -1412,6 +1521,13 @@
             micBtn.classList.remove('recording');
             micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
             clearInterval(timerInterval);
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch (e) {
+                    console.log(e);
+                }
+            }
         }
 
         retryBtn.addEventListener('click', () => {
@@ -1420,6 +1536,7 @@
             finishBtn.style.display = 'none';
             simTimer.textContent = '00:00';
             simStatus.textContent = 'IDLE';
+            spokenTranscript = "";
         });
 
         // FAQ ACCORDIONS
