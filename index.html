@@ -1050,6 +1050,9 @@
         <div class="modal-content">
             <button class="close-modal" id="closeModalBtn" aria-label="Close details">&times;</button>
             <div class="modal-word" id="modalWord">Ameliorate <span class="vocab-pos" id="modalPos">Verb</span></div>
+            <button class="card-btn" id="playModalAudioBtn" style="margin-top: 10px; margin-bottom: 15px; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-play"></i> Listen to Correct Pronunciation
+            </button>
             
             <div class="modal-detail-block">
                 <div class="modal-label">Bangla Context Meaning</div>
@@ -1296,6 +1299,9 @@
         const modalSynonyms = document.getElementById('modalSynonyms');
         const modalSpeaking = document.getElementById('modalSpeakingExample');
         const modalWriting = document.getElementById('modalWritingExample');
+        
+        const playModalAudioBtn = document.getElementById('playModalAudioBtn');
+        let modalAudio = null;
 
         function showModal(item) {
             modalWord.childNodes[0].nodeValue = item.word + " ";
@@ -1305,6 +1311,20 @@
             modalSynonyms.textContent = item.synonyms.join(', ');
             modalSpeaking.textContent = `"${item.speaking_example}"`;
             modalWriting.textContent = `"${item.writing_example}"`;
+            
+            // Set up pronunciation player button using pre-compiled audio guides
+            if (item.audio_guide) {
+                playModalAudioBtn.style.display = 'inline-flex';
+                playModalAudioBtn.onclick = () => {
+                    if (modalAudio) {
+                        modalAudio.pause();
+                    }
+                    modalAudio = new Audio(item.audio_guide);
+                    modalAudio.play();
+                };
+            } else {
+                playModalAudioBtn.style.display = 'none';
+            }
             
             modal.style.display = 'flex';
             modal.setAttribute('aria-hidden', 'false');
