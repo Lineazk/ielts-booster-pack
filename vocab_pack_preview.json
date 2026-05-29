@@ -1,0 +1,92 @@
+[
+  {
+    "word": "Ameliorate",
+    "part_of_speech": "Verb",
+    "definition": "To make something bad or unsatisfactory better; to improve.",
+    "bengali_meaning": "উন্নতি সাধন করা, মন্দ অবস্থা থেকে ভালো করা",
+    "synonyms": ["Improve", "Alleviate", "Mitigate", "Enhance"],
+    "speaking_example": "I believe that government policies should aim to ameliorate the living conditions of individuals residing in underprivileged urban sectors.",
+    "writing_example": "The introduction of modern public transit systems did much to ameliorate traffic congestion in the metropolis."
+  },
+  {
+    "word": "Cognizant",
+    "part_of_speech": "Adjective",
+    "definition": "Having knowledge or being fully aware of something.",
+    "bengali_meaning": "সচেতন, সজ্ঞান, অবগত",
+    "synonyms": ["Aware", "Conscious", "Mindful", "Apprised"],
+    "speaking_example": "Candidates preparing for IELTS must be cognizant of the specific grading descriptors to maximize their band scores.",
+    "writing_example": "Policymakers must remain cognizant of the long-term environmental consequences when enacting economic expansion protocols."
+  },
+  {
+    "word": "Equivocal",
+    "part_of_speech": "Adjective",
+    "definition": "Open to more than one interpretation; ambiguous or uncertain.",
+    "bengali_meaning": "দ্ব্যর্থবোধক, অস্পষ্ট, সন্দেহজনক",
+    "synonyms": ["Ambiguous", "Vague", "Cryptic", "Enigmatic"],
+    "speaking_example": "I feel the candidate gave an equivocal response regarding their long-term career aspirations during the interview.",
+    "writing_example": "The scientific evidence regarding the utility of alternative medical paradigms remains largely equivocal."
+  },
+  {
+    "word": "Fastidious",
+    "part_of_speech": "Adjective",
+    "definition": "Very attentive to and concerned about accuracy and detail; hard to please.",
+    "bengali_meaning": "খুঁতখুঁতে, সহজে সন্তুষ্ট হয় না এমন",
+    "synonyms": ["Meticulous", "Scrupulous", "Painstaking", "Exacting"],
+    "speaking_example": "I'm quite fastidious about my workspace; I cannot concentrate if my desk is disorganized or cluttered.",
+    "writing_example": "The construction of historical monuments required fastidious planning and execution by master architects."
+  },
+  {
+    "word": "Pernicious",
+    "part_of_speech": "Adjective",
+    "definition": "Having a harmful effect, especially in a gradual or subtle way.",
+    "bengali_meaning": "ক্ষতিকর, অনিষ্টকর (যা অলক্ষ্যে ক্ষতি করে)",
+    "synonyms": ["Harmful", "Detrimental", "Inimical", "Noxious"],
+    "speaking_example": "Sedentary lifestyles can have a pernicious influence on a person's mental health over prolonged periods.",
+    "writing_example": "Misinformation spread via digital algorithms exerts a pernicious effect on democratic processes."
+  },
+  {
+    "word": "Ubiquitous",
+    "part_of_speech": "Adjective",
+    "definition": "Present, appearing, or found everywhere.",
+    "bengali_meaning": "সর্বব্যাপী, যা সব জায়গায় একসঙ্গে বিরাজমান",
+    "synonyms": ["Omnipresent", "Pervasive", "Universal", "Rife"],
+    "speaking_example": "Smartphones have become utterly ubiquitous in our daily routines; it is hard to find anyone without one.",
+    "writing_example": "The ubiquitous influence of fast-food chains has dramatically shifted dietary habits across developing nations."
+  },
+  {
+    "word": "Venerate",
+    "part_of_speech": "Verb",
+    "definition": "Regard with great respect; revere.",
+    "bengali_meaning": "শ্রদ্ধা করা, পরম পূজনীয় জ্ঞান করা",
+    "synonyms": ["Revere", "Exalt", "Honor", "Adore"],
+    "speaking_example": "In our cultural framework, we deeply venerate elderly members for their profound wisdom and life experience.",
+    "writing_example": "Many global communities continue to venerate historical figures who pioneered civil liberties."
+  },
+  {
+    "word": "Epistemic",
+    "part_of_speech": "Adjective",
+    "definition": "Relating to knowledge or to the degree of its validation.",
+    "bengali_meaning": "জ্ঞান সম্বন্ধীয়, জ্ঞানতাত্ত্বিক",
+    "synonyms": ["Cognitive", "Intellectual", "Conceptual", "Theoretical"],
+    "speaking_example": "Acquiring a foreign language expands our epistemic horizons, introducing us to new cultural paradigms.",
+    "writing_example": "The primary objective of higher education should be to foster epistemic curiosity among undergraduate scholars."
+  },
+  {
+    "word": "Sycophant",
+    "part_of_speech": "Noun",
+    "definition": "A person who acts obsequiously toward someone important in order to gain advantage.",
+    "bengali_meaning": "চাটুকার, তোষামোদকারী",
+    "synonyms": ["Flatterer", "Toady", "Fawner", "Yes-man"],
+    "speaking_example": "I prefer working with straightforward colleagues rather than a sycophant who simply agrees with everything the manager says.",
+    "writing_example": "Historical autocrats were often surrounded by sycophants who isolated them from authentic public sentiments."
+  },
+  {
+    "word": "Elucidate",
+    "part_of_speech": "Verb",
+    "definition": "Make something clear; explain.",
+    "bengali_meaning": "স্পষ্ট করা, ব্যাখ্যা করা",
+    "synonyms": ["Explain", "Clarify", "Expound", "Delineate"],
+    "speaking_example": "Could you please elucidate the core points of the lecture? I struggled to capture the primary takeaways.",
+    "writing_example": "The primary objective of the literature review is to elucidate the research gap in contemporary AI frameworks."
+  }
+]
