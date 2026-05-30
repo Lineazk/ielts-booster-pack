@@ -2801,7 +2801,7 @@
             const VAD_MIN_MS = 3000;     // minimum 3s speaking time before silence can trigger
             const VAD_MAX_MS = 60000;    // force stop after 60s
             const VAD_SILENCE_MS = 2500; // 2.5s silence triggers next turn
-            const VAD_THRESHOLD = 20;    // Vocal band average energy threshold (0-255)
+            const VAD_THRESHOLD = 32;    // Vocal band average energy threshold (0-255)
 
             function startVoipCallTimer() {
                 voipCallSeconds = 0;
@@ -3028,7 +3028,7 @@
                     vadLastSpeechTime = Date.now();
                     
                     // Adaptive Noise Floor calibration states
-                    let localNoiseFloor = 10;
+                    let localNoiseFloor = 15;
                     const calibrationSamples = [];
 
                     voipMediaRecorder.start();
@@ -3050,15 +3050,23 @@
                         const elapsed = now - vadRecordingStart;
                         const silenceMs = now - vadLastSpeechTime;
 
-                        // Calibration phase (collect noise levels for the first 1 second)
+                        // Dynamic Noise Floor tracking (tracks fan / AC rumble / air noise continually)
                         if (elapsed < 1000) {
                             calibrationSamples.push(voiceEnergy);
                             const sumFloor = calibrationSamples.reduce((a, b) => a + b, 0);
-                            localNoiseFloor = Math.max((sumFloor / calibrationSamples.length) + 6, 12);
+                            localNoiseFloor = Math.max((sumFloor / calibrationSamples.length) + 8, 15);
+                        } else {
+                            // Continuously track minimum background noise floor over time
+                            if (voiceEnergy < localNoiseFloor) {
+                                localNoiseFloor = localNoiseFloor * 0.92 + voiceEnergy * 0.08; // adapt downward quickly
+                            } else {
+                                localNoiseFloor = localNoiseFloor * 0.999 + voiceEnergy * 0.001; // adapt upward extremely slowly
+                            }
+                            localNoiseFloor = Math.min(Math.max(localNoiseFloor, 12), 65); // keep floor within safe margins
                         }
 
-                        // Determine if speech is active based on adaptive threshold
-                        const activeThreshold = Math.max(localNoiseFloor, VAD_THRESHOLD);
+                        // Speech activation requires energy to be clearly higher (e.g. +18 units) than the current dynamic background noise floor
+                        const activeThreshold = Math.max(localNoiseFloor + 18, VAD_THRESHOLD);
                         const isSpeaking = voiceEnergy > activeThreshold;
 
                         if (isSpeaking) {
