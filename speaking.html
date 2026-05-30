@@ -1372,7 +1372,7 @@
             <i class="fa-solid fa-microphone-lines"></i> Live IELTS Speaking Coach
         </div>
         <h1>Achieve IELTS Band 8.5+ <br><span class="gradient-text">Through Advanced AI Autonomy</span></h1>
-        <p>Experience the world's first interactive IELTS Web Calling Suite. Pre-compile advanced academic vocabulary pronunciations natively, receive granular letter-by-letter spelling diff diagnostics, and speak directly with Dr. Sarah.</p>
+        <p>Experience the world's first interactive IELTS Web Calling Suite. Pre-compile advanced academic vocabulary pronunciations natively, receive granular letter-by-letter spelling diff diagnostics, and speak directly with Shikhu.</p>
         <div class="hero-ctas">
             <a href="#calling-module" class="btn-primary" id="heroCallBtn"><i class="fa-solid fa-phone-flip"></i> Launch Live Examiner Call</a>
             <a href="#simulator" class="btn-secondary" id="heroSecondaryBtn"><i class="fa-solid fa-robot"></i> Standard AI Simulator</a>
@@ -1383,7 +1383,7 @@
     <section class="simulator-section" id="calling-module" style="border-top: 1px solid var(--card-border); padding-top: 80px;">
         <div class="section-header">
             <h2>Live IELTS Speaking Call</h2>
-            <p>Connect to Dr. Sarah — your AI IELTS tutor. She will ask real exam questions, listen to your answers, teach you pronunciation, and guide you to a higher band score naturally.</p>
+            <p>Connect to Shikhu — your AI IELTS tutor. She will ask real exam questions, listen to your answers, teach you pronunciation, and guide you to a higher band score naturally.</p>
         </div>
 
         <div class="simulator-container" style="max-width: 700px; border-color: var(--accent-cyan); box-shadow: var(--glow-cyan);">
@@ -1399,7 +1399,7 @@
                 <div class="examiner-avatar" style="background: var(--gradient-primary); font-size: 40px; box-shadow: var(--glow-cyan); margin-bottom: 20px;">
                     <i class="fa-solid fa-user-nurse"></i>
                 </div>
-                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px;">Dr. Sarah — IELTS Speaking Coach</h3>
+                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px;">Shikhu — IELTS Speaking Coach</h3>
                 <p style="font-size: 14.5px; color: var(--text-secondary); max-width: 500px; margin-bottom: 10px; line-height: 1.6;">
                     She will ask you IELTS Part 1, 2 &amp; 3 questions. After each answer she teaches you how to say it better and guides your pronunciation. Silence for 4-5 seconds ends your turn automatically.
                 </p>
@@ -1410,7 +1410,7 @@
                 </div>
 
                 <button class="btn-primary" id="startCallBtn" style="padding: 16px 45px; font-size: 16px;">
-                    <i class="fa-solid fa-phone"></i> Call Dr. Sarah
+                    <i class="fa-solid fa-phone"></i> Call Shikhu
                 </button>
             </div>
         </div>
@@ -2247,13 +2247,13 @@
             
             <div style="background:rgba(212,175,55,0.05); border:1px solid rgba(212,175,55,0.2); border-radius:12px; padding:12px; margin-bottom:18px; font-size:13px; text-align:left; color:var(--text-primary);">
                 <div style="font-weight:700; color:#D4AF37; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;"><i class="fa-solid fa-fire"></i> Limited Promo Offer: $1 for 3 Months</div>
-                Get **300 minutes** of total direct calling talk-time with Dr. Sarah.
+                Get **300 minutes** of total direct calling talk-time with Shikhu.
             </div>
 
             <ul class="premium-bullets" style="margin-bottom:18px; max-width:400px;">
                 <li><i class="fa-solid fa-circle-check"></i> **Free Tier**: 20 mins/month (1st call capped at 4 mins, subsequent calls use remaining 16 mins).</li>
                 <li><i class="fa-solid fa-circle-check"></i> **Premium Promo**: 300 minutes total direct call talk-time over 3 months.</li>
-                <li><i class="fa-solid fa-circle-check"></i> **Dr. Sarah AI**: Ultra-advanced Band 9.0 feedback and accent diagnostics.</li>
+                <li><i class="fa-solid fa-circle-check"></i> **Shikhu AI**: Ultra-advanced Band 9.0 feedback and accent diagnostics.</li>
                 <li><i class="fa-solid fa-circle-check"></i> **Acoustic Clarity**: Advanced frequency filtering & VAD acoustics.</li>
             </ul>
 
@@ -2287,7 +2287,7 @@
                 <div class="voip-wave w3" id="vw3"></div>
                 <div class="voip-avatar">👩‍🏫</div>
             </div>
-            <div class="voip-name">Dr. Sarah Chen</div>
+            <div class="voip-name">Shikhu — IELTS Tutor</div>
             <div class="voip-subtitle">IELTS Speaking Examiner</div>
 
             <!-- VAD bars — show when user is speaking -->
@@ -2307,7 +2307,7 @@
 
         <!-- Transcript bubble -->
         <div class="voip-transcript-container" id="voipTranscriptContainer">
-            <div class="voip-transcript-examiner" id="voipTranscriptText">Connecting to Dr. Sarah...</div>
+            <div class="voip-transcript-examiner" id="voipTranscriptText">Connecting to Shikhu...</div>
         </div>
 
         <!-- iOS bottom controls: Mute | End | Speaker -->
@@ -3314,7 +3314,7 @@
             });
 
             // -----------------------------------------------------------------
-            // INTERACTIVE VoIP PHONE CALL — Dr. Sarah IELTS Coach
+            // INTERACTIVE VoIP PHONE CALL — Shikhu IELTS Coach
             // -----------------------------------------------------------------
             let voipDialTimeout = null;
             let audioQueue = [];
@@ -3358,7 +3358,7 @@
                 voipOverlay.style.display = "flex";
                 voipStatusBadge.className = "voip-status-badge dialing";
                 voipStatusBadge.textContent = "🟠 DIALING...";
-                voipTranscriptText.textContent = "Connecting to Dr. Sarah...";
+                voipTranscriptText.textContent = "Connecting to Shikhu...";
                 startVoipCallTimer();
 
                 voipDialTimeout = setTimeout(() => {
@@ -3391,7 +3391,11 @@
                         if (data.type === "examiner_text") {
                             voipStatusBadge.className = "voip-status-badge speaking";
                             voipStatusBadge.textContent = "💬 EXAMINER SPEAKING";
-                            voipTranscriptText.innerHTML = `<span class="voip-transcript-examiner">${data.text}</span>`;
+                            let content = `<span class="voip-transcript-examiner">${data.text}</span>`;
+                            if (data.bengali_text) {
+                                content += `<div class="voip-transcript-bengali" style="margin-top: 8px; font-size: 14px; color: var(--accent-gold); font-weight: 500; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px; font-family: 'Hind Siliguri', 'Segoe UI', sans-serif;"><i class="fa-solid fa-language"></i> ${data.bengali_text}</div>`;
+                            }
+                            voipTranscriptText.innerHTML = content;
                             const secureUrl = "https://" + _0x5b1e.b + data.audio_url;
                             playVoipResponse(secureUrl, data.text, () => {
                                 startListeningToVoipUser();
@@ -3742,11 +3746,31 @@
             // ─── SIMULATOR FALLBACK ───────────────────────────────────────────
             let simCallIndex = 0;
             const SIM_CONVERSATION = [
-                { examiner: "Hello! I am Doctor Sarah, your IELTS speaking coach. Let us start with an easy question. Could you tell me your full name and where you are from?", audio: "p2_person" },
-                { examiner: "Thank you. Now, let us talk about your hometown. What do you like most about where you live?", audio: "p2_place" },
-                { examiner: "Excellent. Let us move to Part Two. Describe a piece of technology you find very useful in your daily life. You have one minute to speak.", audio: "p2_technology" },
-                { examiner: "Very good. For Part Three, how do you think technology will change the way people learn in the next ten years?", audio: "p2_helped" },
-                { examiner: "Great session! That concludes our practice call. Keep practising and you will reach Band Eight very soon. Well done!", audio: "p2_helped" }
+                { 
+                    examiner: "Hello! I am Shikhu, your IELTS speaking coach. Let us start with an easy question. Could you tell me your full name and where you are from?", 
+                    bengali: "হ্যালো! আমি শিখু, আপনার আইইএলটিএস স্পিকিং কোচ। চলুন একটি সহজ প্রশ্ন দিয়ে শুরু করি। আপনি কি আপনার পুরো নাম এবং আপনি কোথা থেকে এসেছেন তা বলবেন?",
+                    audio: "p2_person" 
+                },
+                { 
+                    examiner: "Thank you. Now, let us talk about your hometown. What do you like most about where you live?", 
+                    bengali: "ধন্যবাদ। এবার আপনার নিজের শহর নিয়ে কথা বলা যাক। আপনি যেখানে থাকেন, সেখানকার কোন জিনিসটি আপনি সবচেয়ে বেশি পছন্দ করেন?",
+                    audio: "p2_place" 
+                },
+                { 
+                    examiner: "Excellent. Let us move to Part Two. Describe a piece of technology you find very useful in your daily life. You have one minute to speak.", 
+                    bengali: "চমৎকার। চলুন পার্ট টু-তে যাওয়া যাক। আপনার দৈনন্দিন জীবনে খুব দরকারী এমন একটি প্রযুক্তির বিবরণ দিন। আপনার বলার জন্য এক মিনিট সময় আছে।",
+                    audio: "p2_technology" 
+                },
+                { 
+                    examiner: "Very good. For Part Three, how do you think technology will change the way people learn in the next ten years?", 
+                    bengali: "খুব ভালো। পার্ট থ্রি-র জন্য প্রশ্ন হলো, প্রযুক্তি আগামী দশ বছরে মানুষের শেখার পদ্ধতিকে কীভাবে বদলে দেবে বলে আপনি মনে করেন?",
+                    audio: "p2_helped" 
+                },
+                { 
+                    examiner: "Great session! That concludes our practice call. Keep practising and you will reach Band Eight very soon. Well done!", 
+                    bengali: "চমৎকার সেশন ছিল! আমাদের আজকের অনুশীলন কল এখানেই শেষ হচ্ছে। নিয়মিত অনুশীলন চালিয়ে যান এবং আপনি খুব শীঘ্রই ব্যান্ড এইট পেয়ে যাবেন। সাবাশ!",
+                    audio: "p2_helped" 
+                }
             ];
 
             function launchVoipClientSimulator() {
@@ -3754,7 +3778,7 @@
                 simCallIndex = 0;
                 voipStatusBadge.className = "voip-status-badge";
                 voipStatusBadge.textContent = "🟢 CONNECTED";
-                voipTranscriptText.textContent = "Session started. Listen for Dr. Sarah...";
+                voipTranscriptText.textContent = "Session started. Listen for Shikhu...";
                 startVoipAvWaves();
                 setTimeout(playSimCallTurn, 1500);
             }
@@ -3770,7 +3794,11 @@
                 const turn = SIM_CONVERSATION[simCallIndex];
                 voipStatusBadge.className = "voip-status-badge speaking";
                 voipStatusBadge.textContent = "💬 EXAMINER SPEAKING";
-                voipTranscriptText.innerHTML = `<span class="voip-transcript-examiner">${turn.examiner}</span>`;
+                let content = `<span class="voip-transcript-examiner">${turn.examiner}</span>`;
+                if (turn.bengali) {
+                    content += `<div class="voip-transcript-bengali" style="margin-top: 8px; font-size: 14px; color: var(--accent-gold); font-weight: 500; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px; font-family: 'Hind Siliguri', 'Segoe UI', sans-serif;"><i class="fa-solid fa-language"></i> ${turn.bengali}</div>`;
+                }
+                voipTranscriptText.innerHTML = content;
                 voipIsSpeaking = true;
                 startVoipAvWaves();
 
