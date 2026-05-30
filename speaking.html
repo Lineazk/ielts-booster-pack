@@ -3150,9 +3150,9 @@
                             return; // Stop VAD loop
                         }
 
-                        // STRICT 5-SECOND UNRECOGNIZED PUSH (Triggers if VAD heard something but no English words were transcribed)
-                        if (!voipSpeechDetected && elapsed >= 5000) {
-                            console.log("No English words transcribed within 5 seconds. Pushing forward.");
+                        // STRICT 12-SECOND UNRECOGNIZED SAFETY CUTOFF (Allows 12s for long answers, deactivated once English is transcribed)
+                        if (!voipSpeechDetected && elapsed >= 12000) {
+                            console.log("No English words transcribed within 12 seconds. Pushing forward.");
                             if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
                                 voipMediaRecorder.stop();
                             }
@@ -3177,8 +3177,8 @@
                                     return; // stop loop
                                 }
                             } else {
-                                // Fast cutoff (1.5s silence) if sound was heard but no English words transcribed (e.g. non-English speech)
-                                if (silenceMs >= 1500) {
+                                // Cut off after 2.5s of silence if sound was heard but no English words transcribed yet (e.g. non-English speech or quiet thinking)
+                                if (silenceMs >= 2500) {
                                     if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
                                         voipMediaRecorder.stop();
                                     }
