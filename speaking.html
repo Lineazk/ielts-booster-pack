@@ -2965,6 +2965,7 @@
             let voipSpeechDetected = false;
             let silenceTimer = null;
             let voipRecordingStart = 0;
+            let lastSpeechTime = 0;
 
             function stopVadListening() {
                 if (vadAnimFrame) { cancelAnimationFrame(vadAnimFrame); vadAnimFrame = null; }
@@ -2988,6 +2989,8 @@
                 
                 voipSpeechDetected = false;
                 voipRecognizedText = "";
+                voipRecordingStart = Date.now();
+                lastSpeechTime = Date.now();
 
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -3007,31 +3010,22 @@
                         
                         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
                         
-                        // ONLY send to server if the browser SpeechRecognition actually detected candidate speaking!
-                        if (voipSpeechDetected && voipRecognizedText.trim().length > 0) {
-                            if (callWs && callWs.readyState === WebSocket.OPEN) {
-                                callWs.send(audioBlob);
-                                voipStatusBadge.className = "voip-status-badge processing";
-                                voipStatusBadge.textContent = "⚙ PROCESSING";
-                            }
-                        } else {
-                            // Noise or silence — restart silently
-                            console.log("[VAD] Noise/Silence filtered out. Restarting...");
-                            setTimeout(startListeningToVoipUser, 600);
+                        // Send the audio to the server. If it was silent/noise, the server STT will handle it.
+                        // This prevents the candidate from getting stuck under all circumstances!
+                        if (callWs && callWs.readyState === WebSocket.OPEN) {
+                            callWs.send(audioBlob);
+                            voipStatusBadge.className = "voip-status-badge processing";
+                            voipStatusBadge.textContent = "⚙ PROCESSING";
                         }
                     };
 
-                    // Start browser SpeechRecognition to detect actual human words
+                    // Start browser SpeechRecognition for high-quality real-time preview (visual only)
                     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                     if (SpeechRec) {
                         voipRecognition = new SpeechRec();
                         voipRecognition.continuous = true;
                         voipRecognition.interimResults = true;
                         voipRecognition.lang = "en-GB";
-
-                        voipRecognition.onstart = () => {
-                            voipRecordingStart = Date.now();
-                        };
 
                         voipRecognition.onresult = (event) => {
                             let interim = "";
@@ -3042,38 +3036,25 @@
                             }
                             const words = final || interim;
                             if (words.trim().length > 0) {
-                                voipSpeechDetected = true;
-                                voipRecognizedText = words;
-                                voipStatusBadge.className = "voip-status-badge speaking";
-                                voipStatusBadge.textContent = "💬 Candidate Speaking...";
-                                voipTranscriptText.innerHTML = `<span class="voip-transcript-user">You: "${words}"</span>`;
-                                
-                                // Reset the silence timer upon active speaking
-                                resetSilenceTimer();
+                                // Gating logic: only trigger if actual English words are transcribed
+                                if (/[a-zA-Z]/.test(words)) {
+                                    voipSpeechDetected = true;
+                                    voipRecognizedText = words;
+                                    voipStatusBadge.className = "voip-status-badge speaking";
+                                    voipTranscriptText.innerHTML = `<span class="voip-transcript-user">You: "${words}"</span>`;
+                                    lastSpeechTime = Date.now(); // Reset silence countdown when speaking English words
+                                }
                             }
                         };
-
-                        voipRecognition.onend = () => {
-                            // If speech recognition ended normally but we had words, trigger finalization
-                            if (voipSpeechDetected && voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                voipMediaRecorder.stop();
-                            }
-                        };
-
-                        voipRecognition.onerror = (err) => {
-                            console.warn("[VoIP STT] SpeechRecognition error:", err.error);
-                        };
-                        
                         voipRecognition.start();
                     }
 
-                    // ── Set up AudioContext VAD for fallback & visual wave animations ──
+                    // ── AudioContext VAD for silence tracking and animations ──
                     vadAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     vadAnalyser = vadAudioCtx.createAnalyser();
                     vadAnalyser.fftSize = 256;
                     const source = vadAudioCtx.createMediaStreamSource(stream);
 
-                    // Filters to clean up input signal
                     const hpFilter = vadAudioCtx.createBiquadFilter();
                     hpFilter.type = "highpass";
                     hpFilter.frequency.value = 150;
@@ -3089,9 +3070,8 @@
                     const dataArray = new Uint8Array(vadAnalyser.frequencyBinCount);
                     voipMediaRecorder.start();
 
-                    let localNoiseFloor = 15;
                     const calibrationSamples = [];
-                    let lastVadTime = Date.now();
+                    const vadEnergyHistory = []; // Rolling energy history for noise floor
 
                     const runVad = () => {
                         if (!callActive || !vadAnalyser) return;
@@ -3108,29 +3088,30 @@
                         const now = Date.now();
                         const elapsed = now - voipRecordingStart;
 
-                        // Continually track noise floor
-                        if (elapsed < 1000) {
-                            calibrationSamples.push(voiceEnergy);
-                            const sumFloor = calibrationSamples.reduce((a, b) => a + b, 0);
-                            localNoiseFloor = Math.max((sumFloor / calibrationSamples.length) + 8, 15);
-                        } else {
-                            if (voiceEnergy < localNoiseFloor) {
-                                localNoiseFloor = localNoiseFloor * 0.92 + voiceEnergy * 0.08;
-                            } else {
-                                localNoiseFloor = localNoiseFloor * 0.999 + voiceEnergy * 0.001;
-                            }
-                            localNoiseFloor = Math.min(Math.max(localNoiseFloor, 12), 65);
+                        // Maintain rolling energy history (last 100 frames ~2s)
+                        vadEnergyHistory.push(voiceEnergy);
+                        if (vadEnergyHistory.length > 100) {
+                            vadEnergyHistory.shift();
                         }
+                        
+                        // Noise floor is the minimum energy in the last 2s
+                        let localNoiseFloor = Math.min(...vadEnergyHistory);
+                        localNoiseFloor = Math.max(15, Math.min(localNoiseFloor, 80));
 
-                        const activeThreshold = Math.max(localNoiseFloor + 18, VAD_THRESHOLD);
+                        // Speech must be clearly higher (+15) than noise floor, and at least above threshold (30)
+                        const activeThreshold = Math.max(localNoiseFloor + 15, VAD_THRESHOLD);
                         const isSpeaking = voiceEnergy > activeThreshold;
 
                         if (isSpeaking) {
                             showVadBars();
                             hideSilenceBar();
-                            lastVadTime = now;
+                            // Fallback VAD speech detection if SpeechRecognition is not active
+                            if (!voipRecognition) {
+                                voipSpeechDetected = true;
+                                lastSpeechTime = now;
+                            }
                             
-                            // Scale active speaking waves
+                            // Scale VAD waves green
                             const bars = document.querySelectorAll(".voip-vad-bar");
                             bars.forEach((bar, idx) => {
                                 const mult = 1 + (idx % 2) * 0.15;
@@ -3138,13 +3119,6 @@
                                 bar.style.transform = `scaleY(${scale})`;
                                 bar.style.backgroundColor = "#4ade80";
                             });
-                            
-                            // If SpeechRecognition failed to start or is unavailable, use VAD as primary trigger
-                            if (!SpeechRec && elapsed >= VAD_MIN_MS) {
-                                voipSpeechDetected = true;
-                                voipRecognizedText = "Spoken Audio";
-                                resetSilenceTimer();
-                            }
                         } else {
                             const bars = document.querySelectorAll(".voip-vad-bar");
                             bars.forEach(bar => {
@@ -3153,20 +3127,30 @@
                             });
                         }
 
-                        // Silence progress tracking (only displays if we actually detected candidate speaking!)
-                        if (voipSpeechDetected && !isSpeaking) {
-                            const silenceMs = now - lastVadTime;
-                            const pct = Math.min((silenceMs / VAD_SILENCE_MS) * 100, 100);
-                            showSilenceBar(pct);
-                            if (silenceMs < 800) hideVadBars();
-                        }
-
-                        // VAD Fallback trigger if SpeechRecognition is missing
-                        if (!SpeechRec && voipSpeechDetected && (now - lastVadTime) >= VAD_SILENCE_MS) {
+                        // STRICT 3-SECOND NO-SPEECH PUSH
+                        if (!voipSpeechDetected && elapsed >= 3000) {
+                            console.log("No English speech detected within 3 seconds. Pushing forward.");
                             if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
                                 voipMediaRecorder.stop();
                             }
-                            return;
+                            return; // Stop VAD loop
+                        }
+
+                        const silenceMs = now - lastSpeechTime;
+
+                        // Display silence progress bar after 1.5 seconds of silence
+                        if (silenceMs >= 1500 && voipSpeechDetected) {
+                            const pct = Math.min(((silenceMs - 1500) / (VAD_SILENCE_MS - 1500)) * 100, 100);
+                            showSilenceBar(pct);
+                            hideVadBars();
+                        }
+
+                        // SILENCE TIMEOUT TRIGGER (Stops recording after 2.5 seconds of silence)
+                        if (voipSpeechDetected && silenceMs >= VAD_SILENCE_MS) {
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                voipMediaRecorder.stop();
+                            }
+                            return; // stop loop
                         }
 
                         // Safety force-stop at 60s
@@ -3181,18 +3165,6 @@
                     };
 
                     vadAnimFrame = requestAnimationFrame(runVad);
-
-                    // Silence Timer function
-                    function resetSilenceTimer() {
-                        if (silenceTimer) clearTimeout(silenceTimer);
-                        if (!callActive) return;
-                        
-                        silenceTimer = setTimeout(() => {
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                voipMediaRecorder.stop();
-                            }
-                        }, VAD_SILENCE_MS);
-                    }
 
                 } catch(e) {
                     voipStatusBadge.className = "voip-status-badge error";
