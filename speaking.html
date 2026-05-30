@@ -3243,6 +3243,13 @@
 
             function unlockBrowserAudio() {
                 try {
+                    if (!voipResponseAudio) {
+                        voipResponseAudio = new Audio();
+                    }
+                    voipResponseAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA";
+                    voipResponseAudio.play().catch(() => {});
+                } catch(e) {}
+                try {
                     const silentAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA");
                     silentAudio.play().catch(() => {});
                 } catch(e) {}
@@ -3368,7 +3375,7 @@
                     const savedKey = localStorage.getItem("ielts_premium_key") || "";
                     const sig = generateHandshakeSignature();
                     const wsUrl = url.startsWith("ws://") || url.startsWith("wss://") ? url : `wss://${url.replace(/^https?:\/\//, '')}`;
-                    callWs = new WebSocket(`${wsUrl}/ws/call?key=${encodeURIComponent(savedKey)}&sig=${sig}`);
+                    callWs = new WebSocket(`${wsUrl}/ws/call?token=${encodeURIComponent(savedKey)}&key=${encodeURIComponent(savedKey)}&sig=${sig}`);
 
                     callWs.onopen = () => {
                         callActive = true;
@@ -3437,7 +3444,10 @@
                 startVoipAvWaves();
                 hideVadBars();
 
-                voipResponseAudio = new Audio(url);
+                if (!voipResponseAudio) {
+                    voipResponseAudio = new Audio();
+                }
+                voipResponseAudio.src = url;
                 let endedExecuted = false;
 
                 const triggerFallback = () => {
