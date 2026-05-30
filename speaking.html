@@ -2798,10 +2798,9 @@
             let vadAnimFrame = null;
             let vadLastSpeechTime = 0;
             let vadRecordingStart = 0;
-            const VAD_MIN_MS = 3000;     // minimum 3s speaking time before silence can trigger
             const VAD_MAX_MS = 60000;    // force stop after 60s
-            const VAD_SILENCE_MS = 2500; // 2.5s silence triggers next turn
-            const VAD_THRESHOLD = 32;    // Vocal band average energy threshold (0-255)
+            const VAD_SILENCE_MS = 4500; // 4.5s silence triggers next turn (comfortable for long answers)
+            const VAD_THRESHOLD = 20;    // Highly sensitive vocal energy threshold (whisper-friendly)
 
             function startVoipCallTimer() {
                 voipCallSeconds = 0;
@@ -3047,6 +3046,18 @@
                                 }
                             }
                         };
+
+                        voipRecognition.onerror = (e) => {
+                            console.warn("[SpeechRecognition] Error: " + e.error);
+                        };
+
+                        voipRecognition.onend = () => {
+                            if (callActive && voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                console.log("[SpeechRecognition] Auto-restarted onend to support long speech.");
+                                try { voipRecognition.start(); } catch(err) {}
+                            }
+                        };
+
                         voipRecognition.start();
                     }
 
@@ -3099,8 +3110,8 @@
                         let localNoiseFloor = Math.min(...vadEnergyHistory);
                         localNoiseFloor = Math.max(15, Math.min(localNoiseFloor, 80));
 
-                        // Speech must be clearly higher (+15) than noise floor, and at least above threshold (30)
-                        const activeThreshold = Math.max(localNoiseFloor + 15, VAD_THRESHOLD);
+                        // Speech must be clearly higher (+8) than noise floor, and at least above threshold (20)
+                        const activeThreshold = Math.max(localNoiseFloor + 8, VAD_THRESHOLD);
                         const isSpeaking = voiceEnergy > activeThreshold;
 
                         if (isSpeaking) {
@@ -3153,9 +3164,9 @@
                             const silenceMs = now - lastSpeechTime;
                             
                             if (voipSpeechDetected) {
-                                // Standard comfortable silence timeout for English speech
-                                if (silenceMs >= 1500) {
-                                    const pct = Math.min(((silenceMs - 1500) / (VAD_SILENCE_MS - 1500)) * 100, 100);
+                                // Standard comfortable silence timeout for English speech (shows countdown at 2.5s, triggers at 4.5s)
+                                if (silenceMs >= 2500) {
+                                    const pct = Math.min(((silenceMs - 2500) / (VAD_SILENCE_MS - 2500)) * 100, 100);
                                     showSilenceBar(pct);
                                     hideVadBars();
                                 }
