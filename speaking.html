@@ -4356,8 +4356,8 @@
                 if (!currentShadowDrill) return;
                 
                 const targetText = currentShadowDrill.band_9_response;
-                const targetWordsClean = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
-                const userWords = userSpeech.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
+                const targetWordsClean = targetText.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+                const userWords = userSpeech.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
                 
                 let tempUserWords = [...userWords];
                 for (let i = 0; i < targetWordsClean.length; i++) {
@@ -4436,8 +4436,8 @@
 
                 practiceMicBtn.addEventListener("click", () => {
                     triggerDrillSpeechRecording("btnPracticeWordMic", "practiceWordFeedback", (spoken) => {
-                        const cleanTarget = wordText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?👑…"]/g, "").trim();
-                        const cleanSpoken = spoken.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?👑…"]/g, "").trim();
+                        const cleanTarget = wordText.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+                        const cleanSpoken = spoken.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
 
                         // Forgiving inclusion matching
                         if (cleanSpoken.includes(cleanTarget) || cleanTarget.includes(cleanSpoken) || 
@@ -4623,8 +4623,8 @@
                 const targetText = currentShadowDrill.band_9_response;
                 
                 // 1. Calculate word comparison diff
-                const targetWords = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
-                const userWords = userText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
+                const targetWords = targetText.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+                const userWords = userText.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
                 
                 let diffHtml = "";
                 let matchCount = 0;
@@ -4718,8 +4718,8 @@
                 const chips = document.querySelectorAll("#fillerChips .scaffold-chip");
                 
                 fillers.forEach((f, idx) => {
-                    const cleanF = f.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").trim();
-                    const cleanUser = userText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
+                    const cleanF = f.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+                    const cleanUser = userText.toLowerCase().replace(/[^a-z0-9\s]/g, "");
                     
                     if (cleanUser.includes(cleanF)) {
                         matchedCount++;
@@ -4739,7 +4739,7 @@
                 });
 
                 vocab.forEach((v, idx) => {
-                    const cleanUser = userText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
+                    const cleanUser = userText.toLowerCase().replace(/[^a-z0-9\s]/g, "");
                     const chipIndex = fillers.length + idx;
                     
                     if (cleanUser.includes(v.toLowerCase())) {
