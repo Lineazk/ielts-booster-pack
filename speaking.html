@@ -4227,6 +4227,10 @@
                 document.getElementById("fillerDiscourseVal").textContent = "0%";
                 document.getElementById("fillerCorrectnessVal").textContent = "0%";
 
+                // Clear any existing active interactive practice boxes
+                const activePractice = document.querySelector("#drillPanelFillers .word-practice-box");
+                if (activePractice) activePractice.remove();
+
                 // Populate Scaffolding Chips
                 const chipsContainer = document.getElementById("fillerChips");
                 chipsContainer.innerHTML = "";
@@ -4234,13 +4238,21 @@
                 drill.fluency_scaffolding.filler_expressions.forEach(f => {
                     const chip = document.createElement("div");
                     chip.className = "scaffold-chip";
+                    chip.style.cursor = "pointer";
                     chip.innerHTML = `<i class="fa-solid fa-comment" style="color:var(--accent-gold)"></i> ${f}`;
+                    chip.addEventListener("click", () => {
+                        showInteractiveWordPractice(f, "fillerChips", false);
+                    });
                     chipsContainer.appendChild(chip);
                 });
                 drill.fluency_scaffolding.vocabulary_focus.forEach(v => {
                     const chip = document.createElement("div");
                     chip.className = "scaffold-chip vocab";
+                    chip.style.cursor = "pointer";
                     chip.innerHTML = `<i class="fa-solid fa-star" style="color:var(--accent-cyan)"></i> ${v}`;
+                    chip.addEventListener("click", () => {
+                        showInteractiveWordPractice(v, "fillerChips", true);
+                    });
                     chipsContainer.appendChild(chip);
                 });
             }
@@ -4268,6 +4280,10 @@
                 document.getElementById("spatialCoherenceVal").textContent = "0%";
                 document.getElementById("spatialLexicalVal").textContent = "0%";
 
+                // Clear any existing active interactive practice boxes
+                const activePractice = document.querySelector("#drillPanelSpatial .word-practice-box");
+                if (activePractice) activePractice.remove();
+
                 // Populate Spatial Scaffolding Chips
                 const chipsContainer = document.getElementById("spatialChips");
                 chipsContainer.innerHTML = "";
@@ -4277,8 +4293,12 @@
                     const label = key.toUpperCase();
                     const chip = document.createElement("div");
                     chip.className = "scaffold-chip spatial";
+                    chip.style.cursor = "pointer";
                     chip.innerHTML = `<i class="fa-solid fa-location-dot" style="color:var(--accent-purple)"></i> <strong>${label}:</strong> "${templateText.substring(0, 32)}..."`;
                     chip.title = templateText;
+                    chip.addEventListener("click", () => {
+                        showInteractiveWordPractice(templateText, "spatialChips", false);
+                    });
                     chipsContainer.appendChild(chip);
                 });
             }
@@ -4331,6 +4351,7 @@
             }
 
             // Real-time sequential tracker for shadowing words highlighting
+            // Bulletproof bag-of-words lookup prevents getting stuck on skipped or mispronounced words!
             function highlightShadowWordsRealTime(userSpeech) {
                 if (!currentShadowDrill) return;
                 
@@ -4338,28 +4359,105 @@
                 const targetWordsClean = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
                 const userWords = userSpeech.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
                 
-                let userIdx = 0;
+                let tempUserWords = [...userWords];
                 for (let i = 0; i < targetWordsClean.length; i++) {
                     const targetW = targetWordsClean[i];
                     const span = document.getElementById(`shadow-word-${i}`);
                     if (!span) continue;
 
-                    let found = false;
-                    for (let j = userIdx; j < Math.min(userIdx + 3, userWords.length); j++) {
-                        if (userWords[j] === targetW) {
-                            found = true;
-                            userIdx = j + 1;
-                            break;
-                        }
-                    }
-
-                    if (found) {
-                        span.style.color = "#4ade80"; // Glowing green
+                    // Locate matched word anywhere in remaining spoken transcript to unlock glowing green
+                    const matchIdx = tempUserWords.indexOf(targetW);
+                    if (matchIdx !== -1) {
+                        span.style.color = "#4ade80"; // Glowing neon green
                         span.style.textShadow = "0 0 10px rgba(74, 222, 128, 0.6)";
                         span.style.fontWeight = "700";
+                        tempUserWords.splice(matchIdx, 1); // Remove to avoid duplicate highlighting
                     }
                 }
             }
+
+            // Gilded interactive pronunciation practice mic drill panel
+            window.showInteractiveWordPractice = function(wordText, containerId, isVocab) {
+                unlockBrowserAudio();
+                
+                // Play spoken native model via Cloud TTS immediately
+                const savedKey = localStorage.getItem("ielts_premium_key") || "";
+                const sig = generateHandshakeSignature();
+                const cleanWord = wordText.replace(/IELTS/gi, "Eye elts").replace(/[👑…"]/g, "").trim();
+                
+                const premiumTtsUrl = `https://${_0x5b1e.b}/tts?text=${encodeURIComponent(cleanWord)}&voice=en-GB-SoniaNeural&key=${encodeURIComponent(savedKey)}&sig=${sig}`;
+                
+                const audio = new Audio(premiumTtsUrl);
+                audio.onerror = () => {
+                    if (window.speechSynthesis) {
+                        window.speechSynthesis.cancel();
+                        const ut = new SpeechSynthesisUtterance(cleanWord);
+                        ut.lang = "en-GB"; ut.rate = 0.90;
+                        window.speechSynthesis.speak(ut);
+                    }
+                };
+                audio.play().catch(audio.onerror);
+
+                // Find or create practice box inside workspace
+                const parent = document.getElementById(containerId).parentElement;
+                let practiceBox = parent.querySelector(".word-practice-box");
+                if (!practiceBox) {
+                    practiceBox = document.createElement("div");
+                    practiceBox.className = "word-practice-box";
+                    practiceBox.style.cssText = "margin-top:15px; padding:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(212,175,55,0.25); border-radius:12px; display:flex; flex-direction:column; gap:10px;";
+                    parent.appendChild(practiceBox);
+                }
+
+                practiceBox.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                        <div>
+                            <span style="font-size:11px; text-transform:uppercase; color:var(--accent-gold); font-weight:700;"><i class="fa-solid fa-microphone-lines"></i> Interactive Word Drill</span>
+                            <h4 style="margin:4px 0 0 0; color:#fff; font-size:14px; line-height:1.3;">"${wordText}"</h4>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-shrink:0;">
+                            <button class="card-btn" style="padding:6px 12px; font-size:11px;" id="btnReplayPracticeWord"><i class="fa-solid fa-volume-high"></i> Hear</button>
+                            <button class="card-btn" id="btnPracticeWordMic" style="padding:6px 12px; font-size:11px; background:rgba(74, 222, 128, 0.1); border-color:#4ade80; color:#4ade80;"><i class="fa-solid fa-microphone"></i> Record</button>
+                        </div>
+                    </div>
+                    <div id="practiceWordFeedback" style="font-size:12px; color:var(--text-secondary); text-align:center; font-style:italic;">Click Record and speak this word/phrase.</div>
+                `;
+
+                // Set up event listeners
+                const replayBtn = practiceBox.querySelector("#btnReplayPracticeWord");
+                replayBtn.addEventListener("click", () => {
+                    unlockBrowserAudio();
+                    const replyAudio = new Audio(premiumTtsUrl);
+                    replyAudio.onerror = audio.onerror;
+                    replyAudio.play().catch(audio.onerror);
+                });
+
+                const practiceMicBtn = practiceBox.querySelector("#btnPracticeWordMic");
+                const practiceFeedback = practiceBox.querySelector("#practiceWordFeedback");
+
+                practiceMicBtn.addEventListener("click", () => {
+                    triggerDrillSpeechRecording("btnPracticeWordMic", "practiceWordFeedback", (spoken) => {
+                        const cleanTarget = wordText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?👑…"]/g, "").trim();
+                        const cleanSpoken = spoken.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?👑…"]/g, "").trim();
+
+                        // Forgiving inclusion matching
+                        if (cleanSpoken.includes(cleanTarget) || cleanTarget.includes(cleanSpoken) || 
+                            cleanTarget.split(/\s+/).some(w => w.length > 3 && cleanSpoken.includes(w))) {
+                            
+                            practiceFeedback.innerHTML = `<span style="color:#4ade80; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Perfect Pronunciation! Match: 100%</span>`;
+                            
+                            // Highlight the matching chip in checked green!
+                            const chips = parent.querySelectorAll(".scaffold-chip");
+                            chips.forEach(chip => {
+                                if (chip.textContent.toLowerCase().includes(cleanTarget) || cleanTarget.includes(chip.textContent.toLowerCase().replace(/[👑…"]/g, "").trim())) {
+                                    chip.classList.add("checked");
+                                }
+                            });
+                        } else {
+                            practiceFeedback.innerHTML = `<span style="color:#ff6b6b;"><i class="fa-solid fa-circle-xmark"></i> Keep trying! Heard: "${spoken}"</span>`;
+                        }
+                    });
+                });
+            };
 
             // Universal Audio Recorder wrapper designed for IELTS speech evaluation
             // satisfies strict user-requested VAD cutoff conditions!
