@@ -4191,8 +4191,14 @@
                 }
 
                 document.getElementById("shadowPromptText").textContent = `Topic: ${drill.topic} - "${drill.prompt}"`;
-                document.getElementById("shadowTargetText").textContent = drill.band_9_response;
-                document.getElementById("shadowTargetText").style.color = "var(--text-secondary)";
+                
+                // Wrap each target word in a span for real-time highlighting
+                const targetTextContainer = document.getElementById("shadowTargetText");
+                const targetWords = drill.band_9_response.split(/\s+/);
+                targetTextContainer.innerHTML = targetWords.map((word, wIdx) => {
+                    return `<span class="shadow-word" id="shadow-word-${wIdx}" style="color: rgba(255,255,255,0.4); transition: all 0.15s; margin-right: 6px; display: inline-block;">${word}</span>`;
+                }).join("");
+
                 document.getElementById("shadowDiffText").innerHTML = "Ready. Listen to the model speaker first, then click 'Start Shadowing' to repeat.";
                 document.getElementById("shadowStressVal").textContent = "0%";
                 document.getElementById("shadowPronVal").textContent = "0%";
@@ -4324,6 +4330,37 @@
                 });
             }
 
+            // Real-time sequential tracker for shadowing words highlighting
+            function highlightShadowWordsRealTime(userSpeech) {
+                if (!currentShadowDrill) return;
+                
+                const targetText = currentShadowDrill.band_9_response;
+                const targetWordsClean = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
+                const userWords = userSpeech.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
+                
+                let userIdx = 0;
+                for (let i = 0; i < targetWordsClean.length; i++) {
+                    const targetW = targetWordsClean[i];
+                    const span = document.getElementById(`shadow-word-${i}`);
+                    if (!span) continue;
+
+                    let found = false;
+                    for (let j = userIdx; j < Math.min(userIdx + 3, userWords.length); j++) {
+                        if (userWords[j] === targetW) {
+                            found = true;
+                            userIdx = j + 1;
+                            break;
+                        }
+                    }
+
+                    if (found) {
+                        span.style.color = "#4ade80"; // Glowing green
+                        span.style.textShadow = "0 0 10px rgba(74, 222, 128, 0.6)";
+                        span.style.fontWeight = "700";
+                    }
+                }
+            }
+
             // Universal Audio Recorder wrapper designed for IELTS speech evaluation
             // satisfies strict user-requested VAD cutoff conditions!
             function triggerDrillSpeechRecording(buttonId, textDisplayId, onComplete) {
@@ -4334,16 +4371,20 @@
                     return;
                 }
 
+                const isShadow = (buttonId === "btnRecordShadow");
                 const btn = document.getElementById(buttonId);
                 const txt = document.getElementById(textDisplayId);
+                
+                // For shadowing, we keep target text visible and show status/transcript in the feedback panel
+                const statusTxt = isShadow ? document.getElementById("shadowDiffText") : txt;
                 
                 btn.innerHTML = `<i class="fa-solid fa-stop-circle fa-pulse" style="color:#ff3b30"></i> Stop Recording`;
                 btn.style.background = "rgba(255, 59, 48, 0.15)";
                 btn.style.borderColor = "#ff3b30";
                 
-                txt.textContent = "Listening... Speak now...";
-                txt.style.color = "var(--accent-cyan)";
-                txt.style.fontStyle = "italic";
+                statusTxt.textContent = "Listening... Speak now...";
+                statusTxt.style.color = "var(--accent-cyan)";
+                statusTxt.style.fontStyle = "italic";
 
                 drillRecordingActive = true;
                 drillEnglishDetected = false;
@@ -4352,8 +4393,8 @@
 
                 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRec) {
-                    txt.textContent = "Your browser does not support Speech Recognition. Use Chrome or Safari.";
-                    txt.style.color = "#ff3b30";
+                    statusTxt.textContent = "Your browser does not support Speech Recognition. Use Chrome or Safari.";
+                    statusTxt.style.color = "#ff3b30";
                     return;
                 }
 
@@ -4367,8 +4408,9 @@
                 let threeSecTimer = setTimeout(() => {
                     if (!drillEnglishDetected) {
                         console.log("STRICT VAD: No English words detected within 3 seconds. Pushing immediately!");
-                        txt.textContent = "No English speech detected within 3 seconds. Stopped.";
-                        txt.style.color = "#ff6b6b";
+                        statusTxt.textContent = "No English speech detected within 3 seconds. Stopped.";
+                        statusTxt.style.color = "#ff6b6b";
+                        statusTxt.style.fontStyle = "normal";
                         stopDrillSpeechRecording();
                     }
                 }, 3000);
@@ -4393,9 +4435,17 @@
                             }
 
                             drillSpokenText = words;
-                            txt.textContent = `"${drillSpokenText}"`;
-                            txt.style.color = "#fff";
-                            txt.style.fontStyle = "normal";
+                            
+                            if (isShadow) {
+                                statusTxt.innerHTML = `<span style="color:var(--text-secondary); font-style:italic;">Shadowing:</span> "${drillSpokenText}"`;
+                                statusTxt.style.color = "#fff";
+                                statusTxt.style.fontStyle = "normal";
+                                highlightShadowWordsRealTime(words);
+                            } else {
+                                txt.textContent = `"${drillSpokenText}"`;
+                                txt.style.color = "#fff";
+                                txt.style.fontStyle = "normal";
+                            }
 
                             // Reset silence timer on active English speech (4.5 seconds comfort window)
                             if (silenceTimer) clearTimeout(silenceTimer);
@@ -4439,8 +4489,18 @@
                     if (drillSpokenText.trim().length > 2) {
                         onComplete(drillSpokenText);
                     } else {
-                        txt.textContent = "Attempt too brief or no English spoken. Please speak English within 3 seconds.";
-                        txt.style.color = "#ff6b6b";
+                        statusTxt.textContent = "Attempt too brief or no English spoken. Please speak English within 3 seconds.";
+                        statusTxt.style.color = "#ff6b6b";
+                        statusTxt.style.fontStyle = "normal";
+                        
+                        // If shadowing, reset the word colors to their original gray state
+                        if (isShadow) {
+                            const spans = document.querySelectorAll("#shadowTargetText .shadow-word");
+                            spans.forEach(span => {
+                                span.style.color = "rgba(255, 255, 255, 0.4)";
+                                span.style.textShadow = "none";
+                            });
+                        }
                     }
                 };
 
