@@ -3329,8 +3329,8 @@
             let vadLastSpeechTime = 0;
             let vadRecordingStart = 0;
             const VAD_MAX_MS = 60000;    // force stop after 60s
-            const VAD_SILENCE_MS = 4500; // 4.5s silence triggers next turn (comfortable for long answers)
-            const VAD_THRESHOLD = 20;    // Highly sensitive vocal energy threshold (whisper-friendly)
+            const VAD_SILENCE_MS = 5500; // 5.5s silence triggers next turn (comfortable for long answers)
+            const VAD_THRESHOLD = 18;    // Highly sensitive vocal energy threshold (even more whisper-friendly)
 
             function startVoipCallTimer() {
                 voipCallSeconds = 0;
@@ -3678,9 +3678,9 @@
                             });
                         }
 
-                        // STRICT 3-SECOND SILENT TIMEOUT (Only triggers if NO voice energy was heard AT ALL)
-                        if (!voipVoiceHeard && elapsed >= 3000) {
-                            console.log("No speech energy heard within 3 seconds. Pushing forward.");
+                        // STRICT 4.5-SECOND SILENT TIMEOUT (Only triggers if NO voice energy was heard AT ALL)
+                        if (!voipVoiceHeard && elapsed >= 4500) {
+                            console.log("No speech energy heard within 4.5 seconds. Pushing forward.");
                             if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
                                 voipMediaRecorder.stop();
                             }
@@ -3701,9 +3701,9 @@
                             const silenceMs = now - lastSpeechTime;
                             
                             if (voipSpeechDetected) {
-                                // Standard comfortable silence timeout for English speech (shows countdown at 2.5s, triggers at 4.5s)
-                                if (silenceMs >= 2500) {
-                                    const pct = Math.min(((silenceMs - 2500) / (VAD_SILENCE_MS - 2500)) * 100, 100);
+                                // Standard comfortable silence timeout for English speech (shows countdown at 3.0s, triggers at 5.5s)
+                                if (silenceMs >= 3000) {
+                                    const pct = Math.min(((silenceMs - 3000) / (VAD_SILENCE_MS - 3000)) * 100, 100);
                                     showSilenceBar(pct);
                                     hideVadBars();
                                 }
@@ -3714,8 +3714,8 @@
                                     return; // stop loop
                                 }
                             } else {
-                                // Cut off after 2.5s of silence if sound was heard but no English words transcribed yet (e.g. non-English speech or quiet thinking)
-                                if (silenceMs >= 2500) {
+                                // Cut off after 5.0s of silence if sound was heard but no English words transcribed yet (handles SpeechRec API network latency gracefully!)
+                                if (silenceMs >= 5000) {
                                     if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
                                         voipMediaRecorder.stop();
                                     }
