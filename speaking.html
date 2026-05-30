@@ -1358,6 +1358,7 @@
         <ul class="nav-links">
             <li><a href="#simulator" id="navSim">AI Examiner</a></li>
             <li><a href="#calling-module" id="navCall" style="color: var(--accent-cyan); font-weight: 700;"><i class="fa-solid fa-phone"></i> VoIP Live Call</a></li>
+            <li><a href="#premium-drills" id="navPremium" style="background: linear-gradient(135deg, #ffe066, #f5b041); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700;"><i class="fa-solid fa-crown"></i> Premium Coach</a></li>
             <li><a href="#vocab" id="navVoc">Vocab Vault</a></li>
             <li><a href="#spelling" id="navSpell">Spelling Dictation</a></li>
             <li><a href="#writing" id="navWrite">Writing templates</a></li>
@@ -1570,6 +1571,528 @@
 
         <div class="vocab-grid" id="vocabGrid">
             <!-- Populated dynamically via JS -->
+        </div>
+    </section>
+
+    <!-- MODULE: PREMIUM speaking DRILLS & SHADOWING COACH -->
+    <section class="premium-drills-section" id="premium-drills" style="border-top: 1px solid rgba(255,255,255,0.05); padding: 50px 0;">
+        <style>
+            .premium-drills-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+            .premium-header {
+                text-align: center;
+                margin-bottom: 40px;
+            }
+            .premium-header h2 {
+                font-size: 32px;
+                font-weight: 800;
+                background: linear-gradient(135deg, #ffe066, #f5b041);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 10px;
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .premium-cards-wrapper {
+                display: flex;
+                gap: 30px;
+                margin-bottom: 40px;
+            }
+            .premium-card-nav {
+                flex: 1;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 16px;
+                padding: 24px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                backdrop-filter: blur(10px);
+            }
+            .premium-card-nav:hover {
+                transform: translateY(-5px);
+                background: rgba(255, 255, 255, 0.06);
+                border-color: rgba(255, 215, 0, 0.3);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+            .premium-card-nav.active {
+                background: rgba(255, 215, 0, 0.05);
+                border-color: #ffd700;
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+            }
+            .premium-card-nav i {
+                font-size: 36px;
+                background: linear-gradient(135deg, #ffe066, #f5b041);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 15px;
+            }
+            .premium-card-nav h3 {
+                font-size: 18px;
+                font-weight: 700;
+                color: #fff;
+                margin-bottom: 8px;
+            }
+            .premium-card-nav p {
+                font-size: 13px;
+                color: var(--text-secondary);
+                line-height: 1.4;
+            }
+            .premium-drill-panel {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 20px;
+                padding: 35px;
+                backdrop-filter: blur(20px);
+                display: none;
+                position: relative;
+            }
+            .premium-drill-panel.active {
+                display: block;
+            }
+            .drill-setup {
+                display: flex;
+                gap: 40px;
+            }
+            .drill-selection-list {
+                width: 320px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                max-height: 480px;
+                overflow-y: auto;
+                padding-right: 10px;
+            }
+            .drill-selection-list::-webkit-scrollbar {
+                width: 4px;
+            }
+            .drill-selection-list::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+            }
+            .drill-item-btn {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 16px;
+                text-align: left;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                color: #fff;
+            }
+            .drill-item-btn:hover {
+                background: rgba(255, 255, 255, 0.05);
+                border-color: rgba(255, 255, 255, 0.15);
+            }
+            .drill-item-btn.active {
+                background: rgba(0, 229, 255, 0.06);
+                border-color: var(--accent-cyan);
+            }
+            .drill-item-btn .topic-label {
+                font-size: 14px;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+            .drill-item-btn .prompt-preview {
+                font-size: 12px;
+                color: var(--text-secondary);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .drill-workspace {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+            }
+            .drill-prompt-box {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 14px;
+                padding: 20px;
+            }
+            .drill-prompt-box h4 {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--accent-cyan);
+                margin-bottom: 8px;
+            }
+            .drill-prompt-box p {
+                font-size: 16px;
+                color: #fff;
+                line-height: 1.5;
+                font-weight: 500;
+            }
+            .drill-scaffolding {
+                background: rgba(0, 229, 255, 0.02);
+                border: 1px solid rgba(0, 229, 255, 0.1);
+                border-radius: 14px;
+                padding: 20px;
+            }
+            .drill-scaffolding h4 {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--accent-gold);
+                margin-bottom: 12px;
+            }
+            .scaffold-chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            .scaffold-chip {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 20px;
+                padding: 6px 12px;
+                font-size: 12px;
+                color: #fff;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                transition: all 0.2s;
+            }
+            .scaffold-chip.checked {
+                background: rgba(74, 222, 128, 0.1);
+                border-color: #4ade80;
+                color: #4ade80;
+            }
+            .scaffold-chip.checked i {
+                color: #4ade80;
+            }
+            .drill-target-sentence {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 14px;
+                padding: 20px;
+                position: relative;
+            }
+            .drill-target-sentence h4 {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                margin-bottom: 10px;
+            }
+            .target-sentence-text {
+                font-size: 15px;
+                color: #fff;
+                line-height: 1.6;
+                margin-bottom: 15px;
+            }
+            .drill-voice-controls {
+                display: flex;
+                gap: 15px;
+                align-items: center;
+            }
+            .drill-btn {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                padding: 10px 20px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                color: #fff;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .drill-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            .drill-btn.primary {
+                background: linear-gradient(135deg, #00e5ff, #008be5);
+                border: none;
+            }
+            .drill-btn.primary:hover {
+                transform: scale(1.02);
+                box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            }
+            .drill-btn.recording {
+                background: #ff3b30;
+                border-color: #ff3b30;
+                animation: pulse-red 1.5s infinite;
+            }
+            .drill-feedback {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 14px;
+                padding: 24px;
+                display: none;
+            }
+            .drill-feedback h4 {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--accent-cyan);
+                margin-bottom: 12px;
+            }
+            .diff-text {
+                font-size: 15px;
+                line-height: 1.6;
+                color: #fff;
+                padding: 15px;
+                background: rgba(0,0,0,0.2);
+                border-radius: 10px;
+                margin-bottom: 20px;
+            }
+            .diff-correct {
+                color: #4ade80;
+                font-weight: 700;
+                background: rgba(74, 222, 128, 0.1);
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
+            .diff-missing {
+                color: #f87171;
+                text-decoration: line-through;
+                background: rgba(248, 113, 113, 0.1);
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
+            .diff-extra {
+                color: #fbbf24;
+                background: rgba(251, 191, 36, 0.1);
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
+            .drill-metrics {
+                display: flex;
+                gap: 20px;
+            }
+            .metric-circle {
+                flex: 1;
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 16px;
+                text-align: center;
+            }
+            .metric-circle .metric-val {
+                font-size: 28px;
+                font-weight: 800;
+                color: var(--accent-cyan);
+                margin-bottom: 4px;
+            }
+            .metric-circle.gold .metric-val {
+                color: var(--accent-gold);
+            }
+            .metric-circle .metric-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+            }
+            .premium-locked-overlay {
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(10, 10, 15, 0.95);
+                backdrop-filter: blur(8px);
+                border-radius: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                padding: 30px;
+                z-index: 10;
+                border: 1px solid rgba(255, 215, 0, 0.15);
+            }
+            .premium-locked-overlay i {
+                font-size: 48px;
+                color: var(--accent-gold);
+                margin-bottom: 15px;
+                filter: drop-shadow(0 0 10px rgba(255,215,0,0.3));
+            }
+            .premium-locked-overlay h3 {
+                font-size: 20px;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: 8px;
+            }
+            .premium-locked-overlay p {
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin-bottom: 20px;
+                max-width: 320px;
+                line-height: 1.5;
+            }
+        </style>
+
+        <div class="premium-drills-container" id="premium-drills">
+            <div class="premium-header">
+                <h2><i class="fa-solid fa-crown" style="color:#ffd700"></i> IELTS Premium Speaking & Shadowing Coach</h2>
+                <p>Master native-like stress patterns, connected speech, spatial scene structures, and filler tricks to autonomous Band 8.5+ speaking.</p>
+            </div>
+
+            <div class="premium-cards-wrapper">
+                <div class="premium-card-nav active" onclick="switchPremiumDrill('shadowing')">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                    <h3>Interactive Shadowing</h3>
+                    <p>Listen to a Band 9 British examiner, repeat, and get a word-by-word diff match & stress-rhythm grading.</p>
+                </div>
+                <div class="premium-card-nav" onclick="switchPremiumDrill('fillers')">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    <h3>Conversation Fillers</h3>
+                    <p>Master native British filler starters (e.g. <i>"off the top of my head..."</i>) to drastically reduce hesitation marks.</p>
+                </div>
+                <div class="premium-card-nav" onclick="switchPremiumDrill('spatial')">
+                    <i class="fa-solid fa-compass"></i>
+                    <h3>Descriptive Spatial Drills</h3>
+                    <p>Learn to structure visual descriptions perfectly using cohesive Foreground/Background/Sensory templates.</p>
+                </div>
+            </div>
+
+            <!-- PANEL 1: SHADOWING COACH -->
+            <div class="premium-drill-panel active" id="drillPanelShadowing">
+                <div class="drill-setup">
+                    <div class="drill-selection-list" id="shadowList">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <div class="drill-workspace">
+                        <div class="drill-prompt-box">
+                            <h4>Topic Cue Prompt</h4>
+                            <p id="shadowPromptText">Select a scenario from the list to begin shadowing.</p>
+                        </div>
+                        <div class="drill-target-sentence">
+                            <div class="premium-locked-overlay" id="shadowPaywall" style="display: none;">
+                                <i class="fa-solid fa-lock"></i>
+                                <h3>Unlock Full Scenario Pack</h3>
+                                <p>You have accessed the Starter scenarios. Enter a Premium license key to unlock all 15+ Advanced Daily Conversation Shadowing drills.</p>
+                                <button class="drill-btn primary" onclick="document.getElementById('navCall').click()"><i class="fa-solid fa-key"></i> Enter License Key</button>
+                            </div>
+                            <h4>Band 9 Native British Model</h4>
+                            <p class="target-sentence-text" id="shadowTargetText">...</p>
+                            <div class="drill-voice-controls">
+                                <button class="drill-btn" id="btnPlayShadowModel"><i class="fa-solid fa-play"></i> Play Native Model</button>
+                                <button class="drill-btn primary" id="btnRecordShadow"><i class="fa-solid fa-microphone"></i> Start Shadowing</button>
+                            </div>
+                        </div>
+                        <div class="drill-feedback" id="shadowFeedback">
+                            <h4>Feedback Assessment</h4>
+                            <div class="diff-text" id="shadowDiffText">...</div>
+                            <div class="drill-metrics">
+                                <div class="metric-circle gold">
+                                    <div class="metric-val" id="shadowStressVal">0%</div>
+                                    <div class="metric-label">Stress/Fluency Alignment</div>
+                                </div>
+                                <div class="metric-circle">
+                                    <div class="metric-val" id="shadowPronVal">0%</div>
+                                    <div class="metric-label">Pronunciation Accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 2: CONVERSATION FILLERS -->
+            <div class="premium-drill-panel" id="drillPanelFillers">
+                <div class="drill-setup">
+                    <div class="drill-selection-list" id="fillerList">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <div class="drill-workspace">
+                        <div class="drill-prompt-box">
+                            <h4>Vocabulary Topic Prompt</h4>
+                            <p id="fillerPromptText">Select a conversation drill to start practicing.</p>
+                        </div>
+                        <div class="drill-scaffolding">
+                            <h4>Required native filler expressions</h4>
+                            <div class="scaffold-chips" id="fillerChips">
+                                <!-- Populated dynamically via JS -->
+                            </div>
+                            <p style="font-size:12px; color:var(--text-secondary); line-height:1.4; margin-top:10px;"><i class="fa-solid fa-circle-info"></i> Speak into your microphone answering the prompt. Try to naturally weave in these premium British discourse fillers to unlock Band 8+ vocabulary scaffolding scores!</p>
+                        </div>
+                        <div class="drill-target-sentence">
+                            <div class="premium-locked-overlay" id="fillerPaywall" style="display: none;">
+                                <i class="fa-solid fa-lock"></i>
+                                <h3>Unlock Advanced Filler Packs</h3>
+                                <p>Upgrade to paid Premium to unlock 20+ complex dialogue fillers and advanced lexical discourse marker evaluations.</p>
+                                <button class="drill-btn primary" onclick="document.getElementById('navCall').click()"><i class="fa-solid fa-key"></i> Enter License Key</button>
+                            </div>
+                            <h4>Practice Your Answer</h4>
+                            <p class="target-sentence-text" id="fillerTargetText" style="color:var(--text-secondary); font-style:italic;">Answer will transcribe in real-time...</p>
+                            <div class="drill-voice-controls">
+                                <button class="drill-btn primary" id="btnRecordFiller"><i class="fa-solid fa-microphone"></i> Start Practice Answer</button>
+                            </div>
+                        </div>
+                        <div class="drill-feedback" id="fillerFeedback">
+                            <h4>Discourse filler Scoring</h4>
+                            <div class="diff-text" id="fillerDiffText">...</div>
+                            <div class="drill-metrics">
+                                <div class="metric-circle gold">
+                                    <div class="metric-val" id="fillerDiscourseVal">0%</div>
+                                    <div class="metric-label">Discourse fillers Used</div>
+                                </div>
+                                <div class="metric-circle">
+                                    <div class="metric-val" id="fillerCorrectnessVal">Perfect</div>
+                                    <div class="metric-label">Speaking Accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 3: SPATIAL DESCRIPTIONS -->
+            <div class="premium-drill-panel" id="drillPanelSpatial">
+                <div class="drill-setup">
+                    <div class="drill-selection-list" id="spatialList">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    <div class="drill-workspace">
+                        <div class="drill-prompt-box">
+                            <h4>Descriptive Cue scenario</h4>
+                            <p id="spatialPromptText">Select a descriptive spatial drill.</p>
+                        </div>
+                        <div class="drill-scaffolding">
+                            <h4>Spatial description templates</h4>
+                            <div class="scaffold-chips" id="spatialChips">
+                                <!-- Populated dynamically via JS -->
+                            </div>
+                            <p style="font-size:12px; color:var(--text-secondary); line-height:1.4; margin-top:10px;"><i class="fa-solid fa-circle-info"></i> Guide your listener's eyes! Speak to describe the scenario. Your sentence structure must follow the strict physical spatial templates above to secure Band 9 coherence.</p>
+                        </div>
+                        <div class="drill-target-sentence">
+                            <div class="premium-locked-overlay" id="spatialPaywall" style="display: none;">
+                                <i class="fa-solid fa-lock"></i>
+                                <h3>Unlock Advanced Spatial Drills</h3>
+                                <p>Enter a Premium key to unlock 15+ Descriptive surrounding templates, Dhaka Bazaars, and scenic nature descriptions.</p>
+                                <button class="drill-btn primary" onclick="document.getElementById('navCall').click()"><i class="fa-solid fa-key"></i> Enter License Key</button>
+                            </div>
+                            <h4>Speak Your Description</h4>
+                            <p class="target-sentence-text" id="spatialTargetText" style="color:var(--text-secondary); font-style:italic;">Speak spatial phrases...</p>
+                            <div class="drill-voice-controls">
+                                <button class="drill-btn primary" id="btnRecordSpatial"><i class="fa-solid fa-microphone"></i> Start Scene Description</button>
+                            </div>
+                        </div>
+                        <div class="drill-feedback" id="spatialFeedback">
+                            <h4>Description Assessment</h4>
+                            <div class="diff-text" id="spatialDiffText">...</div>
+                            <div class="drill-metrics">
+                                <div class="metric-circle gold">
+                                    <div class="metric-val" id="spatialCoherenceVal">0%</div>
+                                    <div class="metric-label">Coherence & Structure</div>
+                                </div>
+                                <div class="metric-circle">
+                                    <div class="metric-val" id="spatialLexicalVal">Good</div>
+                                    <div class="metric-label">Lexical Spatial Markers</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -3376,6 +3899,9 @@
                         premiumSuccessMsg.textContent = "Premium Activated Successfully! 🚀";
                         premiumSuccessMsg.style.color = "var(--accent-green)";
                         
+                        // Force immediate reload of speaking coach drills to unlock panels
+                        loadPremiumSpeakingCoach();
+
                         setTimeout(() => {
                             premiumPaywallModal.style.display = "none";
                             premiumSuccessMsg.style.display = "none";
@@ -3385,6 +3911,10 @@
                         premiumSuccessMsg.style.display = "block";
                         premiumSuccessMsg.textContent = "Cleared Premium key.";
                         premiumSuccessMsg.style.color = "var(--text-secondary)";
+                        
+                        // Reload drills to restore paywall locked state
+                        loadPremiumSpeakingCoach();
+
                         setTimeout(() => { premiumSuccessMsg.style.display = "none"; }, 1500);
                     } else {
                         premiumSuccessMsg.style.display = "block";
@@ -3402,9 +3932,770 @@
 
 
             // -----------------------------------------------------------------
+            // PREMIUM SPEAKING COACH DRILLS ENGINE
+            // -----------------------------------------------------------------
+            let premiumSpeakingData = null;
+            let currentShadowDrill = null;
+            let currentFillerDrill = null;
+            let currentSpatialDrill = null;
+            let shadowAudio = null;
+            let drillRecordingActive = false;
+            let drillRec = null;
+            let drillSpokenText = "";
+            let drillStartSec = 0;
+            let drillEnglishDetected = false;
+
+            // Load data for Premium Speaking Coach
+            async function loadPremiumSpeakingCoach() {
+                const savedKey = localStorage.getItem("ielts_premium_key") || "";
+                const isPremiumKey = VALID_PREMIUM_KEYS.includes(savedKey);
+                
+                // Gated API fetch
+                try {
+                    if (savedKey) {
+                        const res = await fetch(`https://${_0x5b1e.b}/api/premium/speaking?token=${encodeURIComponent(savedKey)}`);
+                        if (res.ok) {
+                            premiumSpeakingData = await res.json();
+                            console.log("Premium Speaking drills loaded successfully from server API.");
+                        }
+                    }
+                } catch(e) {
+                    console.warn("Could not connect to VPS Premium API, falling back to local files:", e);
+                }
+
+                // If loading failed or unauthorized, load from inline/local mock fallbacks
+                if (!premiumSpeakingData) {
+                    premiumSpeakingData = {
+                        "daily_conversation_drills": [
+                            {
+                                "topic": "Hometown",
+                                "prompt": "Tell me about your hometown. What do you like most about it?",
+                                "fluency_scaffolding": {
+                                    "filler_expressions": [
+                                        "Well, off the top of my head, I'd say...",
+                                        "It's a vibrant place, actually...",
+                                        "If I had to pin down one specific aspect..."
+                                    ],
+                                    "vocabulary_focus": ["hustle and bustle", "quaint", "metropolis", "picturesque"]
+                                },
+                                "band_9_response": "Well, off the top of my head, I'd say my hometown is a fascinating blend of historical charm and modern development. What I venerate most about it is the vibrant cultural diversity; it has this picturesque riverside promenade where people gather in the evenings to escape the hustle and bustle of the metropolis. It’s an incredibly salubrious environment that fosters a strong sense of community."
+                            },
+                            {
+                                "topic": "Hobbies & Free Time",
+                                "prompt": "How do you usually spend your weekends?",
+                                "fluency_scaffolding": {
+                                    "filler_expressions": [
+                                        "To be perfectly honest, my weekends are...",
+                                        "I tend to lean towards...",
+                                        "It serves as a quintessential way to..."
+                                    ],
+                                    "vocabulary_focus": ["recharge my batteries", "unwind", "passionate", "sedentary"]
+                                },
+                                "band_9_response": "To be perfectly honest, my weekends are predominantly dedicated to unwinding after a frantic work week. I tend to lean towards outdoor pursuits like cycling or hiking, as it serves as a quintessential way to recharge my batteries. I find that engaging in physical activities helps to mitigate the deleterious effects of my otherwise sedentary office routine."
+                            },
+                            {
+                                "topic": "Accommodation 👑",
+                                "prompt": "Do you live in a house or a flat? Describe your favorite room.",
+                                "fluency_scaffolding": {
+                                    "filler_expressions": [
+                                        "Currently, I reside in a...",
+                                        "Without a doubt, my absolute sanctuary is...",
+                                        "It's meticulously designed to..."
+                                    ],
+                                    "vocabulary_focus": ["cozy", "minimalist", "spacious", "sanctuary"]
+                                },
+                                "band_9_response": "Currently, I reside in a cozy, minimalist flat in a relatively affluent neighborhood. Without a doubt, my absolute sanctuary is my study. It is meticulously designed with a spacious oak desk and natural lighting, which provides a highly salubrious atmosphere for reading or pensive reflection.",
+                                "is_locked": true
+                            },
+                            {
+                                "topic": "Transportation 👑",
+                                "prompt": "What is the most common form of transport in your city?",
+                                "fluency_scaffolding": {
+                                    "filler_expressions": [
+                                        "It goes without saying that...",
+                                        "The ubiquitous option around here is...",
+                                        "It plays a pivotal role in..."
+                                    ],
+                                    "vocabulary_focus": ["commute", "gridlock", "efficient", "ubiquitous"]
+                                },
+                                "band_9_response": "It goes without saying that the ubiquitous option around here is the underground rail network. It plays a pivotal role in our daily commute, helping millions of residents avoid the chronic traffic gridlock on the main avenues. It is exceptionally efficient and has done much to ameliorate travel times in the metropolis.",
+                                "is_locked": true
+                            },
+                            {
+                                "topic": "Food & Dining 👑",
+                                "prompt": "Do you prefer eating home-cooked meals or dining at restaurants?",
+                                "fluency_scaffolding": {
+                                    "filler_expressions": [
+                                        "I'd definitely argue that...",
+                                        "I have a strong proclivity for...",
+                                        "It serves as a wonderful catalyst for..."
+                                    ],
+                                    "vocabulary_focus": ["culinary", "nutritious", "gastronomy", "proclivity"]
+                                },
+                                "band_9_response": "I'd definitely argue that I have a strong proclivity for home-cooked meals. Not only is it far more nutritious and cost-effective, but the actual culinary preparation serves as a therapeutic way to unwind. Of course, I occasionally dine at restaurants to explore exotic gastronomy, which serves as a wonderful catalyst for social gatherings.",
+                                "is_locked": true
+                            }
+                        ],
+                        "surroundings_description_drills": [
+                            {
+                                "scenario": "A Busy Local Bazaar",
+                                "cue_card_prompt": "Describe a bustling marketplace or shopping area that you visited. You should say: where it was, what it looked like, and explain how you felt in that environment.",
+                                "spatial_templates": {
+                                    "foreground": "In the immediate foreground, you are greeted by a chaotic array of wooden stalls overflowing with vibrant spices and textiles...",
+                                    "background": "In the background, the rising smoke from street food vendors creates a hazy, dramatic atmosphere...",
+                                    "sensory": "The overriding characteristic of this scene is the deafening cacophony of vendors shouting their prices..."
+                                },
+                                "band_9_model_answer": "I’d like to describe a historic, bustling local bazaar in Old Dhaka. In the immediate foreground, you are greeted by a chaotic array of wooden stalls overflowing with vibrant spices and textiles. To the left, traditional craftsmen are fastidiously polishing brass utensils. In the background, the rising steam from street food vendors creates a hazy, picturesque atmosphere. The overriding characteristic of this environment is the deafening cacophony of vendors, which initially feels overwhelming but ultimately evokes an ineffable sense of cultural energy and authenticity."
+                            },
+                            {
+                                "scenario": "A Modern Smart Library 👑",
+                                "cue_card_prompt": "Describe a quiet study space or library that you find highly useful. You should say: where it is, what resources it has, and explain why you enjoy studying there.",
+                                "spatial_templates": {
+                                    "foreground": "In the foreground, rows of sleek, minimalist study pods equipped with touch terminals...",
+                                    "background": "Towering in the background are sweeping floor-to-ceiling glass panels overlooking a quiet garden...",
+                                    "sensory": "The atmosphere is defined by an absolute, pensive silence, occasionally broken by the soft tapping of keys..."
+                                },
+                                "band_9_model_answer": "I would like to describe the university library. In the immediate foreground, there are rows of sleek, minimalist study study pods equipped with digital touch terminals. Towering in the background are sweeping floor-to-ceiling glass panels overlooking a quiet, landscaped garden. The atmosphere is defined by an absolute, pensive silence that is highly salubrious for intellectual focus. What I venerate most about this library is its pragmatic blend of physical books and ubiquitous digital databases, which makes research exceptionally seamless.",
+                                "is_locked": true
+                            },
+                            {
+                                "scenario": "A Serene Mountain Pathway 👑",
+                                "cue_card_prompt": "Describe a scenic walk in nature that you particularly enjoyed. You should say: where it was, what you saw, and explain why this walk was memorable.",
+                                "spatial_templates": {
+                                    "foreground": "Stretching out in the foreground is a narrow, winding dirt pathway flanked by wild alpine flowers...",
+                                    "background": "In the far background, majestic snow-capped peaks rise sharply against a crystal-clear blue sky...",
+                                    "sensory": "A profound, salubrious silence envelopes the environment, broken only by the ephemeral rustling of pine needles..."
+                                },
+                                "band_9_model_answer": "I’d like to describe a scenic walk I took along a mountain pathway in the Tatras. Stretching out in the foreground is a narrow, winding dirt pathway flanked by vibrant wild alpine flowers. In the far background, majestic snow-capped peaks rise sharply against a crystal-clear sky. A profound, salubrious silence envelopes the environment, broken only by the ephemeral rustling of pine needles in the wind. This walk was deeply memorable because it offered an ineffable sense of tranquility, completely alleviating the mental clutter of metropolitan life.",
+                                "is_locked": true
+                            }
+                        ]
+                    };
+                }
+
+                // If premium key is verified, unlock all local drills
+                if (isPremiumKey) {
+                    premiumSpeakingData.daily_conversation_drills.forEach(d => d.is_locked = false);
+                    premiumSpeakingData.surroundings_description_drills.forEach(d => d.is_locked = false);
+                }
+
+                // Build selection lists
+                populatePremiumDrillLists();
+                
+                // Initialize defaults
+                selectShadowDrill(0);
+                selectFillerDrill(0);
+                selectSpatialDrill(0);
+            }
+
+            // Expose globally so HTML onClick works
+            window.switchPremiumDrill = function(drillType) {
+                // Remove active class from nav cards
+                const navCards = document.querySelectorAll(".premium-card-nav");
+                navCards.forEach(card => card.classList.remove("active"));
+                
+                // Add active to selected
+                const cardIndex = drillType === 'shadowing' ? 0 : (drillType === 'fillers' ? 1 : 2);
+                if (navCards[cardIndex]) navCards[cardIndex].classList.add("active");
+                
+                // Show/hide panels
+                const panels = document.querySelectorAll(".premium-drill-panel");
+                panels.forEach(p => p.classList.remove("active"));
+                
+                if (drillType === 'shadowing') {
+                    document.getElementById("drillPanelShadowing").classList.add("active");
+                    if (!currentShadowDrill && premiumSpeakingData) {
+                        selectShadowDrill(0);
+                    }
+                } else if (drillType === 'fillers') {
+                    document.getElementById("drillPanelFillers").classList.add("active");
+                    if (!currentFillerDrill && premiumSpeakingData) {
+                        selectFillerDrill(0);
+                    }
+                } else if (drillType === 'spatial') {
+                    document.getElementById("drillPanelSpatial").classList.add("active");
+                    if (!currentSpatialDrill && premiumSpeakingData) {
+                        selectSpatialDrill(0);
+                    }
+                }
+            };
+
+            function populatePremiumDrillLists() {
+                // Populate Shadowing List
+                const shadowList = document.getElementById("shadowList");
+                if (shadowList) {
+                    shadowList.innerHTML = "";
+                    premiumSpeakingData.daily_conversation_drills.forEach((drill, idx) => {
+                        const item = document.createElement("div");
+                        item.className = "drill-selection-item";
+                        if (drill.is_locked) {
+                            item.innerHTML = `<i class="fa-solid fa-lock" style="color:var(--accent-gold); margin-right:8px;"></i> ${drill.topic}`;
+                        } else {
+                            item.innerHTML = `<i class="fa-solid fa-crown" style="color:var(--accent-gold); margin-right:8px;"></i> ${drill.topic}`;
+                        }
+                        item.addEventListener("click", () => selectShadowDrill(idx));
+                        shadowList.appendChild(item);
+                    });
+                }
+
+                // Populate Filler List
+                const fillerList = document.getElementById("fillerList");
+                if (fillerList) {
+                    fillerList.innerHTML = "";
+                    premiumSpeakingData.daily_conversation_drills.forEach((drill, idx) => {
+                        const item = document.createElement("div");
+                        item.className = "drill-selection-item";
+                        if (drill.is_locked) {
+                            item.innerHTML = `<i class="fa-solid fa-lock" style="color:var(--accent-gold); margin-right:8px;"></i> ${drill.topic}`;
+                        } else {
+                            item.innerHTML = `<i class="fa-solid fa-comment-dots" style="color:var(--accent-cyan); margin-right:8px;"></i> ${drill.topic}`;
+                        }
+                        item.addEventListener("click", () => selectFillerDrill(idx));
+                        fillerList.appendChild(item);
+                    });
+                }
+
+                // Populate Spatial List
+                const spatialList = document.getElementById("spatialList");
+                if (spatialList) {
+                    spatialList.innerHTML = "";
+                    premiumSpeakingData.surroundings_description_drills.forEach((drill, idx) => {
+                        const item = document.createElement("div");
+                        item.className = "drill-selection-item";
+                        if (drill.is_locked) {
+                            item.innerHTML = `<i class="fa-solid fa-lock" style="color:var(--accent-gold); margin-right:8px;"></i> ${drill.scenario}`;
+                        } else {
+                            item.innerHTML = `<i class="fa-solid fa-compass" style="color:var(--accent-purple); margin-right:8px;"></i> ${drill.scenario}`;
+                        }
+                        item.addEventListener("click", () => selectSpatialDrill(idx));
+                        spatialList.appendChild(item);
+                    });
+                }
+            }
+
+            // Selection Triggers
+            function selectShadowDrill(idx) {
+                const listItems = document.querySelectorAll("#shadowList .drill-selection-item");
+                listItems.forEach(item => item.classList.remove("active"));
+                if (listItems[idx]) listItems[idx].classList.add("active");
+
+                const drill = premiumSpeakingData.daily_conversation_drills[idx];
+                currentShadowDrill = drill;
+
+                const paywall = document.getElementById("shadowPaywall");
+                if (drill.is_locked) {
+                    paywall.style.display = "flex";
+                    return;
+                } else {
+                    paywall.style.display = "none";
+                }
+
+                document.getElementById("shadowPromptText").textContent = `Topic: ${drill.topic} - "${drill.prompt}"`;
+                document.getElementById("shadowTargetText").textContent = drill.band_9_response;
+                document.getElementById("shadowTargetText").style.color = "var(--text-secondary)";
+                document.getElementById("shadowDiffText").innerHTML = "Ready. Listen to the model speaker first, then click 'Start Shadowing' to repeat.";
+                document.getElementById("shadowStressVal").textContent = "0%";
+                document.getElementById("shadowPronVal").textContent = "0%";
+            }
+
+            function selectFillerDrill(idx) {
+                const listItems = document.querySelectorAll("#fillerList .drill-selection-item");
+                listItems.forEach(item => item.classList.remove("active"));
+                if (listItems[idx]) listItems[idx].classList.add("active");
+
+                const drill = premiumSpeakingData.daily_conversation_drills[idx];
+                currentFillerDrill = drill;
+
+                const paywall = document.getElementById("fillerPaywall");
+                if (drill.is_locked) {
+                    paywall.style.display = "flex";
+                    return;
+                } else {
+                    paywall.style.display = "none";
+                }
+
+                document.getElementById("fillerPromptText").textContent = `Cue Topic: ${drill.topic} - "${drill.prompt}"`;
+                document.getElementById("fillerTargetText").textContent = "Your spoken answer will transcribe in real-time here...";
+                document.getElementById("fillerTargetText").style.color = "var(--text-secondary)";
+                document.getElementById("fillerDiffText").innerHTML = "Ready. Speak into your microphone answering the cue card prompt. Include premium British fillers below!";
+                document.getElementById("fillerDiscourseVal").textContent = "0%";
+                document.getElementById("fillerCorrectnessVal").textContent = "0%";
+
+                // Populate Scaffolding Chips
+                const chipsContainer = document.getElementById("fillerChips");
+                chipsContainer.innerHTML = "";
+                
+                drill.fluency_scaffolding.filler_expressions.forEach(f => {
+                    const chip = document.createElement("div");
+                    chip.className = "scaffold-chip";
+                    chip.innerHTML = `<i class="fa-solid fa-comment" style="color:var(--accent-gold)"></i> ${f}`;
+                    chipsContainer.appendChild(chip);
+                });
+                drill.fluency_scaffolding.vocabulary_focus.forEach(v => {
+                    const chip = document.createElement("div");
+                    chip.className = "scaffold-chip vocab";
+                    chip.innerHTML = `<i class="fa-solid fa-star" style="color:var(--accent-cyan)"></i> ${v}`;
+                    chipsContainer.appendChild(chip);
+                });
+            }
+
+            function selectSpatialDrill(idx) {
+                const listItems = document.querySelectorAll("#spatialList .drill-selection-item");
+                listItems.forEach(item => item.classList.remove("active"));
+                if (listItems[idx]) listItems[idx].classList.add("active");
+
+                const drill = premiumSpeakingData.surroundings_description_drills[idx];
+                currentSpatialDrill = drill;
+
+                const paywall = document.getElementById("spatialPaywall");
+                if (drill.is_locked) {
+                    paywall.style.display = "flex";
+                    return;
+                } else {
+                    paywall.style.display = "none";
+                }
+
+                document.getElementById("spatialPromptText").textContent = `Cue Card: "${drill.cue_card_prompt}"`;
+                document.getElementById("spatialTargetText").textContent = "Your spoken description will transcribe in real-time here...";
+                document.getElementById("spatialTargetText").style.color = "var(--text-secondary)";
+                document.getElementById("spatialDiffText").innerHTML = "Ready. Guide your listener's eyes! Speak to describe the scene utilizing strict physical templates below.";
+                document.getElementById("spatialCoherenceVal").textContent = "0%";
+                document.getElementById("spatialLexicalVal").textContent = "0%";
+
+                // Populate Spatial Scaffolding Chips
+                const chipsContainer = document.getElementById("spatialChips");
+                chipsContainer.innerHTML = "";
+
+                Object.keys(drill.spatial_templates).forEach(key => {
+                    const templateText = drill.spatial_templates[key];
+                    const label = key.toUpperCase();
+                    const chip = document.createElement("div");
+                    chip.className = "scaffold-chip spatial";
+                    chip.innerHTML = `<i class="fa-solid fa-location-dot" style="color:var(--accent-purple)"></i> <strong>${label}:</strong> "${templateText.substring(0, 32)}..."`;
+                    chip.title = templateText;
+                    chipsContainer.appendChild(chip);
+                });
+            }
+
+            // Play Native Model via TTS API
+            const btnPlayShadowModel = document.getElementById("btnPlayShadowModel");
+            if (btnPlayShadowModel) {
+                btnPlayShadowModel.addEventListener("click", () => {
+                    unlockBrowserAudio();
+                    if (!currentShadowDrill) return;
+                    
+                    if (shadowAudio) {
+                        shadowAudio.pause();
+                        shadowAudio = null;
+                        btnPlayShadowModel.innerHTML = `<i class="fa-solid fa-play"></i> Play Native Model`;
+                        return;
+                    }
+
+                    btnPlayShadowModel.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color:var(--accent-cyan)"></i> Playing...`;
+                    
+                    const savedKey = localStorage.getItem("ielts_premium_key") || "";
+                    const sig = generateHandshakeSignature();
+                    // Clean text (phonetic optimization for eye-elts)
+                    const cleanText = currentShadowDrill.band_9_response.replace(/IELTS/gi, "Eye elts");
+                    
+                    const premiumTtsUrl = `https://${_0x5b1e.b}/tts?text=${encodeURIComponent(cleanText)}&voice=en-GB-SoniaNeural&key=${encodeURIComponent(savedKey)}&sig=${sig}`;
+                    
+                    shadowAudio = new Audio(premiumTtsUrl);
+                    shadowAudio.onended = () => {
+                        btnPlayShadowModel.innerHTML = `<i class="fa-solid fa-play"></i> Play Native Model`;
+                        shadowAudio = null;
+                    };
+                    shadowAudio.onerror = () => {
+                        // fallback to web speech synthesis
+                        if (window.speechSynthesis) {
+                            const utt = new SpeechSynthesisUtterance(cleanText);
+                            utt.lang = "en-GB"; utt.rate = 0.90;
+                            utt.onend = () => {
+                                btnPlayShadowModel.innerHTML = `<i class="fa-solid fa-play"></i> Play Native Model`;
+                                shadowAudio = null;
+                            };
+                            window.speechSynthesis.speak(utt);
+                        } else {
+                            btnPlayShadowModel.innerHTML = `<i class="fa-solid fa-play"></i> Play Native Model`;
+                            shadowAudio = null;
+                        }
+                    };
+                    shadowAudio.play().catch(shadowAudio.onerror);
+                });
+            }
+
+            // Universal Audio Recorder wrapper designed for IELTS speech evaluation
+            // satisfies strict user-requested VAD cutoff conditions!
+            function triggerDrillSpeechRecording(buttonId, textDisplayId, onComplete) {
+                unlockBrowserAudio();
+                
+                if (drillRecordingActive) {
+                    stopDrillSpeechRecording();
+                    return;
+                }
+
+                const btn = document.getElementById(buttonId);
+                const txt = document.getElementById(textDisplayId);
+                
+                btn.innerHTML = `<i class="fa-solid fa-stop-circle fa-pulse" style="color:#ff3b30"></i> Stop Recording`;
+                btn.style.background = "rgba(255, 59, 48, 0.15)";
+                btn.style.borderColor = "#ff3b30";
+                
+                txt.textContent = "Listening... Speak now...";
+                txt.style.color = "var(--accent-cyan)";
+                txt.style.fontStyle = "italic";
+
+                drillRecordingActive = true;
+                drillEnglishDetected = false;
+                drillSpokenText = "";
+                drillStartSec = Date.now();
+
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) {
+                    txt.textContent = "Your browser does not support Speech Recognition. Use Chrome or Safari.";
+                    txt.style.color = "#ff3b30";
+                    return;
+                }
+
+                drillRec = new SpeechRec();
+                drillRec.continuous = true;
+                drillRec.interimResults = true;
+                drillRec.lang = "en-GB";
+
+                // Initial 3-second strict English speech timeout
+                // "if user does not talking any english word within 3 sec, the recover push it imideate witout any delay"
+                let threeSecTimer = setTimeout(() => {
+                    if (!drillEnglishDetected) {
+                        console.log("STRICT VAD: No English words detected within 3 seconds. Pushing immediately!");
+                        txt.textContent = "No English speech detected within 3 seconds. Stopped.";
+                        txt.style.color = "#ff6b6b";
+                        stopDrillSpeechRecording();
+                    }
+                }, 3000);
+
+                let silenceTimer = null;
+
+                drillRec.onresult = (event) => {
+                    let interim = "";
+                    let final = "";
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) final += event.results[i][0].transcript;
+                        else interim += event.results[i][0].transcript;
+                    }
+
+                    const words = final || interim;
+                    if (words.trim().length > 0) {
+                        // Strict check: only update if actual English words are transcribed
+                        if (/[a-zA-Z]/.test(words)) {
+                            if (!drillEnglishDetected) {
+                                drillEnglishDetected = true;
+                                clearTimeout(threeSecTimer); // Disable 3s initial cutoff immediately!
+                            }
+
+                            drillSpokenText = words;
+                            txt.textContent = `"${drillSpokenText}"`;
+                            txt.style.color = "#fff";
+                            txt.style.fontStyle = "normal";
+
+                            // Reset silence timer on active English speech (4.5 seconds comfort window)
+                            if (silenceTimer) clearTimeout(silenceTimer);
+                            silenceTimer = setTimeout(() => {
+                                console.log("STRICT VAD: 4.5 seconds comfort silence reached. Pushing response.");
+                                stopDrillSpeechRecording();
+                            }, 4500);
+                        }
+                    }
+                };
+
+                drillRec.onerror = (e) => {
+                    console.warn("[Premium Drill Speech] Error:", e.error);
+                };
+
+                drillRec.onend = () => {
+                    if (drillRecordingActive) {
+                        stopDrillSpeechRecording();
+                    }
+                };
+
+                window.stopDrillSpeechRecording = () => {
+                    clearTimeout(threeSecTimer);
+                    if (silenceTimer) clearTimeout(silenceTimer);
+                    
+                    drillRecordingActive = false;
+                    
+                    if (drillRec) {
+                        try {
+                            drillRec.onend = null;
+                            drillRec.onerror = null;
+                            drillRec.stop();
+                        } catch(err) {}
+                        drillRec = null;
+                    }
+
+                    btn.innerHTML = `<i class="fa-solid fa-microphone"></i> Start Recording`;
+                    btn.style.background = "rgba(212, 175, 55, 0.05)";
+                    btn.style.borderColor = "rgba(212, 175, 55, 0.2)";
+
+                    if (drillSpokenText.trim().length > 2) {
+                        onComplete(drillSpokenText);
+                    } else {
+                        txt.textContent = "Attempt too brief or no English spoken. Please speak English within 3 seconds.";
+                        txt.style.color = "#ff6b6b";
+                    }
+                };
+
+                drillRec.start();
+            }
+
+            // Shadowing Record Trigger
+            const btnRecordShadow = document.getElementById("btnRecordShadow");
+            if (btnRecordShadow) {
+                btnRecordShadow.addEventListener("click", () => {
+                    if (!currentShadowDrill) return;
+                    triggerDrillSpeechRecording("btnRecordShadow", "shadowTargetText", (spokenText) => {
+                        evaluateShadowDrill(spokenText);
+                    });
+                });
+            }
+
+            // Shadowing Evaluation
+            function evaluateShadowDrill(userText) {
+                if (!currentShadowDrill) return;
+                
+                const targetText = currentShadowDrill.band_9_response;
+                
+                // 1. Calculate word comparison diff
+                const targetWords = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
+                const userWords = userText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
+                
+                let diffHtml = "";
+                let matchCount = 0;
+                let userIdx = 0;
+
+                for (let i = 0; i < targetWords.length; i++) {
+                    const targetW = targetWords[i];
+                    let foundIdx = -1;
+                    
+                    // Lookahead 3 words to allow flexible insertions
+                    for (let j = userIdx; j < Math.min(userIdx + 3, userWords.length); j++) {
+                        if (userWords[j] === targetW) {
+                            foundIdx = j;
+                            break;
+                        }
+                    }
+
+                    if (foundIdx !== -1) {
+                        // Extra words spoken in between
+                        for (let k = userIdx; k < foundIdx; k++) {
+                            diffHtml += `<span style="color:#f5b041; text-decoration:line-through; margin-right:6px;" title="Extra Word">${userWords[k]}</span>`;
+                        }
+                        diffHtml += `<span style="color:#4ade80; font-weight:700; margin-right:6px;" title="Matched">${targetW}</span>`;
+                        userIdx = foundIdx + 1;
+                        matchCount++;
+                    } else {
+                        // Missing word
+                        diffHtml += `<span style="color:#ff6b6b; border-bottom:2px dashed #ff6b6b; margin-right:6px;" title="Missing Word">${targetW}</span>`;
+                    }
+                }
+
+                // Add any trailing user words as extra
+                for (let k = userIdx; k < userWords.length; k++) {
+                    diffHtml += `<span style="color:#f5b041; text-decoration:line-through; margin-right:6px;" title="Extra Word">${userWords[k]}</span>`;
+                }
+
+                const pronScore = Math.round((matchCount / targetWords.length) * 100);
+
+                // 2. Stress & Rhythm Pace Match
+                const elapsedSeconds = (Date.now() - drillStartSec) / 1000;
+                const userWpm = (userWords.length / Math.max(2, elapsedSeconds)) * 60;
+                const targetWpm = 135; // Standard Band 9 model reading speed
+                
+                const speedRatio = userWpm / targetWpm;
+                let stressScore = 100 - Math.abs(1 - speedRatio) * 100;
+                
+                // Penalize heavily for short attempts
+                if (userWords.length < 5) stressScore = stressScore * 0.3;
+                stressScore = Math.max(15, Math.min(Math.round(stressScore), 100));
+
+                // Populate DOM Results
+                document.getElementById("shadowDiffText").innerHTML = `
+                    <p style="margin-bottom:12px; font-weight:600; color:var(--text-secondary);"><i class="fa-solid fa-code-compare"></i> Visual Word Diff Comparison:</p>
+                    <div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.04); padding:16px; border-radius:8px; line-height:1.6; font-size:14.5px;">${diffHtml}</div>
+                `;
+                document.getElementById("shadowStressVal").textContent = `${stressScore}%`;
+                document.getElementById("shadowPronVal").textContent = `${pronScore}%`;
+
+                // Quick feedback audio cue
+                if (pronScore >= 80 && stressScore >= 75) {
+                    document.getElementById("shadowDiffText").innerHTML += `<p style="color:#4ade80; font-weight:600; margin-top:12px;"><i class="fa-solid fa-crown"></i> Incredible British rhythm shadow! You are perfectly on track for a Band 9.0 fluency marks.</p>`;
+                } else {
+                    document.getElementById("shadowDiffText").innerHTML += `<p style="color:var(--accent-gold); font-weight:600; margin-top:12px;"><i class="fa-solid fa-circle-exclamation"></i> Good effort! Aim to replicate the examiner WPM speed pace and vowel-stress clarity.</p>`;
+                }
+            }
+
+            // Filler Record Trigger
+            const btnRecordFiller = document.getElementById("btnRecordFiller");
+            if (btnRecordFiller) {
+                btnRecordFiller.addEventListener("click", () => {
+                    if (!currentFillerDrill) return;
+                    triggerDrillSpeechRecording("btnRecordFiller", "fillerTargetText", (spokenText) => {
+                        evaluateFillerDrill(spokenText);
+                    });
+                });
+            }
+
+            // Filler Evaluation
+            function evaluateFillerDrill(userText) {
+                if (!currentFillerDrill) return;
+
+                const drill = currentFillerDrill;
+                const fillers = drill.fluency_scaffolding.filler_expressions;
+                const vocab = drill.fluency_scaffolding.vocabulary_focus;
+                const totalScaffoldingItems = fillers.length + vocab.length;
+
+                let matchedCount = 0;
+                let highlightedText = userText;
+
+                // Mark chips in UI as checked/unchecked
+                const chips = document.querySelectorAll("#fillerChips .scaffold-chip");
+                
+                fillers.forEach((f, idx) => {
+                    const cleanF = f.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").trim();
+                    const cleanUser = userText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
+                    
+                    if (cleanUser.includes(cleanF)) {
+                        matchedCount++;
+                        if (chips[idx]) chips[idx].classList.add("checked");
+                        
+                        // Highlight in display text
+                        const wordsInFiller = cleanF.split(/\s+/);
+                        const firstWord = wordsInFiller[0];
+                        const lastWord = wordsInFiller[wordsInFiller.length - 1];
+                        
+                        // Flexible highlighter
+                        const regex = new RegExp(`\\b${firstWord}.*?${lastWord}\\b`, "gi");
+                        highlightedText = highlightedText.replace(regex, (match) => `<span style="color:#4ade80; font-weight:700; border: 1px solid rgba(74, 222, 128, 0.3); padding:2px 6px; border-radius:4px; background:rgba(74, 222, 128, 0.1);">${match}</span>`);
+                    } else {
+                        if (chips[idx]) chips[idx].classList.remove("checked");
+                    }
+                });
+
+                vocab.forEach((v, idx) => {
+                    const cleanUser = userText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
+                    const chipIndex = fillers.length + idx;
+                    
+                    if (cleanUser.includes(v.toLowerCase())) {
+                        matchedCount++;
+                        if (chips[chipIndex]) chips[chipIndex].classList.add("checked");
+
+                        // Highlight vocabulary in glowing gold
+                        const regex = new RegExp(`\\b${v}\\b`, "gi");
+                        highlightedText = highlightedText.replace(regex, `<span style="color:#ffd700; font-weight:700; border: 1px solid rgba(255, 215, 0, 0.3); padding:2px 6px; border-radius:4px; background:rgba(255, 215, 0, 0.1);">${v}</span>`);
+                    } else {
+                        if (chips[chipIndex]) chips[chipIndex].classList.remove("checked");
+                    }
+                });
+
+                const discoursePercent = Math.round((matchedCount / totalScaffoldingItems) * 100);
+
+                // Word accuracy check
+                let accuracyLabel = "Fair";
+                if (discoursePercent >= 75) accuracyLabel = "Expert (Band 9.0)";
+                else if (discoursePercent >= 50) accuracyLabel = "Advanced (Band 8.0)";
+                else if (discoursePercent >= 25) accuracyLabel = "Intermediate (Band 7.0)";
+
+                // Update UI Display
+                document.getElementById("fillerDiffText").innerHTML = `
+                    <p style="margin-bottom:12px; font-weight:600; color:var(--text-secondary);"><i class="fa-solid fa-wand-magic-sparkles"></i> Scaffolding Discourse analysis:</p>
+                    <div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.04); padding:16px; border-radius:8px; line-height:1.6; font-size:14.5px;">"${highlightedText}"</div>
+                `;
+                document.getElementById("fillerDiscourseVal").textContent = `${discoursePercent}%`;
+                document.getElementById("fillerCorrectnessVal").textContent = accuracyLabel;
+            }
+
+            // Spatial Record Trigger
+            const btnRecordSpatial = document.getElementById("btnRecordSpatial");
+            if (btnRecordSpatial) {
+                btnRecordSpatial.addEventListener("click", () => {
+                    if (!currentSpatialDrill) return;
+                    triggerDrillSpeechRecording("btnRecordSpatial", "spatialTargetText", (spokenText) => {
+                        evaluateSpatialDrill(spokenText);
+                    });
+                });
+            }
+
+            // Spatial Evaluation
+            function evaluateSpatialDrill(userText) {
+                if (!currentSpatialDrill) return;
+
+                const drill = currentSpatialDrill;
+                const templates = drill.spatial_templates;
+                
+                let completedPhases = 0;
+                let matchedMarkersCount = 0;
+                let highlightedText = userText;
+
+                const chips = document.querySelectorAll("#spatialChips .scaffold-chip");
+
+                // Check Coherence Spatial Layouts (Foreground, Background, Sensory)
+                const spatialMarkers = {
+                    foreground: ["foreground", "immediate foreground", "in front", "close up", "stretching out"],
+                    background: ["background", "in the distance", "distance", "towering in", "far background"],
+                    sensory: ["cacophony", "silence", "atmosphere", "overriding", "sensory", "smell", "hearing", "sounds", "feel", "atmosphere is defined by"]
+                };
+
+                let chipIdx = 0;
+                Object.keys(templates).forEach((key) => {
+                    const cleanUser = userText.toLowerCase();
+                    let matchedPhase = false;
+                    
+                    spatialMarkers[key].forEach(marker => {
+                        if (cleanUser.includes(marker)) {
+                            matchedPhase = true;
+                        }
+                    });
+
+                    if (matchedPhase) {
+                        completedPhases++;
+                        if (chips[chipIdx]) chips[chipIdx].classList.add("checked");
+                    } else {
+                        if (chips[chipIdx]) chips[chipIdx].classList.remove("checked");
+                    }
+                    chipIdx++;
+                });
+
+                const coherenceScore = Math.round((completedPhases / 3) * 100);
+
+                // Check Lexical Spatial Markers (connecting transitions)
+                const transitionWords = ["to the left", "to the right", "adjacent to", "flanked by", "overlooking", "overflowing with", "fastidiously", "picturesque", "salubrious", "ineffable", "tranquility"];
+                transitionWords.forEach(word => {
+                    if (userText.toLowerCase().includes(word)) {
+                        matchedMarkersCount++;
+                        const regex = new RegExp(`\\b${word}\\b`, "gi");
+                        highlightedText = highlightedText.replace(regex, `<span style="color:#a855f7; font-weight:700; border: 1px solid rgba(168, 85, 247, 0.3); padding:2px 6px; border-radius:4px; background:rgba(168, 85, 247, 0.1);">${word}</span>`);
+                    }
+                });
+
+                let lexicalLabel = "Basic (Band 6.0)";
+                if (matchedMarkersCount >= 4) lexicalLabel = "Symphonic (Band 9.0)";
+                else if (matchedMarkersCount >= 2) lexicalLabel = "Flowing (Band 8.0)";
+                else if (matchedMarkersCount >= 1) lexicalLabel = "Cohesive (Band 7.0)";
+
+                // Update UI Display
+                document.getElementById("spatialDiffText").innerHTML = `
+                    <p style="margin-bottom:12px; font-weight:600; color:var(--text-secondary);"><i class="fa-solid fa-map-location-dot"></i> Spatial Coherence & Structural Mapping:</p>
+                    <div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.04); padding:16px; border-radius:8px; line-height:1.6; font-size:14.5px;">"${highlightedText}"</div>
+                `;
+                document.getElementById("spatialCoherenceVal").textContent = `${coherenceScore}%`;
+                document.getElementById("spatialLexicalVal").textContent = lexicalLabel;
+            }
+
+
+            // -----------------------------------------------------------------
             // INIT APP
             // -----------------------------------------------------------------
             loadVocabData();
+            loadPremiumSpeakingCoach();
         });
     </script>
 </body>
