@@ -3139,6 +3139,15 @@
                             return; // Stop VAD loop
                         }
 
+                        // STRICT 5-SECOND UNRECOGNIZED PUSH (Triggers if VAD heard something but no English words were transcribed)
+                        if (!voipSpeechDetected && elapsed >= 5000) {
+                            console.log("No English words transcribed within 5 seconds. Pushing forward.");
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                voipMediaRecorder.stop();
+                            }
+                            return; // Stop VAD loop
+                        }
+
                         // SILENCE TIMEOUT GATES FOR WHEN SOUND WAS HEARD
                         if (voipVoiceHeard) {
                             const silenceMs = now - lastSpeechTime;
