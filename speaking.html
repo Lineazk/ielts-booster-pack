@@ -2988,6 +2988,7 @@
                 hideSilenceBar();
                 
                 voipSpeechDetected = false;
+                let voipVoiceHeard = false; // Tracks if any voice energy was actively spoken
                 voipRecognizedText = "";
                 voipRecordingStart = Date.now();
                 lastSpeechTime = Date.now();
@@ -3105,10 +3106,12 @@
                         if (isSpeaking) {
                             showVadBars();
                             hideSilenceBar();
+                            voipVoiceHeard = true; // Actively heard human voice energy
+                            lastSpeechTime = now;  // Reset silence countdown while user is making sound
+                            
                             // Fallback VAD speech detection if SpeechRecognition is not active
                             if (!voipRecognition) {
                                 voipSpeechDetected = true;
-                                lastSpeechTime = now;
                             }
                             
                             // Scale VAD waves green
@@ -3127,30 +3130,41 @@
                             });
                         }
 
-                        // STRICT 3-SECOND NO-SPEECH PUSH
-                        if (!voipSpeechDetected && elapsed >= 3000) {
-                            console.log("No English speech detected within 3 seconds. Pushing forward.");
+                        // STRICT 3-SECOND SILENT TIMEOUT (Only triggers if NO voice energy was heard AT ALL)
+                        if (!voipVoiceHeard && elapsed >= 3000) {
+                            console.log("No speech energy heard within 3 seconds. Pushing forward.");
                             if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
                                 voipMediaRecorder.stop();
                             }
                             return; // Stop VAD loop
                         }
 
-                        const silenceMs = now - lastSpeechTime;
-
-                        // Display silence progress bar after 1.5 seconds of silence
-                        if (silenceMs >= 1500 && voipSpeechDetected) {
-                            const pct = Math.min(((silenceMs - 1500) / (VAD_SILENCE_MS - 1500)) * 100, 100);
-                            showSilenceBar(pct);
-                            hideVadBars();
-                        }
-
-                        // SILENCE TIMEOUT TRIGGER (Stops recording after 2.5 seconds of silence)
-                        if (voipSpeechDetected && silenceMs >= VAD_SILENCE_MS) {
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                voipMediaRecorder.stop();
+                        // SILENCE TIMEOUT GATES FOR WHEN SOUND WAS HEARD
+                        if (voipVoiceHeard) {
+                            const silenceMs = now - lastSpeechTime;
+                            
+                            if (voipSpeechDetected) {
+                                // Standard comfortable silence timeout for English speech
+                                if (silenceMs >= 1500) {
+                                    const pct = Math.min(((silenceMs - 1500) / (VAD_SILENCE_MS - 1500)) * 100, 100);
+                                    showSilenceBar(pct);
+                                    hideVadBars();
+                                }
+                                if (silenceMs >= VAD_SILENCE_MS) {
+                                    if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                        voipMediaRecorder.stop();
+                                    }
+                                    return; // stop loop
+                                }
+                            } else {
+                                // Fast cutoff (1.5s silence) if sound was heard but no English words transcribed (e.g. non-English speech)
+                                if (silenceMs >= 1500) {
+                                    if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                        voipMediaRecorder.stop();
+                                    }
+                                    return; // stop loop
+                                }
                             }
-                            return; // stop loop
                         }
 
                         // Safety force-stop at 60s
