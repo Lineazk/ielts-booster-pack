@@ -3628,8 +3628,9 @@
                     const dataArray = new Uint8Array(vadAnalyser.frequencyBinCount);
                     voipMediaRecorder.start();
 
-                    const calibrationSamples = [];
-                    const vadEnergyHistory = []; // Rolling energy history for noise floor
+                    let speechFrames = 0;
+                    let isSpeakingState = false;
+                    const vadEnergyHistory = [];
 
                     const runVad = () => {
                         if (!callActive || !vadAnalyser) return;
@@ -3646,32 +3647,38 @@
                         const now = Date.now();
                         const elapsed = now - voipRecordingStart;
 
-                        // Maintain rolling energy history (last 100 frames ~2s)
                         vadEnergyHistory.push(voiceEnergy);
                         if (vadEnergyHistory.length > 100) {
                             vadEnergyHistory.shift();
                         }
-                        
-                        // Noise floor is the minimum energy in the last 2s
                         let localNoiseFloor = Math.min(...vadEnergyHistory);
                         localNoiseFloor = Math.max(15, Math.min(localNoiseFloor, 80));
 
-                        // Speech must be clearly higher (+8) than noise floor, and at least above threshold (20)
-                        const activeThreshold = Math.max(localNoiseFloor + 8, VAD_THRESHOLD);
-                        const isSpeaking = voiceEnergy > activeThreshold;
+                        const sttEngine = document.getElementById("sttEngineSelect")?.value || "whisper";
+                        const isWhisperMode = (sttEngine === "whisper");
+                        const noiseMargin = isWhisperMode ? 14 : 9;
+                        const activeThreshold = Math.max(localNoiseFloor + noiseMargin, VAD_THRESHOLD);
 
-                        if (isSpeaking) {
-                            showVadBars();
-                            hideSilenceBar();
-                            voipVoiceHeard = true; // Actively heard human voice energy
-                            lastSpeechTime = now;  // Reset silence countdown while user is making sound
-                            
-                            // Fallback VAD speech detection if SpeechRecognition is not active
+                        if (voiceEnergy > activeThreshold) {
+                            speechFrames = Math.min(speechFrames + 1, 10);
+                        } else {
+                            speechFrames = Math.max(speechFrames - 1, 0);
+                        }
+
+                        if (speechFrames >= 4) {
+                            isSpeakingState = true;
+                            voipVoiceHeard = true;
+                            lastSpeechTime = now;
                             if (!voipRecognition) {
                                 voipSpeechDetected = true;
                             }
-                            
-                            // Scale VAD waves green
+                        } else if (speechFrames === 0) {
+                            isSpeakingState = false;
+                        }
+
+                        if (isSpeakingState) {
+                            showVadBars();
+                            hideSilenceBar();
                             const bars = document.querySelectorAll(".voip-vad-bar");
                             bars.forEach((bar, idx) => {
                                 const mult = 1 + (idx % 2) * 0.15;
@@ -3687,61 +3694,50 @@
                             });
                         }
 
-                        // STRICT 4.5-SECOND SILENT TIMEOUT (Only triggers if NO voice energy was heard AT ALL)
-                        if (!voipVoiceHeard && elapsed >= 4500) {
-                            console.log("No speech energy heard within 4.5 seconds. Pushing forward.");
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                voipMediaRecorder.stop();
-                            }
-                            return; // Stop VAD loop
-                        }
-
-                        // STRICT 12-SECOND UNRECOGNIZED SAFETY CUTOFF (Allows 12s for long answers, deactivated once English is transcribed)
-                        if (!voipSpeechDetected && elapsed >= 12000) {
-                            console.log("No English words transcribed within 12 seconds. Pushing forward.");
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                voipMediaRecorder.stop();
-                            }
-                            return; // Stop VAD loop
-                        }
-
-                        // SILENCE TIMEOUT GATES FOR WHEN SOUND WAS HEARD
-                        if (voipVoiceHeard) {
-                            const silenceMs = now - lastSpeechTime;
-                            
-                            if (voipSpeechDetected) {
-                                // Standard comfortable silence timeout for English speech (shows countdown at 3.0s, triggers at 5.5s)
-                                if (silenceMs >= 3000) {
-                                    const pct = Math.min(((silenceMs - 3000) / (VAD_SILENCE_MS - 3000)) * 100, 100);
-                                    showSilenceBar(pct);
-                                    hideVadBars();
-                                }
-                                if (silenceMs >= VAD_SILENCE_MS) {
-                                    if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                        voipMediaRecorder.stop();
-                                    }
-                                    return; // stop loop
-                                }
-                            } else {
-                                // Cut off after 5.0s of silence if sound was heard but no English words transcribed yet (handles SpeechRec API network latency gracefully!)
-                                if (silenceMs >= 5000) {
-                                    if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                        voipMediaRecorder.stop();
-                                    }
-                                    return; // stop loop
-                                }
-                            }
-                        }
-
-                        // Safety force-stop at 60s
-                        if (elapsed >= VAD_MAX_MS) {
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                voipMediaRecorder.stop();
-                            }
+                        if (!voipVoiceHeard && elapsed >= 5000) {
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
                             return;
                         }
 
-                        vadAnimFrame = requestAnimationFrame(runVad);
+                        if (voipRecognition && !voipSpeechDetected && elapsed >= 12000) {
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
+                            return;
+                        }
+
+                        if (voipVoiceHeard) {
+                            const silenceMs = now - lastSpeechTime;
+                            
+                            // 2.0s silence timeout for Whisper cloud backend, 5.5s for browser fallback Google STT
+                            const silenceLimit = isWhisperMode ? 2000 : VAD_SILENCE_MS;
+                            const progressStart = isWhisperMode ? 1000 : 3000;
+                            
+                            if (silenceMs >= progressStart) {
+                                const pct = Math.min(((silenceMs - progressStart) / (silenceLimit - progressStart)) * 100, 100);
+                                showSilenceBar(pct);
+                                hideVadBars();
+                            }
+                            if (silenceMs >= silenceLimit) {
+                                console.log(`Silence limit of ${silenceLimit}ms reached. Stopping recording.`);
+                                if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                    voipMediaRecorder.stop();
+                                }
+                                return; // Stop VAD loop
+                            }
+                        }
+
+                        // HARD SAFETY MAX DURATION LIMIT (Prevents infinite recording loops on extreme background noise)
+                        const maxLimit = isWhisperMode ? 35000 : VAD_MAX_MS;
+                        if (elapsed >= maxLimit) {
+                            console.log(`Hard safety limit of ${maxLimit}ms reached. Stopping recording.`);
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                                voipMediaRecorder.stop();
+                            }
+                            return; // Stop VAD loop
+                        }
+
+                        if (callActive && vadAnalyser) {
+                            vadAnimFrame = requestAnimationFrame(runVad);
+                        }
                     };
 
                     vadAnimFrame = requestAnimationFrame(runVad);
