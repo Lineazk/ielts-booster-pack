@@ -2272,6 +2272,13 @@
                         <option value="google">Google Web Speech (Browser Fallback)</option>
                     </select>
                 </div>
+                <div style="margin-top:10px;">
+                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; font-weight:600; letter-spacing:0.5px;">Auto-Detect Silence (VAD)</div>
+                    <select id="sttVadSelect" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px; padding:8px; font-size:12.5px; outline:none; cursor:pointer;">
+                        <option value="on" selected>On (Hands-Free Mode)</option>
+                        <option value="off">Off (Manual "Done Speaking" Button)</option>
+                    </select>
+                </div>
             </div>
 
             <button class="premium-action-btn" onclick="window.open('https://lineazk.github.io/ielts-booster-pack/', '_blank')" style="font-size:14px; padding:12px;">Get Premium Access Now</button>
@@ -2310,6 +2317,11 @@
             <div class="voip-silence-bar-wrap" id="voipSilenceWrap">
                 <div class="voip-silence-bar" id="voipSilenceBar"></div>
             </div>
+
+            <!-- Done Speaking Button (Manual stop fallback for noisy environments) -->
+            <button class="voip-action-btn" id="voipActionBtn" style="margin-top:20px; display:none; background:rgba(74,222,128,0.15); border:1px solid #4ade80; color:#4ade80; padding:10px 24px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; align-items:center; gap:8px; transition:all 0.2s; box-shadow:0 0 15px rgba(74, 222, 128, 0.2);" onmouseover="this.style.background='rgba(74,222,128,0.25)'" onmouseout="this.style.background='rgba(74,222,128,0.15)'">
+                <i class="fa-solid fa-circle-check"></i> Done Speaking (Click to Send)
+            </button>
         </div>
 
         <!-- Transcript bubble -->
@@ -3391,6 +3403,7 @@
                         voipStatusBadge.textContent = "🟢 CONNECTED";
                         voipTranscriptText.textContent = "Session started. Listen for the examiner...";
                         startVoipAvWaves();
+                        startContinuousVoipSpeechRecognition();
                     };
 
                     callWs.onmessage = async (event) => {
@@ -3515,12 +3528,78 @@
                 if (vadAnimFrame) { cancelAnimationFrame(vadAnimFrame); vadAnimFrame = null; }
                 if (vadAnalyser) { try { vadAnalyser.disconnect(); } catch(_) {} vadAnalyser = null; }
                 if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
-                if (voipRecognition) {
-                    try { voipRecognition.onend = null; voipRecognition.onerror = null; voipRecognition.stop(); } catch(e) {}
-                    voipRecognition = null;
-                }
                 hideSilenceBar();
                 hideVadBars();
+            }
+
+            function startContinuousVoipSpeechRecognition() {
+                if (voipRecognition) return;
+                
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) {
+                    console.warn("SpeechRecognition not supported in this browser.");
+                    return;
+                }
+                
+                voipRecognition = new SpeechRec();
+                voipRecognition.continuous = true;
+                voipRecognition.interimResults = true;
+                voipRecognition.lang = "en-US"; // en-US has better general compatibility
+
+                voipRecognition.onresult = (event) => {
+                    let interim = "";
+                    let final = "";
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) final += event.results[i][0].transcript;
+                        else interim += event.results[i][0].transcript;
+                    }
+                    const words = final || interim;
+                    
+                    if (words.trim().length > 0 && /[a-zA-Z]/.test(words)) {
+                        console.log("[Continuous SpeechRec] Speech text detected:", words);
+                        
+                        if (voipIsSpeaking) {
+                            // INTERRUPT/BARGE-IN: User spoke while Shikhu was speaking
+                            console.log("[Continuous SpeechRec] Barge-in! User interrupted the tutor.");
+                            voipIsSpeaking = false;
+                            if (voipResponseAudio) {
+                                try { voipResponseAudio.pause(); voipResponseAudio.src = ""; } catch(_) {}
+                            }
+                            if (window.speechSynthesis) {
+                                try { window.speechSynthesis.cancel(); } catch(_) {}
+                            }
+                            stopVoipAvWaves();
+                            
+                            // Immediately switch to user speaking/recording mode
+                            startListeningToVoipUser();
+                        } else if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                            // Reset silence timer because user is actively speaking text
+                            voipSpeechDetected = true;
+                            voipRecognizedText = words;
+                            voipStatusBadge.className = "voip-status-badge speaking";
+                            voipTranscriptText.innerHTML = `<span class="voip-transcript-user">You: "${words}"</span>`;
+                            lastSpeechTime = Date.now();
+                        }
+                    }
+                };
+
+                voipRecognition.onerror = (e) => {
+                    console.warn("[Continuous SpeechRec] Error occurred:", e.error);
+                };
+
+                voipRecognition.onend = () => {
+                    voipRecognition = null;
+                    if (callActive) {
+                        console.log("[Continuous SpeechRec] Closed. Restarting in 150ms...");
+                        setTimeout(startContinuousVoipSpeechRecognition, 150);
+                    }
+                };
+
+                try {
+                    voipRecognition.start();
+                } catch(err) {
+                    console.error("[Continuous SpeechRec] Start error:", err);
+                }
             }
 
             // ─── SMART VAD LISTENING ──────────────────────────────────────────
@@ -3532,10 +3611,14 @@
                 hideSilenceBar();
                 
                 voipSpeechDetected = false;
-                let voipVoiceHeard = false; // Tracks if any voice energy was actively spoken
+                let voipVoiceHeard = false; 
                 voipRecognizedText = "";
                 voipRecordingStart = Date.now();
                 lastSpeechTime = Date.now();
+
+                // Show manual stop fallback button
+                const actionBtn = document.getElementById("voipActionBtn");
+                if (actionBtn) actionBtn.style.display = "inline-flex";
 
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -3548,15 +3631,10 @@
 
                     voipMediaRecorder.onstop = () => {
                         stopVadListening();
-                        if (voipRecognition) {
-                            try { voipRecognition.stop(); } catch(e) {}
-                        }
+                        if (actionBtn) actionBtn.style.display = "none";
                         if (!callActive) return;
                         
                         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-                        
-                        // Send the audio to the server. If it was silent/noise, the server STT will handle it.
-                        // This prevents the candidate from getting stuck under all circumstances!
                         if (callWs && callWs.readyState === WebSocket.OPEN) {
                             callWs.send(audioBlob);
                             voipStatusBadge.className = "voip-status-badge processing";
@@ -3564,50 +3642,7 @@
                         }
                     };
 
-                    // Start browser SpeechRecognition for high-quality real-time preview (visual only)
-                    const useBrowserRec = (document.getElementById("sttEngineSelect")?.value === "google");
-                    const SpeechRec = useBrowserRec ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
-                    if (SpeechRec) {
-                        voipRecognition = new SpeechRec();
-                        voipRecognition.continuous = true;
-                        voipRecognition.interimResults = true;
-                        voipRecognition.lang = "en-GB";
-
-                        voipRecognition.onresult = (event) => {
-                            let interim = "";
-                            let final = "";
-                            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                                if (event.results[i].isFinal) final += event.results[i][0].transcript;
-                                else interim += event.results[i][0].transcript;
-                            }
-                            const words = final || interim;
-                            if (words.trim().length > 0) {
-                                // Gating logic: only trigger if actual English words are transcribed
-                                if (/[a-zA-Z]/.test(words)) {
-                                    voipSpeechDetected = true;
-                                    voipRecognizedText = words;
-                                    voipStatusBadge.className = "voip-status-badge speaking";
-                                    voipTranscriptText.innerHTML = `<span class="voip-transcript-user">You: "${words}"</span>`;
-                                    lastSpeechTime = Date.now(); // Reset silence countdown when speaking English words
-                                }
-                            }
-                        };
-
-                        voipRecognition.onerror = (e) => {
-                            console.warn("[SpeechRecognition] Error: " + e.error);
-                        };
-
-                        voipRecognition.onend = () => {
-                            if (callActive && voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                console.log("[SpeechRecognition] Auto-restarted onend to support long speech.");
-                                try { voipRecognition.start(); } catch(err) {}
-                            }
-                        };
-
-                        voipRecognition.start();
-                    }
-
-                    // ── AudioContext VAD for silence tracking and animations ──
+                    // ── AudioContext VAD for animations ──
                     vadAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     vadAnalyser = vadAudioCtx.createAnalyser();
                     vadAnalyser.fftSize = 256;
@@ -3667,11 +3702,7 @@
 
                         if (speechFrames >= 4) {
                             isSpeakingState = true;
-                            voipVoiceHeard = true;
-                            lastSpeechTime = now;
-                            if (!voipRecognition) {
-                                voipSpeechDetected = true;
-                            }
+                            voipVoiceHeard = true; // Actively heard human voice energy (prevents initial silence timeout)
                         } else if (speechFrames === 0) {
                             isSpeakingState = false;
                         }
@@ -3694,45 +3725,47 @@
                             });
                         }
 
-                        if (!voipVoiceHeard && elapsed >= 5000) {
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
-                            return;
-                        }
+                        const useVad = (document.getElementById("sttVadSelect")?.value !== "off");
 
-                        if (voipRecognition && !voipSpeechDetected && elapsed >= 12000) {
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
-                            return;
-                        }
-
-                        if (voipVoiceHeard) {
-                            const silenceMs = now - lastSpeechTime;
-                            
-                            // 2.0s silence timeout for Whisper cloud backend, 5.5s for browser fallback Google STT
-                            const silenceLimit = isWhisperMode ? 2000 : VAD_SILENCE_MS;
-                            const progressStart = isWhisperMode ? 1000 : 3000;
-                            
-                            if (silenceMs >= progressStart) {
-                                const pct = Math.min(((silenceMs - progressStart) / (silenceLimit - progressStart)) * 100, 100);
-                                showSilenceBar(pct);
-                                hideVadBars();
+                        if (useVad) {
+                            // 1. INITIAL SILENCE TIMEOUT (If no sound energy heard at all within 5.0 seconds)
+                            if (!voipVoiceHeard && elapsed >= 5000) {
+                                console.log("VAD: No speech energy heard within initial 5.0s. Stopping.");
+                                if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
+                                return;
                             }
-                            if (silenceMs >= silenceLimit) {
-                                console.log(`Silence limit of ${silenceLimit}ms reached. Stopping recording.`);
-                                if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                    voipMediaRecorder.stop();
+
+                            // 2. TEXT-BASED SILENCE TIMEOUT (Resets only when Google STT transcribes words)
+                            if (voipSpeechDetected) {
+                                const silenceMs = now - lastSpeechTime;
+                                const silenceLimit = 2500; // Fast 2.5s silence gate when speech is active
+                                
+                                if (silenceMs >= 1500) {
+                                    const pct = Math.min(((silenceMs - 1500) / (silenceLimit - 1500)) * 100, 100);
+                                    showSilenceBar(pct);
+                                    hideVadBars();
                                 }
-                                return; // Stop VAD loop
+                                if (silenceMs >= silenceLimit) {
+                                    console.log("VAD: 2.5s silence limit reached (Speech detected previously). Stopping.");
+                                    if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
+                                    return;
+                                }
+                            }
+
+                            // 3. ENERGY-ONLY FALLBACK TIMEOUT (If user spoke, but Google STT failed to transcribe any text)
+                            if (voipVoiceHeard && !voipSpeechDetected && elapsed >= 8000) {
+                                console.log("VAD: Speech energy heard but no text transcribed within 8.0s. Stopping and sending.");
+                                if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
+                                return;
                             }
                         }
 
                         // HARD SAFETY MAX DURATION LIMIT (Prevents infinite recording loops on extreme background noise)
                         const maxLimit = isWhisperMode ? 35000 : VAD_MAX_MS;
                         if (elapsed >= maxLimit) {
-                            console.log(`Hard safety limit of ${maxLimit}ms reached. Stopping recording.`);
-                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
-                                voipMediaRecorder.stop();
-                            }
-                            return; // Stop VAD loop
+                            console.log(`VAD: Hard safety limit of ${maxLimit}ms reached. Stopping.`);
+                            if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
+                            return;
                         }
 
                         if (callActive && vadAnalyser) {
@@ -3878,6 +3911,12 @@
                 if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
                 if (voipResponseAudio) voipResponseAudio.pause();
                 if (currentAudio) currentAudio.pause();
+                if (voipRecognition) {
+                    try { voipRecognition.onend = null; voipRecognition.onerror = null; voipRecognition.stop(); } catch(_) {}
+                    voipRecognition = null;
+                }
+                const actionBtn = document.getElementById("voipActionBtn");
+                if (actionBtn) actionBtn.style.display = "none";
                 voipOverlay.style.display = "none";
                 stopVoipAvWaves();
                 hideVadBars();
@@ -3886,6 +3925,17 @@
 
             startCallBtn.addEventListener("click", startLiveVoipCall);
             voipEndBtn.addEventListener("click", endLiveCallSession);
+
+            const voipActionBtn = document.getElementById("voipActionBtn");
+            if (voipActionBtn) {
+                voipActionBtn.addEventListener("click", () => {
+                    console.log("MANUAL STOP: User clicked Done Speaking button.");
+                    if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                        voipMediaRecorder.stop();
+                    }
+                    voipActionBtn.style.display = "none";
+                });
+            }
 
             voipMuteBtn.addEventListener("click", () => {
                 voipMuted = !voipMuted;
