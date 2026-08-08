@@ -2279,6 +2279,13 @@
                         <option value="off">Off (Manual "Done Speaking" Button)</option>
                     </select>
                 </div>
+                <div style="margin-top:10px;">
+                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; font-weight:600; letter-spacing:0.5px;">Tutor Interruption (Barge-in)</div>
+                    <select id="sttBargeInSelect" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px; padding:8px; font-size:12.5px; outline:none; cursor:pointer;">
+                        <option value="off" selected>Off (Recommended for Speakers)</option>
+                        <option value="on">On (Requires Headphones)</option>
+                    </select>
+                </div>
             </div>
 
             <button class="premium-action-btn" onclick="window.open('https://lineazk.github.io/ielts-booster-pack/', '_blank')" style="font-size:14px; padding:12px;">Get Premium Access Now</button>
@@ -3474,8 +3481,16 @@
             }
 
             function playVoipResponse(url, text, onEnd) {
+                // Instantly cancel/stop any active recording to prevent duplicate state machines
+                if (voipMediaRecorder) {
+                    voipMediaRecorder.onstop = null; // Remove callbacks first
+                    if (voipMediaRecorder.state === "recording") {
+                        try { voipMediaRecorder.stop(); } catch(_) {}
+                    }
+                }
                 if (voipResponseAudio) voipResponseAudio.pause();
                 voipIsSpeaking = true;
+                voipTutorSpeakStartTime = Date.now();
                 stopVadListening();
                 startVoipAvWaves();
                 hideVadBars();
@@ -3538,6 +3553,7 @@
             let simDialTimeout = null;
             let simTurnTimeout = null;
             let voipIsConnecting = false;
+            let voipTutorSpeakStartTime = 0;
 
             function stopVadListening() {
                 if (vadAnimFrame) { cancelAnimationFrame(vadAnimFrame); vadAnimFrame = null; }
@@ -3573,20 +3589,26 @@
                     if (words.trim().length > 0 && /[a-zA-Z]/.test(words)) {
                         console.log("[Continuous SpeechRec] Speech text detected:", words);
                         
+                        const allowBargeIn = (document.getElementById("sttBargeInSelect")?.value === "on");
                         if (voipIsSpeaking) {
-                            // INTERRUPT/BARGE-IN: User spoke while Shikhu was speaking
-                            console.log("[Continuous SpeechRec] Barge-in! User interrupted the tutor.");
-                            voipIsSpeaking = false;
-                            if (voipResponseAudio) {
-                                try { voipResponseAudio.pause(); voipResponseAudio.src = ""; } catch(_) {}
+                            if (allowBargeIn) {
+                                // Guard barge-in: tutor must have been speaking for at least 1.5s to prevent echo trigger
+                                const speakingDuration = Date.now() - voipTutorSpeakStartTime;
+                                if (speakingDuration > 1500) {
+                                    console.log("[Continuous SpeechRec] Barge-in! User interrupted the tutor.");
+                                    voipIsSpeaking = false;
+                                    if (voipResponseAudio) {
+                                        try { voipResponseAudio.pause(); voipResponseAudio.src = ""; } catch(_) {}
+                                    }
+                                    if (window.speechSynthesis) {
+                                        try { window.speechSynthesis.cancel(); } catch(_) {}
+                                    }
+                                    stopVoipAvWaves();
+                                    
+                                    // Immediately switch to user speaking/recording mode
+                                    startListeningToVoipUser();
+                                }
                             }
-                            if (window.speechSynthesis) {
-                                try { window.speechSynthesis.cancel(); } catch(_) {}
-                            }
-                            stopVoipAvWaves();
-                            
-                            // Immediately switch to user speaking/recording mode
-                            startListeningToVoipUser();
                         } else if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
                             // Reset silence timer because user is actively speaking text
                             voipSpeechDetected = true;
@@ -3620,6 +3642,21 @@
             // ─── SMART VAD LISTENING ──────────────────────────────────────────
             async function startListeningToVoipUser() {
                 if (!callActive) return;
+                
+                // Block duplicate parallel invocations!
+                if (voipMediaRecorder && voipMediaRecorder.state === "recording") {
+                    console.log("startListeningToVoipUser: Recorder already active, skipping.");
+                    return;
+                }
+                
+                // If tutor is currently speaking, do NOT start listening (unless barge-in is active and handled)
+                if (voipIsSpeaking) {
+                    const allowBargeIn = (document.getElementById("sttBargeInSelect")?.value === "on");
+                    if (!allowBargeIn) {
+                        console.log("startListeningToVoipUser: Tutor is speaking and Barge-in is Off. Skipping.");
+                        return;
+                    }
+                }
 
                 voipStatusBadge.className = "voip-status-badge listening";
                 voipStatusBadge.textContent = "🎤 LISTENING";
