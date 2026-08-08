@@ -2265,6 +2265,13 @@
                     <button class="premium-unlock-btn" id="activatePremiumKeyBtn" style="font-size:12px; padding:8px 14px;">Activate</button>
                 </div>
                 <div class="premium-success-msg" id="premiumSuccessMsg">Premium Activated Successfully! 🚀</div>
+                <div style="margin-top:14px; border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; font-weight:600; letter-spacing:0.5px;">Speech-to-Text Engine</div>
+                    <select id="sttEngineSelect" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px; padding:8px; font-size:12.5px; outline:none; cursor:pointer;">
+                        <option value="whisper" selected>Groq Whisper Cloud (Highly Accurate)</option>
+                        <option value="google">Google Web Speech (Browser Fallback)</option>
+                    </select>
+                </div>
             </div>
 
             <button class="premium-action-btn" onclick="window.open('https://lineazk.github.io/ielts-booster-pack/', '_blank')" style="font-size:14px; padding:12px;">Get Premium Access Now</button>
@@ -2797,7 +2804,8 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             
             function startStandardSpeechRecognition() {
-                if (!SpeechRecognition) {
+                const useBrowserRec = (document.getElementById("sttEngineSelect")?.value === "google");
+                if (!SpeechRecognition || !useBrowserRec) {
                     launchStandardMediaRecorderFallback();
                     return;
                 }
@@ -3557,7 +3565,8 @@
                     };
 
                     // Start browser SpeechRecognition for high-quality real-time preview (visual only)
-                    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const useBrowserRec = (document.getElementById("sttEngineSelect")?.value === "google");
+                    const SpeechRec = useBrowserRec ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
                     if (SpeechRec) {
                         voipRecognition = new SpeechRec();
                         voipRecognition.continuous = true;
