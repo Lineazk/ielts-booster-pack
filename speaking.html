@@ -3373,6 +3373,7 @@
                 transcriptText = "";
                 window.hasSpokenBusy = false; // Reset busy voice state
                 window.lastQueuePosition = 0; // Reset last queue position for voiced updates
+                voipIsConnecting = true; // Set connecting flag to allow fallback on real errors
                 const tunnelUrl = _0x5b1e.b;
 
                 voipOverlay.style.display = "flex";
@@ -3399,6 +3400,7 @@
 
                     callWs.onopen = () => {
                         callActive = true;
+                        voipIsConnecting = false; // Reset connecting flag
                         voipStatusBadge.className = "voip-status-badge";
                         voipStatusBadge.textContent = "🟢 CONNECTED";
                         voipTranscriptText.textContent = "Session started. Listen for the examiner...";
@@ -3455,10 +3457,19 @@
                         }
                     };
 
-                    callWs.onerror = () => { launchVoipClientSimulatorFallback(); };
-                    callWs.onclose = () => { endLiveCallSession(); };
+                    callWs.onerror = () => { 
+                        if (voipIsConnecting) {
+                            launchVoipClientSimulatorFallback(); 
+                        }
+                    };
+                    callWs.onclose = () => { 
+                        voipIsConnecting = false;
+                        endLiveCallSession(); 
+                    };
                 } catch(e) {
-                    launchVoipClientSimulatorFallback();
+                    if (voipIsConnecting) {
+                        launchVoipClientSimulatorFallback();
+                    }
                 }
             }
 
@@ -3523,6 +3534,10 @@
             let silenceTimer = null;
             let voipRecordingStart = 0;
             let lastSpeechTime = 0;
+            let simCheckInterval = null;
+            let simDialTimeout = null;
+            let simTurnTimeout = null;
+            let voipIsConnecting = false;
 
             function stopVadListening() {
                 if (vadAnimFrame) { cancelAnimationFrame(vadAnimFrame); vadAnimFrame = null; }
@@ -3818,14 +3833,14 @@
                 voipStatusBadge.textContent = "🟢 CONNECTED";
                 voipTranscriptText.textContent = "Session started. Listen for Shikhu...";
                 startVoipAvWaves();
-                setTimeout(playSimCallTurn, 1500);
+                simTurnTimeout = setTimeout(playSimCallTurn, 1500);
             }
 
             function playSimCallTurn() {
                 if (!callActive) return;
                 if (simCallIndex >= SIM_CONVERSATION.length) {
                     voipTranscriptText.textContent = "Great session! Call ending...";
-                    setTimeout(endLiveCallSession, 3000);
+                    simTurnTimeout = setTimeout(endLiveCallSession, 3000);
                     return;
                 }
 
@@ -3859,7 +3874,7 @@
                 const AUTO_ADVANCE = 15000;
                 let simListenStart = Date.now();
 
-                const simCheckInterval = setInterval(() => {
+                simCheckInterval = setInterval(() => {
                     const elapsed = Date.now() - simListenStart;
                     if (elapsed >= MIN_SIM) {
                         // Show silence progress bar after 10s
@@ -3868,11 +3883,12 @@
                     }
                     if (elapsed >= AUTO_ADVANCE) {
                         clearInterval(simCheckInterval);
+                        simCheckInterval = null;
                         hideVadBars();
                         hideSilenceBar();
                         voipStatusBadge.className = "voip-status-badge processing";
                         voipStatusBadge.textContent = "⚙ PROCESSING";
-                        setTimeout(playSimCallTurn, 1200);
+                        simTurnTimeout = setTimeout(playSimCallTurn, 1200);
                     }
                 }, 200);
             }
@@ -3881,7 +3897,7 @@
                 voipStatusBadge.className = "voip-status-badge dialing";
                 voipStatusBadge.textContent = "🟠 CONNECTING...";
                 voipTranscriptText.textContent = "Switching to offline mode...";
-                setTimeout(launchVoipClientSimulator, 1500);
+                simDialTimeout = setTimeout(launchVoipClientSimulator, 1500);
             }
 
             // VoIP avatar pulse waves
@@ -3900,13 +3916,23 @@
 
             function endLiveCallSession() {
                 callActive = false;
+                voipIsConnecting = false;
                 window.lastQueuePosition = 0;
                 stopVoipCallTimer();
                 stopVadListening();
                 clearTimeout(voipDialTimeout);
+                
+                // Clear simulator timers/intervals
+                if (simCheckInterval) { clearInterval(simCheckInterval); simCheckInterval = null; }
+                if (simDialTimeout) { clearTimeout(simDialTimeout); simDialTimeout = null; }
+                if (simTurnTimeout) { clearTimeout(simTurnTimeout); simTurnTimeout = null; }
+                
                 if (callWs) {
                     try { callWs.send(JSON.stringify({action: "end_call"})); } catch(_) {}
+                    callWs.onclose = null; // Prevent callbacks during closing
+                    callWs.onerror = null;
                     callWs.close();
+                    callWs = null;
                 }
                 if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
                 if (voipResponseAudio) voipResponseAudio.pause();
