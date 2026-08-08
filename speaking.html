@@ -3738,15 +3738,15 @@
                             // 2. TEXT-BASED SILENCE TIMEOUT (Resets only when Google STT transcribes words)
                             if (voipSpeechDetected) {
                                 const silenceMs = now - lastSpeechTime;
-                                const silenceLimit = 2500; // Fast 2.5s silence gate when speech is active
+                                const silenceLimit = 1000; // Super fast 1.0s silence gate when speech is active
                                 
-                                if (silenceMs >= 1500) {
-                                    const pct = Math.min(((silenceMs - 1500) / (silenceLimit - 1500)) * 100, 100);
+                                if (silenceMs >= 500) {
+                                    const pct = Math.min(((silenceMs - 500) / (silenceLimit - 500)) * 100, 100);
                                     showSilenceBar(pct);
                                     hideVadBars();
                                 }
                                 if (silenceMs >= silenceLimit) {
-                                    console.log("VAD: 2.5s silence limit reached (Speech detected previously). Stopping.");
+                                    console.log("VAD: 1.0s silence limit reached (Speech detected previously). Stopping.");
                                     if (voipMediaRecorder && voipMediaRecorder.state === "recording") voipMediaRecorder.stop();
                                     return;
                                 }
