@@ -2553,6 +2553,9 @@
             }
 
             function playExaminerPromptAudio(filename, onEnd = null) {
+                if (window.speechSynthesis) {
+                    try { window.speechSynthesis.cancel(); } catch(_) {}
+                }
                 if (currentAudio) {
                     currentAudio.pause();
                     currentAudio = null;
@@ -2564,6 +2567,9 @@
                 let fallbackExecuted = false;
                 const triggerFallback = () => {
                     if (fallbackExecuted) return;
+                    if (audio && audio.currentTime > 0.5) {
+                        return;
+                    }
                     fallbackExecuted = true;
                     
                     if (currentAudio === audio) {
@@ -2580,6 +2586,7 @@
                     
                     fallbackAudio.onended = () => { if (onEnd) onEnd(); };
                     fallbackAudio.onerror = () => {
+                        if (fallbackAudio && fallbackAudio.currentTime > 0.5) return;
                         // Ultimate fail-safe
                         if (window.speechSynthesis) {
                             window.speechSynthesis.cancel();
@@ -2593,6 +2600,7 @@
                         }
                     };
                     fallbackAudio.play().catch(() => {
+                        if (fallbackAudio && fallbackAudio.currentTime > 0.5) return;
                         if (window.speechSynthesis) {
                             window.speechSynthesis.cancel();
                             const utt = new SpeechSynthesisUtterance(textToSpeak);
@@ -3481,6 +3489,9 @@
             }
 
             function playVoipResponse(url, text, onEnd) {
+                if (window.speechSynthesis) {
+                    try { window.speechSynthesis.cancel(); } catch(_) {}
+                }
                 // Instantly cancel/stop any active recording to prevent duplicate state machines
                 if (voipMediaRecorder) {
                     voipMediaRecorder.onstop = null; // Remove callbacks first
@@ -3503,6 +3514,10 @@
 
                 const triggerFallback = () => {
                     if (endedExecuted) return;
+                    if (voipResponseAudio && voipResponseAudio.currentTime > 0.5) {
+                        console.log("playVoipResponse: Audio errored midway but already played > 0.5s. Skipping fallback.");
+                        return;
+                    }
                     endedExecuted = true;
                     if (window.speechSynthesis) {
                         window.speechSynthesis.cancel();
